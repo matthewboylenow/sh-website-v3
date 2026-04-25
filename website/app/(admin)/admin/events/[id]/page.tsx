@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/db";
 import { events } from "@/db/schema";
 import { assetUrl } from "@/lib/blob";
+import { getSiteSettings } from "@/lib/queries/site-settings.query";
 import { EventForm } from "../EventForm";
 
 export const metadata = { title: "Edit event · Admin" };
@@ -21,7 +22,15 @@ export default async function EditEventPage({
   const [row] = await db.select().from(events).where(eq(events.id, id)).limit(1);
   if (!row) notFound();
 
-  const photoPreviewUrl = await assetUrl(row.photoBlobKey);
+  const [photoPreviewUrl, settings] = await Promise.all([
+    assetUrl(row.photoBlobKey),
+    getSiteSettings(),
+  ]);
+  const tax = settings?.taxonomies ?? {
+    eventCategories: [],
+    eventAudiences: [],
+    ministryAudiences: [],
+  };
 
   return (
     <div>
@@ -54,6 +63,8 @@ export default async function EditEventPage({
           eventId={row.id}
           defaultValues={row}
           photoPreviewUrl={photoPreviewUrl}
+          audienceOptions={tax.eventAudiences}
+          categoryOptions={tax.eventCategories}
         />
       </div>
     </div>

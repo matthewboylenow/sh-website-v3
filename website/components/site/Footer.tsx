@@ -4,7 +4,7 @@ import { Container } from "./Container";
 export function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="mt-24 bg-navy-dark text-white/85">
+    <footer className="mt-24 bg-navy-dark text-white">
       <Container width="wide">
         <div className="grid gap-10 py-14 sm:grid-cols-2 md:grid-cols-4">
           <div>
@@ -44,7 +44,7 @@ export function Footer() {
           />
         </div>
 
-        <div className="border-t border-white/10 py-6 text-xs text-white/60">
+        <div className="border-t border-white/15 py-6 text-xs text-white/85">
           &copy; {year} Saint Helen Parish &middot; A Roman Catholic parish in
           the Archdiocese of Newark.
         </div>
@@ -62,13 +62,13 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">
         {title}
       </p>
       <ul className="mt-3 space-y-2 text-sm">
         {links.map((l) => (
           <li key={l.href + l.label}>
-            <Link href={l.href} className="text-white/85 hover:text-white">
+            <Link href={l.href} className="text-white hover:text-gold">
               {l.label}
             </Link>
           </li>

@@ -20,21 +20,26 @@ export function AdminTopbar({
     <header className="border-b border-navy-dark bg-navy text-white">
       <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-4 sm:px-6">
         <div className="flex items-center gap-4">
-          <Link href="/admin" className="font-serif text-base font-bold text-white">
-            Saint Helen <span className="text-gold">Admin</span>
+          <Link
+            href="/admin"
+            className="font-serif text-base font-bold text-white hover:text-gold"
+          >
+            Saint Helen Admin
           </Link>
-          <span className="hidden text-xs text-white/50 sm:inline">
+          <span className="hidden rounded-pill bg-white/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/85 sm:inline">
             {process.env.VERCEL_ENV ?? "local"}
           </span>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="hidden text-xs font-semibold uppercase tracking-[0.12em] text-white/70 hover:text-white sm:inline"
+            target="_blank"
+            rel="noopener"
+            className="hidden text-xs font-semibold uppercase tracking-[0.12em] text-white hover:text-gold sm:inline"
           >
             View site →
           </Link>
-          <span className="hidden text-xs text-white/85 md:inline">
+          <span className="hidden text-xs text-white md:inline">
             {userName ?? userEmail}
           </span>
           <div
@@ -46,7 +51,7 @@ export function AdminTopbar({
           <form action={signOut}>
             <button
               type="submit"
-              className="rounded-pill border border-white/20 px-3 py-1.5 text-xs font-semibold text-white/85 hover:bg-white/10 hover:text-white"
+              className="rounded-pill border border-white/40 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/15"
             >
               Sign out
             </button>

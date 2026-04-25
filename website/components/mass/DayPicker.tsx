@@ -131,9 +131,7 @@ export function DayPicker({ week }: { week: WeekDay[] }) {
                       {formatTime(m.time)}
                     </div>
                     <div className="mt-1 text-sm text-ink-2">
-                      {[m.label ?? prettyKind(m.kind), m.presider?.name]
-                        .filter(Boolean)
-                        .join(" · ")}
+                      {prettyKind(m.kind)}
                     </div>
                   </div>
                   {m.liveStreamUrl && (

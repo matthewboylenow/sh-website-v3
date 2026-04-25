@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Container } from "@/components/site/Container";
 import { EventsFilters } from "@/components/events/EventsFilters";
 import { InteriorHero } from "@/components/site/InteriorHero";
-import { AUDIENCES, CATEGORIES } from "@/lib/events-filters";
 import {
   formatMonthLong,
   formatMonthShort,
@@ -16,6 +15,7 @@ import {
   getLatestFeaturedEvent,
   getUpcomingEvents,
 } from "@/lib/queries/events.query";
+import { getSiteSettings } from "@/lib/queries/site-settings.query";
 
 export const metadata = {
   title: "Events",
@@ -41,10 +41,16 @@ export default async function EventsPage({
   const category = params.category && params.category !== "all" ? params.category : null;
   const q = (params.q ?? "").trim();
 
-  const [featured, allUpcoming] = await Promise.all([
+  const [featured, allUpcoming, settings] = await Promise.all([
     getLatestFeaturedEvent(),
     getUpcomingEvents(200),
+    getSiteSettings(),
   ]);
+  const tax = settings?.taxonomies ?? {
+    eventCategories: [],
+    eventAudiences: [],
+    ministryAudiences: [],
+  };
 
   const filtered = allUpcoming.filter((e) => {
     if (audience !== "all" && !(e.audiences ?? []).includes(audience)) return false;
@@ -85,10 +91,23 @@ export default async function EventsPage({
           )}
 
           {/* Active filter summary */}
-          <ActiveSummary audience={audience} category={category} q={q} count={filtered.length} />
+          <ActiveSummary
+            audience={audience}
+            category={category}
+            q={q}
+            count={filtered.length}
+            audienceOptions={tax.eventAudiences}
+            categoryOptions={tax.eventCategories}
+          />
 
           <div className="mt-10 grid gap-12 md:grid-cols-[260px_1fr] md:items-start">
-            <EventsFilters audience={audience} category={category} q={q} />
+            <EventsFilters
+              audience={audience}
+              category={category}
+              q={q}
+              audienceOptions={tax.eventAudiences}
+              categoryOptions={tax.eventCategories}
+            />
 
             <div>
               {byMonth.size === 0 ? (
@@ -234,20 +253,23 @@ function ActiveSummary({
   category,
   q,
   count,
+  audienceOptions,
+  categoryOptions,
 }: {
   audience: string;
   category: string | null;
   q: string;
   count: number;
+  audienceOptions: readonly string[];
+  categoryOptions: readonly string[];
 }) {
+  const pretty = (k: string) => k.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const pieces: string[] = [];
-  if (audience !== "all") {
-    const a = AUDIENCES.find((x) => x.key === audience);
-    if (a) pieces.push(a.label);
+  if (audience !== "all" && audienceOptions.includes(audience)) {
+    pieces.push(pretty(audience));
   }
-  if (category) {
-    const c = CATEGORIES.find((x) => x.key === category);
-    if (c) pieces.push(c.label);
+  if (category && categoryOptions.includes(category)) {
+    pieces.push(pretty(category));
   }
   if (q) pieces.push(`“${q}”`);
   return (

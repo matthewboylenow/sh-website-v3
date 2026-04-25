@@ -19,8 +19,13 @@ Last updated: **2026-04-25**
 | 6 | Public API routes | 🟡 Done for launch — welcome / readings / mass-times wired; prayer-request and revalidate deferred |
 | 7 | Backups + staging | ⏸️ Deferred (backups, B2 off-platform copy, staging branch — revisit before launch) |
 | 8 | External integrations (Resend / Twilio / Fathom / Subsplash) | ⬜ Queued |
+| 9 | Polish — contrast, summary rename, ministry hides, mass simplification, taxonomies, media library | ✅ Done |
+| 10 | Rich text editor (TipTap) | ⬜ Queued |
+| 11 | Per-ministry forms + leads dashboard | ⬜ Queued |
+| 12 | Blog + megamenu + nav editor | ⬜ Queued |
+| 13 | Sections + embed allowlist + matchmaker skip-rules | ⬜ Queued |
 
-Build sequence is from `design-ref/pages/backend.html §16`.
+Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).
 
 ---
 
@@ -264,6 +269,23 @@ The public-facing endpoints from `backend.html §05` that drive forms and extern
 - **Matchmaker manifest editor:** form-based v1 inside the custom admin. Visual logic-tree editor explicitly deferred.
 - **Spanish multilingual:** deferred indefinitely. Don't add `locale` columns.
 - **Stack version:** Next.js 15.x latest (15.5.15 at time of writing). **Never Next 16.**
+
+---
+
+## ✅ Shipped — Wave 9 polish
+
+Closed in one batch. Build green (41 routes). Smoke checklist below carries forward — the contrast / mass-times / ministry-page changes will be visible after redeploy.
+
+- **Contrast audit + fixes.** Admin topbar: parish wordmark uses one consistent gold, env tag is now a pill (white-on-white-with-bg-tint passes AA), View site / user name / sign-out border opacities all bumped to full white or white/40+ where appropriate. Public Header nav items at full white with gold hover (was white/85). Footer links full white with gold accent on column titles + hover.
+- **"Lede" → "Summary"** on the events editor label. Schema column stays `lede` (no migration); only user-facing copy changed. The `sh-lede` CSS class is just a typographic token — kept.
+- **Public ministry pages stripped.** Removed audiences chips, contact email block, lead-staff sidebar card. Only the description + meeting cadence + accepting-new state + "All ministries" link remain on the public side. Internal admin still uses every field. The proper join / inquire / volunteer flow lands in Wave 11.
+- **Mass times simplified.** Public render shows just **time + Sunday/Daily/Vigil** + a **Livestream pill** when applicable. Day picker presider line gone. Bottom weekly schedule columns now read **Saturday Vigil / Sunday / Daily Mass (Mon–Sat)** matching the real schedule. Seed rewritten: Daily Mon–Sat 9 AM (livestreamed), Saturday Vigil 5 PM, Sunday 8 / 10 AM (livestreamed) / 12 / 6 PM. Schema columns (label, presider) stay — just unused on the public side now.
+- **Taxonomies live.** Added `taxonomies` jsonb to `site_settings` (migration `0002_aberrant_vanisher`) holding `eventCategories`, `eventAudiences`, `ministryAudiences`. Defaults seeded. New admin route `/admin/settings/taxonomies` with a `ListEditor` (chip-based add/remove). New `TagPicker` chip component; EventForm uses it for audiences + categories, MinistryForm for audiences. Comma-separated free text is gone. `/events` filter sidebar reads from taxonomies via the Server Component (no more `lib/events-filters.ts` constants — module deleted).
+- **`/admin/media` library.** Lists every `blob_assets` row with previews (PDF gets a doc icon), search by key / alt / caption, delete-with-confirm. Delete bubbles a friendly error when an asset is still referenced by an editor (Postgres FK), rather than silent failure.
+
+### Step 7 status
+
+⏸️ **Deferred indefinitely** per Matthew. Backups + B2 + staging branch revisit before launch.
 
 ---
 

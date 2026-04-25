@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/db";
 import { ministries, staff } from "@/db/schema";
 import { assetUrl } from "@/lib/blob";
+import { getSiteSettings } from "@/lib/queries/site-settings.query";
 import { MinistryForm } from "../MinistryForm";
 
 export const metadata = { title: "Edit ministry · Admin" };
@@ -21,13 +22,19 @@ export default async function EditMinistryPage({
   const [row] = await db.select().from(ministries).where(eq(ministries.id, id)).limit(1);
   if (!row) notFound();
 
-  const [staffOptions, photoPreviewUrl] = await Promise.all([
+  const [staffOptions, photoPreviewUrl, settings] = await Promise.all([
     db
       .select({ id: staff.id, name: staff.name })
       .from(staff)
       .orderBy(asc(staff.orderingPriority), asc(staff.name)),
     assetUrl(row.photoBlobKey),
+    getSiteSettings(),
   ]);
+  const tax = settings?.taxonomies ?? {
+    eventCategories: [],
+    eventAudiences: [],
+    ministryAudiences: [],
+  };
 
   return (
     <div>
@@ -57,6 +64,7 @@ export default async function EditMinistryPage({
           mode="edit"
           ministryId={row.id}
           staffOptions={staffOptions}
+          audienceOptions={tax.ministryAudiences}
           defaultValues={row}
           photoPreviewUrl={photoPreviewUrl}
         />

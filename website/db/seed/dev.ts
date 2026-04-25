@@ -278,28 +278,36 @@ export async function seedDev() {
   console.log(`  ✓ events (${eventRows.length} inserted / already present)`);
 
   /* ---------- mass times ------------------------------------------ */
-  const frTom = staffRows.find((s) => s.slug === "fr-tom");
-  const frLuis = staffRows.find((s) => s.slug === "fr-luis");
+  // Real Saint Helen schedule:
+  //   Daily Mass Mon–Sat 9 AM (livestreamed)
+  //   Saturday Vigil 5 PM
+  //   Sunday 8 / 10 (livestreamed) / 12 / 6
+  // Schema columns (label, presider) are kept for future flexibility but
+  // the public render no longer uses them.
 
   // Drizzle's .onConflictDoNothing needs a unique target — mass_times has
   // none that would naturally dedupe. Delete any existing rows first, then
   // re-insert. Idempotent via full replace.
   await db.delete(massTimes);
+  const liveUrl = "https://subsplash.com/+SAINTHELEN/livestream"; // placeholder — Matthew supplies the real Subsplash URL
   await db.insert(massTimes).values([
-    // Saturday vigil
-    { dayOfWeek: 6, time: "17:00:00", kind: "vigil", label: "Saturday Vigil", presiderId: frTom?.id },
-    // Sunday
-    { dayOfWeek: 0, time: "07:30:00", kind: "sunday", presiderId: frTom?.id },
-    { dayOfWeek: 0, time: "09:00:00", kind: "sunday", presiderId: frLuis?.id },
-    { dayOfWeek: 0, time: "10:30:00", kind: "sunday", label: "Family Mass", presiderId: frTom?.id },
-    { dayOfWeek: 0, time: "12:00:00", kind: "sunday", presiderId: frLuis?.id },
-    // Weekday
-    { dayOfWeek: 1, time: "08:00:00", kind: "daily" },
-    { dayOfWeek: 2, time: "08:00:00", kind: "daily" },
-    { dayOfWeek: 3, time: "08:00:00", kind: "daily" },
-    { dayOfWeek: 4, time: "08:00:00", kind: "daily" },
-    { dayOfWeek: 5, time: "08:00:00", kind: "daily" },
+    // Daily Mass — Mon through Sat at 9 AM, all livestreamed.
+    { dayOfWeek: 1, time: "09:00:00", kind: "daily", liveStreamUrl: liveUrl },
+    { dayOfWeek: 2, time: "09:00:00", kind: "daily", liveStreamUrl: liveUrl },
+    { dayOfWeek: 3, time: "09:00:00", kind: "daily", liveStreamUrl: liveUrl },
+    { dayOfWeek: 4, time: "09:00:00", kind: "daily", liveStreamUrl: liveUrl },
+    { dayOfWeek: 5, time: "09:00:00", kind: "daily", liveStreamUrl: liveUrl },
+    { dayOfWeek: 6, time: "09:00:00", kind: "daily", liveStreamUrl: liveUrl },
+    // Saturday Vigil at 5 PM (not livestreamed).
+    { dayOfWeek: 6, time: "17:00:00", kind: "vigil" },
+    // Sunday 8, 10 (livestreamed), 12, 6.
+    { dayOfWeek: 0, time: "08:00:00", kind: "sunday" },
+    { dayOfWeek: 0, time: "10:00:00", kind: "sunday", liveStreamUrl: liveUrl },
+    { dayOfWeek: 0, time: "12:00:00", kind: "sunday" },
+    { dayOfWeek: 0, time: "18:00:00", kind: "sunday" },
   ]);
 
-  console.log("  ✓ mass_times (10 entries — vigil + 4 Sunday + 5 weekday)");
+  console.log(
+    "  ✓ mass_times (11 entries — 6 daily livestreamed + vigil + 4 Sunday)",
+  );
 }

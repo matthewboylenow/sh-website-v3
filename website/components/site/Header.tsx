@@ -16,7 +16,7 @@ export function Header() {
         <div className="flex items-center justify-between gap-6 py-4">
           <Link
             href="/"
-            className="font-serif text-lg font-bold tracking-tight text-white hover:text-cream"
+            className="font-serif text-lg font-bold tracking-tight text-white hover:text-gold"
           >
             Saint Helen
           </Link>
@@ -27,7 +27,7 @@ export function Header() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="text-sm font-medium text-white/85 hover:text-white"
+                    className="text-sm font-medium text-white hover:text-gold"
                   >
                     {item.label}
                   </Link>
@@ -38,7 +38,7 @@ export function Header() {
 
           <Link
             href="/give"
-            className="inline-flex items-center rounded-pill bg-rust px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rust-dark"
+            className="inline-flex items-center rounded-pill bg-rust px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rust-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
           >
             Give
           </Link>

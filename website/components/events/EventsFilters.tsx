@@ -2,21 +2,27 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useTransition } from "react";
-import { AUDIENCES, CATEGORIES } from "@/lib/events-filters";
 
 /**
  * Filter sidebar — URL-synced via searchParams. Server Component
  * does the actual filtering; this just pushes the chosen state into
  * the URL. Shared links preserve filter state.
+ *
+ * Audience and category options come from /admin/settings/taxonomies
+ * via siteSettings — passed in by the Server Component parent.
  */
 export function EventsFilters({
   audience,
   category,
   q,
+  audienceOptions,
+  categoryOptions,
 }: {
   audience: string;
   category: string | null;
   q: string;
+  audienceOptions: readonly string[];
+  categoryOptions: readonly string[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -46,7 +52,7 @@ export function EventsFilters({
         className="relative mb-6"
         onSubmit={(e) => {
           e.preventDefault();
-          const input = (e.currentTarget.elements.namedItem("q") as HTMLInputElement);
+          const input = e.currentTarget.elements.namedItem("q") as HTMLInputElement;
           pushWith({ q: input.value.trim() });
         }}
       >
@@ -65,7 +71,10 @@ export function EventsFilters({
 
       <FilterGroup
         title="Audience"
-        options={AUDIENCES.map((a) => ({ key: a.key, label: a.label }))}
+        options={[
+          { key: "all", label: "All audiences" },
+          ...audienceOptions.map((k) => ({ key: k, label: prettify(k) })),
+        ]}
         selected={audience}
         onSelect={(k) => pushWith({ audience: k })}
       />
@@ -74,7 +83,7 @@ export function EventsFilters({
         title="Category"
         options={[
           { key: "all", label: "All categories" },
-          ...CATEGORIES.map((c) => ({ key: c.key, label: c.label })),
+          ...categoryOptions.map((k) => ({ key: k, label: prettify(k) })),
         ]}
         selected={category ?? "all"}
         onSelect={(k) => pushWith({ category: k })}
@@ -89,6 +98,10 @@ export function EventsFilters({
       </button>
     </aside>
   );
+}
+
+function prettify(key: string): string {
+  return key.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function FilterGroup({
@@ -117,9 +130,7 @@ function FilterGroup({
                 aria-pressed={active}
                 onClick={() => onSelect(o.key)}
                 className={`flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-[14px] transition-colors ${
-                  active
-                    ? "bg-navy text-white"
-                    : "text-ink hover:bg-cream"
+                  active ? "bg-navy text-white" : "text-ink hover:bg-cream"
                 }`}
               >
                 <span>{o.label}</span>

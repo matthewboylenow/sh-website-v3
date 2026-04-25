@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
+import { TagPicker } from "@/components/admin/TagPicker";
 import {
   createEventAction,
   setEventStatusAction,
@@ -39,12 +40,16 @@ export function EventForm({
   eventId,
   defaultValues,
   photoPreviewUrl,
+  audienceOptions,
+  categoryOptions,
 }: {
   mode: "create" | "edit";
   eventId?: string;
   defaultValues: Partial<EventFormValues>;
   /** Already-resolved image URL for the existing photoBlobKey. */
   photoPreviewUrl?: string | null;
+  audienceOptions: readonly string[];
+  categoryOptions: readonly string[];
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -129,7 +134,12 @@ export function EventForm({
           />
         </Field>
 
-        <Field name="lede" label="Lede" errors={errors.lede}>
+        <Field
+          name="lede"
+          label="Summary"
+          hint="One-sentence teaser shown on cards and the hero. Up to 500 characters."
+          errors={errors.lede}
+        >
           <textarea
             id="ev-lede"
             name="lede"
@@ -177,30 +187,26 @@ export function EventForm({
         <Field
           name="audiences"
           label="Audiences"
-          hint="Comma-separated. Used by the events filter (families, teens, adults, all-parish, …)."
+          hint="Who is this event for? Manage the list at Settings → Taxonomies."
           errors={errors.audiences}
         >
-          <input
-            id="ev-audiences"
+          <TagPicker
             name="audiences"
-            type="text"
-            defaultValue={(defaultValues.audiences ?? []).join(", ")}
-            className="form-input"
+            options={audienceOptions}
+            defaultValue={defaultValues.audiences ?? []}
           />
         </Field>
 
         <Field
           name="categories"
           label="Categories"
-          hint="Comma-separated. worship, formation, fellowship, service, sacraments, music."
+          hint="What kind of event? Manage the list at Settings → Taxonomies."
           errors={errors.categories}
         >
-          <input
-            id="ev-categories"
+          <TagPicker
             name="categories"
-            type="text"
-            defaultValue={(defaultValues.categories ?? []).join(", ")}
-            className="form-input"
+            options={categoryOptions}
+            defaultValue={defaultValues.categories ?? []}
           />
         </Field>
 

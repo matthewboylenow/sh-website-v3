@@ -159,7 +159,7 @@ export default async function MassPage() {
           <div className="mt-10 grid gap-8 md:grid-cols-3">
             <MassGroup title="Saturday Vigil" entries={vigil} />
             <MassGroup title="Sunday" entries={sunday} />
-            <MassGroup title="Weekday (Mon–Fri)" entries={daily} />
+            <MassGroup title="Daily Mass (Mon–Sat)" entries={daily} />
           </div>
         </Container>
       </section>
@@ -189,9 +189,11 @@ function MassGroup({
               <span className="font-serif text-lg font-bold text-navy">
                 {formatTime(m.time)}
               </span>
-              <span className="text-sm text-ink-2">
-                {m.label ?? (m.kind === "vigil" ? "Vigil" : m.kind === "sunday" ? "Sunday" : "Weekday")}
-              </span>
+              {m.liveStreamUrl && (
+                <span className="rounded-pill bg-rust-pale px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-rust-dark">
+                  Livestream
+                </span>
+              )}
             </li>
           ))}
         </ul>

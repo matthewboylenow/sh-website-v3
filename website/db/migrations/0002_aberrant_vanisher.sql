@@ -1,0 +1,1 @@
+ALTER TABLE "site_settings" ADD COLUMN "taxonomies" jsonb DEFAULT '{"eventCategories":[],"eventAudiences":[],"ministryAudiences":[]}'::jsonb NOT NULL;

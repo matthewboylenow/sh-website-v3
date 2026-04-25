@@ -344,6 +344,17 @@ export type MatchmakerManifest = {
   fallbackTags?: string[];
 };
 
+/**
+ * Editor-managed taxonomies. Replaces hard-coded option lists across
+ * the admin so editors can add/remove audiences and categories without
+ * a deploy.
+ */
+export type Taxonomies = {
+  eventCategories: string[];
+  eventAudiences: string[];
+  ministryAudiences: string[];
+};
+
 export const siteSettings = pgTable(
   "site_settings",
   {
@@ -364,6 +375,10 @@ export const siteSettings = pgTable(
       .$type<MatchmakerManifest>()
       .notNull()
       .default({ questions: [] }),
+    taxonomies: jsonb("taxonomies")
+      .$type<Taxonomies>()
+      .notNull()
+      .default({ eventCategories: [], eventAudiences: [], ministryAudiences: [] }),
     footerCopy: text("footer_copy"),
     densityScale: numeric("density_scale", { precision: 3, scale: 2 })
       .default("1.00")

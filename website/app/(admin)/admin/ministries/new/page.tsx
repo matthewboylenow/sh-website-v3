@@ -2,15 +2,24 @@ import Link from "next/link";
 import { asc } from "drizzle-orm";
 import { db } from "@/db";
 import { staff } from "@/db/schema";
+import { getSiteSettings } from "@/lib/queries/site-settings.query";
 import { MinistryForm } from "../MinistryForm";
 
 export const metadata = { title: "New ministry · Admin" };
 
 export default async function NewMinistryPage() {
-  const staffOptions = await db
-    .select({ id: staff.id, name: staff.name })
-    .from(staff)
-    .orderBy(asc(staff.orderingPriority), asc(staff.name));
+  const [staffOptions, settings] = await Promise.all([
+    db
+      .select({ id: staff.id, name: staff.name })
+      .from(staff)
+      .orderBy(asc(staff.orderingPriority), asc(staff.name)),
+    getSiteSettings(),
+  ]);
+  const tax = settings?.taxonomies ?? {
+    eventCategories: [],
+    eventAudiences: [],
+    ministryAudiences: [],
+  };
 
   return (
     <div>
@@ -24,6 +33,7 @@ export default async function NewMinistryPage() {
         <MinistryForm
           mode="create"
           staffOptions={staffOptions}
+          audienceOptions={tax.ministryAudiences}
           defaultValues={{
             slug: "",
             name: "",

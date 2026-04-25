@@ -1,9 +1,17 @@
 import Link from "next/link";
+import { getSiteSettings } from "@/lib/queries/site-settings.query";
 import { EventForm } from "../EventForm";
 
 export const metadata = { title: "New event · Admin" };
 
-export default function NewEventPage() {
+export default async function NewEventPage() {
+  const settings = await getSiteSettings();
+  const tax = settings?.taxonomies ?? {
+    eventCategories: [],
+    eventAudiences: [],
+    ministryAudiences: [],
+  };
+
   // Default the start/end to "today at 6 PM" / "today at 8 PM" — most events
   // are evenings; editor adjusts as needed.
   const start = new Date();
@@ -27,6 +35,8 @@ export default function NewEventPage() {
       <div className="mt-8">
         <EventForm
           mode="create"
+          audienceOptions={tax.eventAudiences}
+          categoryOptions={tax.eventCategories}
           defaultValues={{
             slug: "",
             title: "",

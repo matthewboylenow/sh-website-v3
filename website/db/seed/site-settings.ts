@@ -6,9 +6,41 @@
  */
 
 import { sql } from "drizzle-orm";
-import type { MatchmakerManifest } from "../schema";
+import type { MatchmakerManifest, Taxonomies } from "../schema";
 import { db } from "../index";
 import { siteSettings } from "../schema";
+
+/** Sensible starter lists. Editors expand these via /admin/settings/taxonomies. */
+const DEFAULT_TAXONOMIES: Taxonomies = {
+  eventCategories: [
+    "worship",
+    "formation",
+    "fellowship",
+    "service",
+    "sacraments",
+    "music",
+    "outreach",
+  ],
+  eventAudiences: [
+    "all-parish",
+    "families",
+    "teens",
+    "young-adults",
+    "adults",
+    "women",
+    "men",
+    "newcomers",
+  ],
+  ministryAudiences: [
+    "adults",
+    "men",
+    "women",
+    "teens",
+    "families",
+    "newcomers",
+    "young-adults",
+  ],
+};
 
 /**
  * Default Matchmaker manifest. Tuned to the dev-seeded ministries'
@@ -134,19 +166,23 @@ export async function seedSiteSettings() {
         primaryUrl: "", // populated from /admin/settings/giving when Touchpoint URLs are provided
       },
       matchmaker: DEFAULT_MATCHMAKER,
+      taxonomies: DEFAULT_TAXONOMIES,
       footerCopy: "A Roman Catholic parish in the Archdiocese of Newark.",
       densityScale: "1.00",
     })
     .onConflictDoUpdate({
       target: siteSettings.id,
-      // Only seed matchmaker if it's still the empty default — don't
-      // clobber an admin's curated quiz on re-seed.
+      // Only fill defaults when the columns are still empty — don't
+      // clobber an admin's curated lists on re-seed.
       set: {
         matchmaker: sql`CASE WHEN ${siteSettings.matchmaker} = '{"questions":[]}'::jsonb
                              THEN ${JSON.stringify(DEFAULT_MATCHMAKER)}::jsonb
                              ELSE ${siteSettings.matchmaker} END`,
+        taxonomies: sql`CASE WHEN ${siteSettings.taxonomies} = '{"eventCategories":[],"eventAudiences":[],"ministryAudiences":[]}'::jsonb
+                             THEN ${JSON.stringify(DEFAULT_TAXONOMIES)}::jsonb
+                             ELSE ${siteSettings.taxonomies} END`,
       },
     });
 
-  console.log("  ✓ site_settings (id=1) — matchmaker seeded if empty");
+  console.log("  ✓ site_settings (id=1) — matchmaker + taxonomies seeded if empty");
 }

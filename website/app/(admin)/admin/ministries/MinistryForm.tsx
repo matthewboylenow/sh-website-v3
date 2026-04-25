@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
+import { TagPicker } from "@/components/admin/TagPicker";
 import { MINISTRY_CATEGORIES } from "@/lib/validators/ministries";
 import {
   createMinistryAction,
@@ -34,12 +35,14 @@ export function MinistryForm({
   defaultValues,
   staffOptions,
   photoPreviewUrl,
+  audienceOptions,
 }: {
   mode: "create" | "edit";
   ministryId?: string;
   defaultValues: Partial<Values>;
   staffOptions: { id: string; name: string }[];
   photoPreviewUrl?: string | null;
+  audienceOptions: readonly string[];
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -177,15 +180,13 @@ export function MinistryForm({
           <AdminField
             name="audiences"
             label="Audiences"
-            hint="Comma-separated. Used by matchmaker + filters."
+            hint="Internal-only — public ministry pages don't display these. Manage the list at Settings → Taxonomies."
             errors={errors.audiences}
           >
-            <input
-              id="audiences-input"
+            <TagPicker
               name="audiences"
-              type="text"
-              defaultValue={(defaultValues.audiences ?? []).join(", ")}
-              className="form-input"
+              options={audienceOptions}
+              defaultValue={defaultValues.audiences ?? []}
             />
           </AdminField>
           <AdminField

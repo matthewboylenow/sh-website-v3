@@ -15,6 +15,13 @@
       "when": 1777128396413,
       "tag": "0001_flashy_darkstar",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777153371508,
+      "tag": "0002_aberrant_vanisher",
+      "breakpoints": true
     }
   ]
 }
