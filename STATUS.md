@@ -14,7 +14,7 @@ Last updated: **2026-04-25**
 | 1 | Design system | 🟡 In progress (basic version live; a11y widget + full components.html parity pending) |
 | 2 | Database (Drizzle schema + seed) | ✅ Done (schema applied to Neon, dev seed run) |
 | 3 | Public site — homepage + 3 interiors | ✅ Done (4 routes wired to DB, filters URL-synced, build green) |
-| 4 | Admin shell, auth, ministry edits, matchmaker editor | ⬜ Queued |
+| 4 | Admin shell, auth, ministry edits, matchmaker editor | 🟡 Wave A done (auth + shell + events editor); Waves B/C queued |
 | 5 | Upload + CDN (Vercel Blob → cdn.sainthelen.org) | ⬜ Queued — needs DNS |
 | 6 | Public API routes | ⬜ Queued |
 | 7 | Backups + staging | ⬜ Queued |
@@ -116,12 +116,42 @@ All four routes from the spec render real data from Neon. Build prerenders `/`, 
 - **Real `/events/[slug]` detail pages** — homepage + events list link to them already; detail template itself is a Step 3 follow-up once admin editor lands.
 - **`/ministries`, `/ministries/[slug]`, `/bulletin`, `/give`, `/contact`** — linked from nav and homepage but pages aren't built yet. Next.js will 404 until we scaffold them. Fine for internal review; flag before external stakeholders visit.
 
-### Step 4 · Admin
-- `(admin)/admin` shell (rail + topbar) per `backend.html §06`.
-- Events editor first (canonical pattern), then mass-times / ministries / staff / bulletins / seasonal-banners.
-- Sign-in page with Email-link and SMS-code tabs.
-- Ministry self-service draft → approve workflow (built dark; flag `ENABLE_MINISTRY_SELF_SERVICE=false`).
-- **Matchmaker editor (form-based v1)** — edits the questions, answer rows, and per-answer ministry tag weights. Drag-drop visual tree explicitly deferred per resolved decisions.
+### Step 4 · Admin — Wave A done
+
+✅ **Auth foundation + admin shell + events editor are live.** Build green. End-to-end auth round-trip verified locally: /admin gates → /sign-in → magic link logs to server console → click → session set → /admin dashboard renders with seeded data.
+
+- **Auth.js v5** (`next-auth@beta`) with Drizzle adapter. JWT sessions, 30-day expiry. `auth.config.ts` is the edge-safe slice imported by `middleware.ts`; `auth.ts` is the full Node-only setup that wires the providers.
+- **Two sign-in methods:**
+  - **Magic-link email** via custom Email provider that calls `lib/email.ts → sendMagicLink`. With `RESEND_API_KEY` set, real Resend send. Without it, **dev fallback prints the link to the server console** with a clear "📧 DEV MAGIC LINK" banner.
+  - **SMS code** via Twilio Verify, two-step. `POST /api/auth/sms/start` triggers the send (or logs `📱 DEV SMS CODE` with code `123456` when Twilio creds are missing). `signIn("sms", { phone, code })` runs through a Credentials provider whose `authorize` calls `checkSmsCode` and looks up the existing user. SMS sign-in is **invitation-only** — no account auto-creation.
+- **`/sign-in` page** with two-tab client island. Email tab: single email input. SMS tab: phone → OTP step. Friendly error states. Branded with parish wordmark.
+- **`middleware.ts`** uses the slim auth config to gate `/admin/*` and redirect to `/sign-in?callbackUrl=…`. Already-signed-in users hitting `/sign-in` get bounced to `/admin`.
+- **Admin shell** at `app/(admin)/layout.tsx`: sticky navy topbar with parish brand + signed-in user + sign-out (Server Action), left rail with Content / Settings groupings, role-aware (`ministry_lead` only sees Ministries items).
+- **`/admin` dashboard** — content-type tiles with live row counts; pending-edits banner appears when `ministry_edits.status = 'pending'` rows exist.
+- **Events editor (canonical pattern):**
+  - `/admin/events` list with All / Drafts / Published / Archived tabs and status pill, badge counts, "View on site →" deep links.
+  - `/admin/events/new` and `/admin/events/[id]` share `EventForm.tsx` — RHF-free server-form using a Server Action; same Zod schema (`lib/validators/events.ts`) the public API will use in Step 6.
+  - Server Actions in `_actions.ts`: `createEventAction`, `updateEventAction`, `setEventStatusAction` (publish/unpublish), `deleteEventAndRedirect` (soft delete via `archived` status). All call `revalidateTag("events")` so public-site Server Components flip on the next request.
+  - Role gate: `admin` and `editor` can write; `ministry_lead` is forbidden at action level.
+- **`AUTH_SECRET`** generated locally and in `.env.local` (gitignored). Matthew will set the same on Vercel for production. Fresh value: `openssl rand -base64 32`.
+
+### Step 4 · Wave B (queued)
+
+Other content editors, all cloning the events pattern:
+- `/admin/mass-times` — recurring + override rows
+- `/admin/ministries` — full ministry record
+- `/admin/staff` — pastor / clergy / lay staff
+- `/admin/bulletins` — weeks + PDF (upload bit waits for Step 5)
+- `/admin/seasonal-banners` — date-windowed homepage banner
+- `/admin/settings` (general) + `/admin/settings/giving` (Touchpoint URLs)
+
+### Step 4 · Wave C (queued)
+
+- `/admin/users` — invite / role / deactivate
+- `/admin/account` — self-service (name, phone, preferred auth, sign-out-everywhere)
+- **Ministry-edits draft → approve workflow** built behind `ENABLE_MINISTRY_SELF_SERVICE=false`
+- **Matchmaker editor (form-based v1)** — questions / answer rows / per-answer ministry tag weights. Drag-drop visual tree deferred per resolved decisions.
+- `/admin/approvals` queue UI for pending ministry edits
 
 ### Step 5 · Upload + CDN
 - Client-upload flow per `backend.html §08`.

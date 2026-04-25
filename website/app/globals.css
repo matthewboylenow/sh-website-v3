@@ -265,6 +265,31 @@ small { font-size: var(--fs-small); color: var(--fg-3); }
   margin: 0 0 var(--space-4);
 }
 
+/* Form input baseline — used heavily in the admin */
+.form-input {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--sh-rule);
+  background: white;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  transition: border-color var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard);
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--sh-navy);
+  box-shadow: 0 0 0 2px rgba(205, 83, 52, 0.4);
+}
+.form-input::placeholder {
+  color: var(--sh-ink-4);
+}
+textarea.form-input {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  resize: vertical;
+}
+
 /* Reduced-motion respect */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
