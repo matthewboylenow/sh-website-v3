@@ -267,7 +267,73 @@ The public-facing endpoints from `backend.html §05` that drive forms and extern
 
 ---
 
-## 🐛 Known issues
+## 🛑 Paused — end-to-end testing in progress
 
-- **Production sign-in needs Vercel env vars set.** Local works because `.env.local` has them; production hits `MissingSecret: Please define a 'secret'` until `AUTH_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`, `TWILIO_*`, `DATABASE_URL`, `BLOB_READ_WRITE_TOKEN` are mirrored in Vercel → Project Settings → Environment Variables → Production, then redeployed. Magic-link email and SMS both depend on this.
-- **USCCB readings scraper** returns null on the live page (markup mismatch). Page falls back to the outbound link. Needs a fresh look at USCCB's current HTML.
+Build paused after Step 6. Step 7 deferred. Step 8 (Fathom + Subsplash) queued. Matthew is verifying everything end-to-end before we keep going.
+
+### Test checklist (work top-down)
+
+**0 · Vercel env vars + redeploy**
+- [ ] Set in Vercel → Project Settings → Environment Variables → Production: `AUTH_SECRET` (fresh one — `openssl rand -base64 32`), `DATABASE_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID`, `BLOB_READ_WRITE_TOKEN`, `NEXT_PUBLIC_ENABLE_GIVE_FAB=true`, `NEXT_PUBLIC_ENABLE_LIVESTREAM=true`, `NEXT_PUBLIC_ENABLE_A11Y_WIDGET=true`, `ENABLE_MINISTRY_SELF_SERVICE=false`
+- [ ] Deployments → latest → ⋯ → **Redeploy** (env-var changes don't apply retroactively)
+
+**1 · Public site loads**
+- [ ] `/` — homepage hero, "This Sunday" mass peek, ministries spotlight, featured events, bulletin block, support CTA
+- [ ] `/im-new` — three steps + welcome form
+- [ ] `/mass` — day picker (today is selected), readings card (citations or USCCB fallback), weekly schedule
+- [ ] `/events` — featured event + filtered list, try `?audience=families`
+- [ ] `/ministries` — all 8 ministries, category filter, "Open the matchmaker" button
+- [ ] `/ministries/choir` — full detail page with sidebar
+- [ ] `/bulletin` — empty state ("No bulletins yet")
+
+**2 · Matchmaker quiz**
+- [ ] Click "Open the matchmaker" on `/ministries` (or homepage)
+- [ ] Walk through 3 questions, submit
+- [ ] Top-5 ministries should appear with score badges; `family + service + lots` should put St. Vincent + Knights at top
+
+**3 · Welcome form** (real email send)
+- [ ] Submit `/im-new` welcome form with your real email
+- [ ] Should land in `mboyle@sainthelen.org` inbox (per `welcomeFormRecipients` setting)
+- [ ] Reply-To should be your email so a parish staffer can hit Reply directly
+
+**4 · Sign-in — email magic link**
+- [ ] Visit `/admin` → bounces to `/sign-in`
+- [ ] Email tab → enter `mboyle@sainthelen.org` → "Send the link"
+- [ ] Magic link arrives via Resend (from `no-reply@send.sainthelen.org`)
+- [ ] Click → land in `/admin` dashboard
+
+**5 · Sign-in — SMS**
+- [ ] Sign out
+- [ ] SMS tab → enter `9084038480` (plain 10 digits)
+- [ ] Receive 6-digit code from Twilio
+- [ ] Enter code → land in `/admin`
+
+**6 · Admin walk-through** (signed in as admin)
+- [ ] Dashboard tile counts match seed (8 ministries, 4 staff, 5 events, etc.)
+- [ ] `/admin/events` list renders 5 seeded events with status pills
+- [ ] Edit Harvest Fest → drop an image → save → check `/` (Featured Events) shows the photo
+- [ ] `/admin/ministries` → edit Parish Choir → upload a photo → save → check `/ministries/choir` and homepage spotlight
+- [ ] `/admin/staff` → upload a headshot → save
+- [ ] `/admin/seasonal-banners` → create a banner with current dates → check homepage shows it
+- [ ] `/admin/bulletins/new` → upload a real PDF for next Sunday → check `/bulletin` shows it → click row → modal opens with PDF
+- [ ] `/admin/mass-times` → flip a row's livestream URL → save
+- [ ] `/admin/settings` → tweak footer copy → check public site footer
+- [ ] `/admin/settings/giving` → put your Touchpoint URLs in (when ready)
+- [ ] `/admin/matchmaker` → tweak a question → save → re-run the public quiz, verify the change shows
+
+**7 · Users + roles**
+- [ ] `/admin/users` → invite a test address with role `editor`
+- [ ] Sign out → sign in as the new user → verify limited admin access (no Site Settings, no Users)
+- [ ] Sign back in as admin → change their role → verify takes effect
+
+**8 · Mobile**
+- [ ] Test homepage on a phone (or DevTools mobile preview at 390 px)
+- [ ] Give FAB should appear after scrolling 400 px
+
+### Known things that are expected NOT to work
+
+- USCCB scraper returns null right now → the readings card shows the outbound link instead of inline citations. This is graceful degradation, not a bug.
+- `/give` and `/contact` routes don't exist yet — links land on the branded `/(site)` 404. Defer until pre-launch polish.
+- `/events/[slug]` detail pages don't exist yet — clicking an event card from the public list lands on the 404. Same.
+- Subsplash livestream slot on `/mass` shows "Subsplash embed lands in Step 8 — Matthew will supply the widget."
+- Bulletins are empty until you upload one in admin.
