@@ -30,10 +30,11 @@ export default {
     },
     jwt({ token, user }) {
       // user is populated on initial sign-in; copy over the role claim.
+      // ministryIds is hydrated from the DB in auth.ts's jwt callback
+      // since auth.config.ts (this file) is edge-safe and DB-less.
       if (user) {
         token.userId = user.id;
         token.role = (user as { role?: string }).role ?? "editor";
-        token.ministryId = (user as { ministryId?: string | null }).ministryId ?? null;
       }
       return token;
     },
@@ -41,7 +42,7 @@ export default {
       if (session.user) {
         session.user.id = (token.userId as string) ?? session.user.id;
         session.user.role = (token.role as Role) ?? "editor";
-        session.user.ministryId = (token.ministryId as string | null) ?? null;
+        session.user.ministryIds = (token.ministryIds as string[]) ?? [];
       }
       return session;
     },

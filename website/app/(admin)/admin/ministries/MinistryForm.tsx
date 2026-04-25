@@ -6,6 +6,7 @@ import { AdminField } from "@/components/admin/AdminField";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { TagPicker } from "@/components/admin/TagPicker";
+import type { MinistryInquiryConfig } from "@/db/schema";
 import { MINISTRY_CATEGORIES } from "@/lib/validators/ministries";
 import {
   createMinistryAction,
@@ -28,7 +29,27 @@ type Values = {
   isAcceptingNew: boolean;
   orderingPriority: number;
   status: "draft" | "published" | "archived";
+  inquiryConfig: MinistryInquiryConfig | null;
 };
+
+const DEFAULT_BUTTONS: MinistryInquiryConfig["buttons"] = [
+  { kind: "join", label: "Join this ministry", enabled: false },
+  { kind: "inquire", label: "Inquire about this ministry", enabled: true },
+  { kind: "volunteer", label: "Volunteer", enabled: false },
+];
+
+function normalizeConfig(c: MinistryInquiryConfig | null | undefined): MinistryInquiryConfig {
+  const incoming = c?.buttons ?? [];
+  const buttons = DEFAULT_BUTTONS.map((d) => {
+    const match = incoming.find((b) => b.kind === d.kind);
+    return match ?? d;
+  });
+  return {
+    enabled: c?.enabled ?? true,
+    buttons,
+    customFields: c?.customFields,
+  };
+}
 
 export function MinistryForm({
   mode,
@@ -49,6 +70,9 @@ export function MinistryForm({
   const [pending, start] = useTransition();
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [topError, setTopError] = useState<string | null>(null);
+  const [inquiryCfg, setInquiryCfg] = useState<MinistryInquiryConfig>(
+    normalizeConfig(defaultValues.inquiryConfig ?? null),
+  );
 
   const onSubmit = (formData: FormData) => {
     setErrors({});
@@ -204,6 +228,13 @@ export function MinistryForm({
             />
           </AdminField>
         </div>
+
+        <InquiryConfigEditor value={inquiryCfg} onChange={setInquiryCfg} />
+        <input
+          type="hidden"
+          name="inquiryConfig"
+          value={JSON.stringify(inquiryCfg)}
+        />
       </div>
 
       <aside className="space-y-6">
@@ -331,5 +362,67 @@ export function MinistryForm({
         </div>
       </aside>
     </form>
+  );
+}
+
+function InquiryConfigEditor({
+  value,
+  onChange,
+}: {
+  value: MinistryInquiryConfig;
+  onChange: (v: MinistryInquiryConfig) => void;
+}) {
+  const setEnabled = (enabled: boolean) => onChange({ ...value, enabled });
+  const setButton = (
+    kind: MinistryInquiryConfig["buttons"][number]["kind"],
+    patch: Partial<MinistryInquiryConfig["buttons"][number]>,
+  ) =>
+    onChange({
+      ...value,
+      buttons: value.buttons.map((b) => (b.kind === kind ? { ...b, ...patch } : b)),
+    });
+
+  return (
+    <div className="rounded-lg border border-rule bg-white p-5">
+      <div className="flex items-baseline justify-between gap-4">
+        <h3 className="font-serif text-lg font-bold text-navy">Inquiry buttons</h3>
+        <label className="flex items-center gap-2 text-xs text-ink-2">
+          <input
+            type="checkbox"
+            checked={value.enabled}
+            onChange={(e) => setEnabled(e.target.checked)}
+            className="size-4"
+          />
+          Form enabled
+        </label>
+      </div>
+      <p className="mt-1 text-xs text-ink-3">
+        Toggle which buttons appear on the public ministry page. Edit the label to
+        match the ask (e.g. &ldquo;Sign up for Confirmation prep&rdquo;).
+      </p>
+      <ul className="mt-4 space-y-3">
+        {value.buttons.map((b) => (
+          <li key={b.kind} className="flex items-center gap-3">
+            <label className="flex w-24 shrink-0 items-center gap-2 text-xs font-semibold text-ink-2">
+              <input
+                type="checkbox"
+                checked={b.enabled}
+                onChange={(e) => setButton(b.kind, { enabled: e.target.checked })}
+                className="size-4"
+              />
+              <span className="capitalize">{b.kind}</span>
+            </label>
+            <input
+              type="text"
+              value={b.label}
+              maxLength={80}
+              disabled={!b.enabled}
+              onChange={(e) => setButton(b.kind, { label: e.target.value })}
+              className="form-input flex-1 disabled:bg-stone-50 disabled:text-ink-3"
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

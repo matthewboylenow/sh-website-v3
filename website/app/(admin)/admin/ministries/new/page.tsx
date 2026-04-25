@@ -42,6 +42,7 @@ export default async function NewMinistryPage() {
             status: "draft",
             audiences: [],
             matchmakerTags: [],
+            inquiryConfig: null,
           }}
         />
       </div>

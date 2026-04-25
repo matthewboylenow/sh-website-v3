@@ -5,6 +5,7 @@ import { PhotoPlaceholder } from "@/components/site/PhotoPlaceholder";
 import { RichTextRenderer } from "@/components/site/RichTextRenderer";
 import { assetUrl } from "@/lib/blob";
 import { getMinistryBySlug } from "@/lib/queries/ministries.query";
+import { MinistryInquiryForm } from "./MinistryInquiryForm";
 
 export const revalidate = 3600;
 
@@ -65,9 +66,12 @@ export default async function MinistryDetailPage({
               )}
 
               <div className="mt-8 flex flex-wrap gap-3">
-                {/* Per-ministry forms (Join / Inquire / Volunteer) land in
-                    Wave 11. For now, the only public action is browsing back
-                    to the directory — internal contact info stays in admin. */}
+                <a
+                  href="#get-involved"
+                  className="inline-flex items-center rounded-pill bg-rust px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rust-dark"
+                >
+                  Get involved
+                </a>
                 <Link
                   href="/ministries"
                   className="inline-flex items-center rounded-pill border border-rule bg-white px-6 py-3 text-sm font-semibold text-navy transition-colors hover:border-navy"
@@ -101,10 +105,7 @@ export default async function MinistryDetailPage({
                   className="text-[17px] leading-[1.7]"
                 />
               ) : (
-                <p className="text-ink-3">
-                  Description coming soon. A join / inquire / volunteer form
-                  will live here once Wave 11 lands.
-                </p>
+                <p className="text-ink-3">Description coming soon.</p>
               )}
             </article>
 
@@ -132,6 +133,17 @@ export default async function MinistryDetailPage({
               </div>
             </aside>
           </div>
+
+          {m.inquiryConfig?.enabled &&
+            m.inquiryConfig.buttons.some((b) => b.enabled) && (
+              <div id="get-involved" className="mt-16 scroll-mt-24">
+                <MinistryInquiryForm
+                  slug={m.slug}
+                  ministryName={m.name}
+                  config={m.inquiryConfig}
+                />
+              </div>
+            )}
         </Container>
       </section>
     </>

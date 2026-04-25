@@ -7,13 +7,17 @@ declare module "next-auth" {
     user: {
       id: string;
       role: Role;
-      ministryId: string | null;
+      /**
+       * Ministries this user leads, sourced from the ministry_leads
+       * join table at JWT-mint time. Empty array for admins/editors
+       * who don't also lead a ministry.
+       */
+      ministryIds: string[];
     } & DefaultSession["user"];
   }
 
   interface User {
     role?: Role;
-    ministryId?: string | null;
   }
 }
 
@@ -21,6 +25,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     userId?: string;
     role?: Role;
-    ministryId?: string | null;
+    ministryIds?: string[];
   }
 }

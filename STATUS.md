@@ -302,6 +302,25 @@ TipTap drives every long-form description in the admin. Output is sanitized HTML
 
 Build green — 41 routes. Sanitizer covers Edge + Node runtimes.
 
+## ✅ Shipped — Wave 11 inquiries pipeline
+
+Public visitors can submit Join / Inquire / Volunteer requests on every published ministry page; ministry leads + admins receive an email with one-click status buttons and manage the pipeline from `/admin/inquiries`. Migrated `users.ministry_id` → a many-to-many `ministry_leads` join so a person can lead any number of ministries (and vice versa).
+
+- **Schema (migration 0003).** New tables: `ministry_leads (user_id, ministry_id, is_primary, added_at, added_by)`, `inquiries (id, ministry_id, kind, name, email, phone, message, custom_answers, status, reason_code, notes, assigned_to, created_at, updated_at)`, `inquiry_events (id, inquiry_id, user_id, via_token, kind, payload, at)`. Dropped `users.ministry_id` after data-copy. Added `ministries.inquiry_config` jsonb (per-ministry button toggles + labels). **Note:** the migration was applied to Neon during Wave 11 build — combined with the deploy of this commit, `users` schema and code re-align.
+- **Auth.** `session.user.ministryIds[]` replaces `ministryId`. JWT hydrates from the join table on initial sign-in; admins re-sign-in to pick up new lead assignments (real-time refresh via `session_version` is post-launch).
+- **Users & roles.** `/admin/users` invite + edit-role both take a multi-ministry chip picker; ministry-lead role enforced to require ≥1 ministry. Replace-set semantics on save.
+- **Per-ministry self-service.** `/admin/my-ministries` lands ministry leads on a card list (or auto-redirects when they lead exactly one). `AdminRail` differentiates ministry-lead surface from admin/editor surface.
+- **Public form.** `/ministries/[slug]` renders a "Get involved" section with the configured button row; clicking opens an inline form that POSTs to `/api/ministries/[slug]/inquire`. Rate-limited 5/hour/IP, validates with `InquirySubmitSchema`, inserts `inquiries` + `created` event, emails every lead of that ministry through Resend with HTML+text bodies + 3 magic-link action buttons + dashboard link.
+- **Magic-link actions.** `lib/inquiry-tokens.ts` HMAC-signs `{iid, act, exp}` payloads with 24h TTL using `AUTH_SECRET`. `/inquiries/[token]` confirms intent on GET (Outlook safe-link prefetch resistant), applies on POST via Server Action — idempotent and timeline-logged with `via_token=true`.
+- **Admin dashboard.** `/admin/inquiries` filters by status (default = open: new+contacted+stuck), ministry, and free-text search across name/email/message. `/admin/inquiries/[id]` shows the timeline (created → status changes → notes → assignments → magic-link clicks) plus status update, notes, and assignee picker. Authorization: admin/editor see everything; ministry leads see only their ministries.
+
+## ✅ Shipped — Wave 11.5 visual polish
+
+- **Frosted-pill header.** `<Header>` is a sticky pill at the top of every public page — `bg-navy/55 backdrop-blur-md` with rounded-full container. Inner nav links pick up subtle `hover:bg-white/10` chips. Reads on photo + cream + navy backgrounds equally.
+- **Full-bleed video hero.** New `<HeroVideo>` client component drives the homepage hero. Reads `NEXT_PUBLIC_HERO_VIDEO_URL` (and `NEXT_PUBLIC_HERO_VIDEO_POSTER`) — autoplay/muted/loop/playsinline with navy-to-black gradient overlay. Falls back to poster-only when video URL unset, falls further back to a navy gradient when neither is set. Honors `prefers-reduced-motion` (motion-reduce hides the video, shows the poster). Hero copy restyled to white-on-dark with gold eyebrow accents. **Swap point:** set `NEXT_PUBLIC_HERO_VIDEO_URL` in Vercel env vars when you have footage; ideal source is Mux/Cloudflare Stream over direct Vercel Blob for a looping background.
+
+Build green. SMS auth re-aligned with the new schema (no longer references the dropped `users.ministry_id`).
+
 ## 🛑 Paused — end-to-end testing in progress
 
 Build paused after Step 6. Step 7 deferred. Step 8 (Fathom + Subsplash) queued. Matthew is verifying everything end-to-end before we keep going.

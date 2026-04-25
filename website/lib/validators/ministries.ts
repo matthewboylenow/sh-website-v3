@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { InquiryConfigSchema } from "./inquiries";
 
 const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -30,6 +31,7 @@ const baseFields = {
   isAcceptingNew: z.boolean().default(true),
   orderingPriority: z.coerce.number().int().min(0).max(9999).default(0),
   status: z.enum(["draft", "published", "archived"]).default("draft"),
+  inquiryConfig: InquiryConfigSchema.optional(),
 };
 
 export const MinistryCreateSchema = z.object(baseFields);

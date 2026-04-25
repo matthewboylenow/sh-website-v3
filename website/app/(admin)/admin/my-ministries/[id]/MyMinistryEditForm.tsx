@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
-import { submitMinistryEditAction } from "./_actions";
+import { submitMinistryEditAction } from "../_actions";
 
 type Defaults = {
   tagline: string | null;
@@ -13,7 +13,13 @@ type Defaults = {
   isAcceptingNew: boolean;
 };
 
-export function MinistryEditForm({ defaults }: { defaults: Defaults }) {
+export function MyMinistryEditForm({
+  ministryId,
+  defaults,
+}: {
+  ministryId: string;
+  defaults: Defaults;
+}) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [errors, setErrors] = useState<Record<string, string[]>>({});
@@ -25,7 +31,7 @@ export function MinistryEditForm({ defaults }: { defaults: Defaults }) {
     setErrors({});
     setTopError(null);
     start(async () => {
-      const r = await submitMinistryEditAction(formData);
+      const r = await submitMinistryEditAction(ministryId, formData);
       if (r.ok) {
         setSubmitted(true);
         router.refresh();
@@ -44,8 +50,7 @@ export function MinistryEditForm({ defaults }: { defaults: Defaults }) {
           Thanks — sent for review.
         </p>
         <p className="mt-2 text-sm text-ink-2">
-          An admin will approve or send back with notes. You&rsquo;ll get an
-          email when there&rsquo;s an answer.
+          An admin will approve or send back with notes.
         </p>
         <button
           type="button"
@@ -69,7 +74,7 @@ export function MinistryEditForm({ defaults }: { defaults: Defaults }) {
       <AdminField
         name="tagline"
         label="Tagline"
-        hint="Up to 120 characters. Shown on cards."
+        hint="Up to 120 characters."
         errors={errors.tagline}
       >
         <input
@@ -85,7 +90,7 @@ export function MinistryEditForm({ defaults }: { defaults: Defaults }) {
       <AdminField
         name="description"
         label="Description"
-        hint="Up to 1000 characters. Plain markdown only — no HTML."
+        hint="Up to 1000 characters. Plain text — no HTML."
         errors={errors.description}
       >
         <textarea

@@ -6,6 +6,7 @@ import authConfig from "./auth.config";
 import { db } from "./db";
 import {
   accounts,
+  ministryLeads,
   sessions,
   users,
   verificationTokens,
@@ -76,7 +77,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           email: user.email,
           name: user.name,
           role: user.role,
-          ministryId: user.ministryId,
         };
       },
     }),
@@ -91,27 +91,37 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       const baseRun = await authConfig.callbacks?.jwt?.(args);
       const merged = baseRun ?? token;
 
-      // For email-link sign-in, `user` is the DB row but `role` /
-      // `ministryId` columns aren't auto-mapped. Read them.
+      // On initial sign-in, hydrate role + ministryIds from the DB.
+      // Email-link sign-in goes through the Drizzle adapter so `user`
+      // is the DB row, but we still need to load role + leads
+      // ourselves; the SMS Credentials provider returns `role` already.
       if (args.user && (!merged.role || !merged.userId)) {
         const userId = (args.user as { id?: string }).id;
         if (userId) {
           const [u] = await db
-            .select({
-              id: users.id,
-              role: users.role,
-              ministryId: users.ministryId,
-            })
+            .select({ id: users.id, role: users.role })
             .from(users)
             .where(eq(users.id, userId))
             .limit(1);
           if (u) {
             merged.userId = u.id;
             merged.role = u.role;
-            merged.ministryId = u.ministryId;
           }
         }
       }
+
+      // ministryIds come from the join table. Loaded on initial sign-in
+      // and cached in the JWT for the session lifetime; admins re-sign-
+      // in to pick up new lead assignments. (Real-time refresh will
+      // come post-launch alongside the `session_version` ticket.)
+      if (args.user && typeof merged.userId === "string") {
+        const rows = await db
+          .select({ ministryId: ministryLeads.ministryId })
+          .from(ministryLeads)
+          .where(eq(ministryLeads.userId, merged.userId));
+        merged.ministryIds = rows.map((r) => r.ministryId);
+      }
+
       return merged;
     },
   },

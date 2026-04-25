@@ -45,17 +45,40 @@ export const users = pgTable(
     preferredAuthMethod: text("preferred_auth_method", { enum: ["email", "sms"] })
       .notNull()
       .default("email"),
-    // ministry_lead role is scoped to one ministry via this FK.
-    // Lazy arrow avoids the forward-reference issue (ministries is defined
-    // later in the file) — Drizzle resolves it at query time.
-    ministryId: uuid("ministry_id").references(
-      (): AnyPgColumn => ministries.id,
-    ),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [
     uniqueIndex("users_email_uq").on(t.email),
     uniqueIndex("users_phone_uq").on(t.phone),
+  ],
+);
+
+/**
+ * Ministry leads — many-to-many between users and ministries. Replaces
+ * the old `users.ministry_id` column. A user can lead any number of
+ * ministries; a ministry can have any number of leads. Both ministry
+ * inquiry routing and the dashboard scoping read from here.
+ *
+ * `is_primary` (optional flag) marks the canonical contact when there
+ * are several — used for "where do I redirect on first sign-in" and
+ * email "primary lead" labels.
+ */
+export const ministryLeads = pgTable(
+  "ministry_leads",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    ministryId: uuid("ministry_id")
+      .notNull()
+      .references((): AnyPgColumn => ministries.id, { onDelete: "cascade" }),
+    isPrimary: boolean("is_primary").default(false).notNull(),
+    addedAt: timestamp("added_at").defaultNow().notNull(),
+    addedBy: uuid("added_by").references(() => users.id),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.ministryId] }),
+    index("ministry_leads_ministry_idx").on(t.ministryId),
   ],
 );
 
@@ -169,6 +192,14 @@ export const ministries = pgTable(
     status: text("status", { enum: ["draft", "published", "archived"] })
       .notNull()
       .default("draft"),
+    /**
+     * Per-ministry inquiry form configuration. Drives whether the public
+     * page shows a Join / Inquire / Volunteer button row.
+     */
+    inquiryConfig: jsonb("inquiry_config")
+      .$type<MinistryInquiryConfig>()
+      .notNull()
+      .default({ enabled: true, buttons: [{ kind: "inquire", label: "Inquire about this ministry", enabled: true }] }),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [
@@ -176,6 +207,89 @@ export const ministries = pgTable(
     index("ministries_status_idx").on(t.status),
     index("ministries_category_idx").on(t.category),
   ],
+);
+
+/** Per-ministry inquiry form config. */
+export type MinistryInquiryConfig = {
+  enabled: boolean;
+  buttons: {
+    kind: "join" | "inquire" | "volunteer";
+    label: string;
+    enabled: boolean;
+  }[];
+  customFields?: {
+    label: string;
+    type: "text" | "textarea";
+    required: boolean;
+  }[];
+};
+
+/* ------------------------------------------------------------------ */
+/* Inquiries — per-ministry contact submissions + audit timeline       */
+/* ------------------------------------------------------------------ */
+
+export const INQUIRY_STATUSES = [
+  "new",
+  "contacted",
+  "joined",
+  "declined",
+  "stuck",
+] as const;
+
+export const inquiries = pgTable(
+  "inquiries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ministryId: uuid("ministry_id")
+      .notNull()
+      .references(() => ministries.id, { onDelete: "cascade" }),
+    kind: text("kind", { enum: ["join", "inquire", "volunteer"] }).notNull(),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    phone: text("phone"),
+    message: text("message"),
+    /**
+     * Snapshot of any custom fields at submission time. Frozen-in-time
+     * so renaming fields later doesn't break old rows.
+     */
+    customAnswers: jsonb("custom_answers").$type<Record<string, string>>(),
+    status: text("status", { enum: INQUIRY_STATUSES }).notNull().default("new"),
+    /** Optional reason code for declined / stuck rows. */
+    reasonCode: text("reason_code"),
+    notes: text("notes"),
+    assignedTo: uuid("assigned_to").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("inquiries_ministry_idx").on(t.ministryId),
+    index("inquiries_status_idx").on(t.status),
+    index("inquiries_created_idx").on(t.createdAt),
+  ],
+);
+
+/**
+ * Audit timeline. Every status change, note add, and magic-link click
+ * lands here so admins can answer "who did what when" without grepping
+ * email forwarding chains.
+ */
+export const inquiryEvents = pgTable(
+  "inquiry_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    inquiryId: uuid("inquiry_id")
+      .notNull()
+      .references(() => inquiries.id, { onDelete: "cascade" }),
+    /** Null when the actor was anonymous-via-token (magic-link click). */
+    userId: uuid("user_id").references(() => users.id),
+    viaToken: boolean("via_token").default(false).notNull(),
+    kind: text("kind", {
+      enum: ["created", "status_change", "note_added", "assigned"],
+    }).notNull(),
+    payload: jsonb("payload"),
+    at: timestamp("at").defaultNow().notNull(),
+  },
+  (t) => [index("inquiry_events_inquiry_idx").on(t.inquiryId)],
 );
 
 /* ------------------------------------------------------------------ */
@@ -443,3 +557,7 @@ export type SeasonalBanner = typeof seasonalBanners.$inferSelect;
 export type SiteSettings = typeof siteSettings.$inferSelect;
 export type BlobAsset = typeof blobAssets.$inferSelect;
 export type MinistryEdit = typeof ministryEdits.$inferSelect;
+export type MinistryLead = typeof ministryLeads.$inferSelect;
+export type Inquiry = typeof inquiries.$inferSelect;
+export type InquiryEvent = typeof inquiryEvents.$inferSelect;
+export type InquiryStatus = (typeof INQUIRY_STATUSES)[number];

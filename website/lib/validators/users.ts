@@ -9,34 +9,40 @@ const phoneE164 = z
   .nullable()
   .or(z.literal(""));
 
+/**
+ * Multi-ministry assignments now live in the ministry_leads join
+ * table. Forms submit a comma-separated list of ministry UUIDs which
+ * is parsed server-side into the join-table rows.
+ */
 export const InviteUserSchema = z
   .object({
     email: z.email("Valid email required"),
     name: z.string().max(200).optional().nullable(),
     role: z.enum(ROLES).default("editor"),
     phone: phoneE164,
-    ministryId: z.uuid().optional().nullable().or(z.literal("")),
+    ministryIds: z.array(z.uuid()).default([]),
   })
   .refine(
-    (v) => v.role !== "ministry_lead" || Boolean(v.ministryId),
+    (v) => v.role !== "ministry_lead" || v.ministryIds.length > 0,
     {
-      path: ["ministryId"],
-      message: "Ministry leads must be scoped to a ministry.",
+      path: ["ministryIds"],
+      message: "Ministry leads must be scoped to at least one ministry.",
     },
   );
 
-export const SetRoleSchema = z
+export const SetUserSchema = z
   .object({
     userId: z.uuid(),
     role: z.enum(ROLES),
-    ministryId: z.uuid().optional().nullable().or(z.literal("")),
+    ministryIds: z.array(z.uuid()).default([]),
   })
   .refine(
-    (v) => v.role !== "ministry_lead" || Boolean(v.ministryId),
+    (v) => v.role !== "ministry_lead" || v.ministryIds.length > 0,
     {
-      path: ["ministryId"],
-      message: "Ministry leads must be scoped to a ministry.",
+      path: ["ministryIds"],
+      message: "Ministry leads must be scoped to at least one ministry.",
     },
   );
 
 export type InviteUserInput = z.infer<typeof InviteUserSchema>;
+export type SetUserInput = z.infer<typeof SetUserSchema>;

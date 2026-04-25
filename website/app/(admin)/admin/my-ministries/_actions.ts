@@ -1,9 +1,9 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { ministries, ministryEdits } from "@/db/schema";
+import { ministries, ministryEdits, ministryLeads } from "@/db/schema";
 import { ENABLE_MINISTRY_SELF_SERVICE } from "@/lib/flags";
 import { MinistryEditProposedSchema } from "@/lib/validators/ministry-edits";
 
@@ -12,19 +12,34 @@ type ActionResult =
   | { ok: false; fieldErrors: Record<string, string[]> }
   | { ok: false; error: string };
 
+/**
+ * Submit a proposed edit for a ministry the current user leads.
+ *
+ * Authorization: user must have a ministry_leads row for this ministry,
+ * OR be admin/editor (who can edit any ministry directly via /admin/
+ * ministries — but if they hit this route, treat them like a lead and
+ * route through the approval queue for consistency).
+ *
+ * Hard-gated by ENABLE_MINISTRY_SELF_SERVICE for ministry_lead role.
+ * Admin/editor bypass the flag.
+ */
 export async function submitMinistryEditAction(
+  ministryId: string,
   formData: FormData,
 ): Promise<ActionResult> {
-  if (!ENABLE_MINISTRY_SELF_SERVICE) {
-    return { ok: false, error: "Ministry self-service is disabled." };
-  }
-
   const session = await auth();
   if (!session?.user) return { ok: false, error: "Not signed in" };
-  if (session.user.role !== "ministry_lead")
-    return { ok: false, error: "Forbidden — ministry leads only" };
-  if (!session.user.ministryId)
-    return { ok: false, error: "No ministry scope on your account." };
+
+  const isPrivileged =
+    session.user.role === "admin" || session.user.role === "editor";
+  const leadsThis = session.user.ministryIds.includes(ministryId);
+
+  if (!isPrivileged && !leadsThis) {
+    return { ok: false, error: "You don't lead that ministry." };
+  }
+  if (!isPrivileged && !ENABLE_MINISTRY_SELF_SERVICE) {
+    return { ok: false, error: "Ministry self-service is disabled." };
+  }
 
   const get = (k: string) => {
     const v = formData.get(k);
@@ -66,9 +81,9 @@ export async function submitMinistryEditAction(
   const [ministry] = await db
     .select({ id: ministries.id })
     .from(ministries)
-    .where(eq(ministries.id, session.user.ministryId))
+    .where(eq(ministries.id, ministryId))
     .limit(1);
-  if (!ministry) return { ok: false, error: "Your assigned ministry no longer exists." };
+  if (!ministry) return { ok: false, error: "Ministry not found." };
 
   const [row] = await db
     .insert(ministryEdits)
@@ -81,4 +96,22 @@ export async function submitMinistryEditAction(
 
   if (!row) return { ok: false, error: "Insert returned no row" };
   return { ok: true, id: row.id };
+}
+
+/** Confirm the current user can lead this ministry. Server-side gate. */
+export async function userLeadsMinistry(
+  userId: string,
+  ministryId: string,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ userId: ministryLeads.userId })
+    .from(ministryLeads)
+    .where(
+      and(
+        eq(ministryLeads.userId, userId),
+        eq(ministryLeads.ministryId, ministryId),
+      ),
+    )
+    .limit(1);
+  return Boolean(row);
 }

@@ -16,6 +16,7 @@ export function InviteUserForm({
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [topError, setTopError] = useState<string | null>(null);
   const [role, setRole] = useState<"admin" | "editor" | "ministry_lead">("editor");
+  const [ministryIds, setMinistryIds] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
 
   const onSubmit = (formData: FormData) => {
@@ -26,6 +27,7 @@ export function InviteUserForm({
       if (result.ok) {
         router.refresh();
         setOpen(false);
+        setMinistryIds([]);
       } else if ("fieldErrors" in result) {
         setErrors(result.fieldErrors);
       } else {
@@ -51,6 +53,8 @@ export function InviteUserForm({
       action={onSubmit}
       className="rounded-lg border border-rule bg-white p-6 shadow-md"
     >
+      <input type="hidden" name="ministryIds" value={ministryIds.join(",")} />
+
       <div className="flex items-baseline justify-between">
         <h2 className="font-serif text-lg font-bold text-navy">Invite user</h2>
         <button
@@ -106,38 +110,30 @@ export function InviteUserForm({
           >
             {ROLES.map((r) => (
               <option key={r} value={r}>
-                {r === "ministry_lead" ? "Ministry lead" : r.charAt(0).toUpperCase() + r.slice(1)}
+                {prettyRole(r)}
               </option>
             ))}
           </select>
         </AdminField>
       </div>
 
-      {role === "ministry_lead" && (
-        <AdminField
-          name="ministryId"
-          label="Ministry"
-          required
-          hint="Ministry leads can only edit this ministry's record."
-          errors={errors.ministryId}
-          className="mt-4"
-        >
-          <select
-            id="ministryId-input"
-            name="ministryId"
-            required
-            defaultValue=""
-            className="form-input"
-          >
-            <option value="">— Select a ministry —</option>
-            {ministryOptions.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        </AdminField>
-      )}
+      <AdminField
+        name="ministryIds"
+        label={role === "ministry_lead" ? "Ministries (required)" : "Ministries (optional)"}
+        hint={
+          role === "ministry_lead"
+            ? "Pick one or more ministries this person will lead."
+            : "Admins / editors can also lead specific ministries — receive their inquiries, edit their pages."
+        }
+        errors={errors.ministryIds}
+        className="mt-4"
+      >
+        <MinistryPicker
+          options={ministryOptions}
+          selected={ministryIds}
+          onChange={setMinistryIds}
+        />
+      </AdminField>
 
       <div className="mt-6 flex items-center gap-3">
         <button
@@ -153,4 +149,51 @@ export function InviteUserForm({
       </div>
     </form>
   );
+}
+
+export function MinistryPicker({
+  options,
+  selected,
+  onChange,
+}: {
+  options: { id: string; name: string }[];
+  selected: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const toggle = (id: string) =>
+    onChange(selected.includes(id) ? selected.filter((s) => s !== id) : [...selected, id]);
+
+  if (options.length === 0) {
+    return (
+      <p className="text-xs text-ink-3">No ministries yet.</p>
+    );
+  }
+
+  return (
+    <ul className="flex flex-wrap gap-2">
+      {options.map((m) => {
+        const active = selected.includes(m.id);
+        return (
+          <li key={m.id}>
+            <button
+              type="button"
+              onClick={() => toggle(m.id)}
+              aria-pressed={active}
+              className={`rounded-pill border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                active
+                  ? "border-rust bg-rust text-white"
+                  : "border-rule bg-white text-ink-2 hover:border-rust"
+              }`}
+            >
+              {m.name}
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function prettyRole(r: "admin" | "editor" | "ministry_lead") {
+  return r === "ministry_lead" ? "Ministry lead" : r.charAt(0).toUpperCase() + r.slice(1);
 }

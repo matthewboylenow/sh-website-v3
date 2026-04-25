@@ -38,6 +38,16 @@ function parseForm(formData: FormData) {
   const cat = get("category");
   const isCat = (MINISTRY_CATEGORIES as readonly string[]).includes(cat);
 
+  let inquiryConfig: unknown = undefined;
+  const cfgRaw = get("inquiryConfig");
+  if (cfgRaw) {
+    try {
+      inquiryConfig = JSON.parse(cfgRaw);
+    } catch {
+      // Leave undefined — Zod will reject with a "Required" error if needed.
+    }
+  }
+
   return {
     slug: get("slug"),
     name: get("name"),
@@ -53,6 +63,7 @@ function parseForm(formData: FormData) {
     isAcceptingNew: formData.get("isAcceptingNew") === "on",
     orderingPriority: get("orderingPriority") || "0",
     status: (get("status") || "draft") as "draft" | "published" | "archived",
+    inquiryConfig,
   };
 }
 

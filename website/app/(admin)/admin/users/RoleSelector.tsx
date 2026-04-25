@@ -1,59 +1,99 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { ROLES } from "@/lib/validators/users";
-import { setUserRoleAction } from "./_actions";
+import { setUserAction } from "./_actions";
+import { MinistryPicker } from "./InviteUserForm";
 
 export function RoleSelector({
   userId,
   currentRole,
-  currentMinistryId,
+  currentMinistryIds,
   ministryOptions,
   selfId,
 }: {
   userId: string;
   currentRole: "admin" | "editor" | "ministry_lead";
-  currentMinistryId: string | null;
+  currentMinistryIds: string[];
   ministryOptions: { id: string; name: string }[];
   selfId: string;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
+  const [role, setRole] = useState(currentRole);
+  const [ministryIds, setMinistryIds] = useState<string[]>(currentMinistryIds);
+  const [editing, setEditing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (userId === selfId) {
     return (
-      <span className="text-xs text-ink-3" title="Use a different admin to change your own role.">
-        {prettyRole(currentRole)} (you)
-      </span>
+      <div>
+        <span className="text-xs text-ink-3" title="Use a different admin to change your own role.">
+          {prettyRole(currentRole)} (you)
+        </span>
+        {currentMinistryIds.length > 0 && (
+          <p className="mt-0.5 text-[11px] text-ink-3">
+            Leads {currentMinistryIds.length} ministr
+            {currentMinistryIds.length === 1 ? "y" : "ies"}
+          </p>
+        )}
+      </div>
     );
   }
 
-  const onSubmit = (formData: FormData) => {
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="text-left"
+      >
+        <span className="block text-sm text-ink">
+          {prettyRole(currentRole)}
+        </span>
+        {currentMinistryIds.length > 0 && (
+          <span className="block text-[11px] text-ink-3">
+            {currentMinistryIds.length === 1
+              ? "1 ministry"
+              : `${currentMinistryIds.length} ministries`}
+          </span>
+        )}
+        <span className="text-[11px] font-semibold text-rust-dark hover:text-rust">
+          Edit →
+        </span>
+      </button>
+    );
+  }
+
+  const onSave = () => {
+    setError(null);
+    const fd = new FormData();
+    fd.set("userId", userId);
+    fd.set("role", role);
+    fd.set("ministryIds", ministryIds.join(","));
     start(async () => {
-      const result = await setUserRoleAction(formData);
-      if (!result.ok && "error" in result) {
-        alert(result.error);
+      const r = await setUserAction(fd);
+      if (!r.ok && "error" in r) {
+        setError(r.error);
+        return;
       }
+      if (!r.ok && "fieldErrors" in r) {
+        setError(Object.values(r.fieldErrors).flat().join(" · "));
+        return;
+      }
+      setEditing(false);
       router.refresh();
     });
   };
 
   return (
-    <form action={onSubmit} className="flex items-center gap-2">
-      <input type="hidden" name="userId" value={userId} />
+    <div className="space-y-2">
       <select
-        name="role"
-        defaultValue={currentRole}
+        value={role}
+        onChange={(e) => setRole(e.target.value as typeof role)}
         disabled={pending}
-        className="rounded-md border border-rule bg-white px-2 py-1 text-xs text-ink"
-        onChange={(e) => {
-          // For ministry_lead role, require a ministry choice — open a prompt if missing.
-          if (e.target.value === "ministry_lead" && !currentMinistryId && ministryOptions.length === 0) {
-            alert("Add a ministry first.");
-            e.target.value = currentRole;
-          }
-        }}
+        className="form-input max-w-[200px]"
       >
         {ROLES.map((r) => (
           <option key={r} value={r}>
@@ -61,27 +101,35 @@ export function RoleSelector({
           </option>
         ))}
       </select>
-      <select
-        name="ministryId"
-        defaultValue={currentMinistryId ?? ""}
-        disabled={pending}
-        className="rounded-md border border-rule bg-white px-2 py-1 text-xs text-ink"
-      >
-        <option value="">— No ministry —</option>
-        {ministryOptions.map((m) => (
-          <option key={m.id} value={m.id}>
-            {m.name}
-          </option>
-        ))}
-      </select>
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-pill bg-navy px-3 py-1 text-xs font-semibold text-white hover:bg-navy-light disabled:opacity-70"
-      >
-        {pending ? "…" : "Save"}
-      </button>
-    </form>
+      <MinistryPicker
+        options={ministryOptions}
+        selected={ministryIds}
+        onChange={setMinistryIds}
+      />
+      {error && <p className="text-[11px] text-rust-dark">{error}</p>}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={pending}
+          className="rounded-pill bg-navy px-3 py-1 text-xs font-semibold text-white hover:bg-navy-light disabled:opacity-70"
+        >
+          {pending ? "…" : "Save"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setEditing(false);
+            setRole(currentRole);
+            setMinistryIds(currentMinistryIds);
+          }}
+          disabled={pending}
+          className="rounded-pill border border-rule bg-white px-3 py-1 text-xs font-semibold text-ink-2 hover:border-navy"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }
 
