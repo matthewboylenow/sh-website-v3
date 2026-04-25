@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { TagPicker } from "@/components/admin/TagPicker";
 import { MINISTRY_CATEGORIES } from "@/lib/validators/ministries";
 import {
@@ -141,15 +142,14 @@ export function MinistryForm({
 
         <AdminField
           name="description"
-          label="Description (markdown)"
+          label="Description"
           errors={errors.description}
         >
-          <textarea
-            id="description-input"
+          <RichTextEditor
             name="description"
-            defaultValue={defaultValues.description ?? ""}
-            rows={8}
-            className="form-input"
+            initialHtml={defaultValues.description ?? ""}
+            pathPrefix={`ministries/${ministryId ?? "new"}`}
+            placeholder="Describe the ministry, who's a fit, and how to get involved…"
           />
         </AdminField>
 

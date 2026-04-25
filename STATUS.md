@@ -20,7 +20,7 @@ Last updated: **2026-04-25**
 | 7 | Backups + staging | ⏸️ Deferred (backups, B2 off-platform copy, staging branch — revisit before launch) |
 | 8 | External integrations (Resend / Twilio / Fathom / Subsplash) | ⬜ Queued |
 | 9 | Polish — contrast, summary rename, ministry hides, mass simplification, taxonomies, media library | ✅ Done |
-| 10 | Rich text editor (TipTap) | ⬜ Queued |
+| 10 | Rich text editor (TipTap) | ✅ Done — TipTap in events / ministries / staff; sanitize-html on render |
 | 11 | Per-ministry forms + leads dashboard | ⬜ Queued |
 | 12 | Blog + megamenu + nav editor | ⬜ Queued |
 | 13 | Sections + embed allowlist + matchmaker skip-rules | ⬜ Queued |
@@ -288,6 +288,19 @@ Closed in one batch. Build green (41 routes). Smoke checklist below carries forw
 ⏸️ **Deferred indefinitely** per Matthew. Backups + B2 + staging branch revisit before launch.
 
 ---
+
+## ✅ Shipped — Wave 10 rich text
+
+TipTap drives every long-form description in the admin. Output is sanitized HTML stored as plain TEXT in the existing schema columns (events.body, ministries.description, staff.bio) — **no migration needed.** Existing rows that are plain text without HTML tags pass through the sanitizer unchanged and render fine.
+
+- **`components/admin/RichTextEditor.tsx`** — TipTap React, StarterKit + Link + Image + Placeholder. Toolbar covers bold / italic / strike / inline code / H2-H3 / lists / blockquote / hr / link / image. Hidden form input carries the HTML so the editor round-trips through standard FormData submits — works inside Server-Action forms with no client-side resolver.
+- **Image insert** reuses `/api/admin/upload` + `/api/admin/upload/complete` so every embedded image is a real `blob_assets` row. The resulting `<img>` is stamped with `data-blob-key` for future orphan cleanup.
+- **`components/site/RichTextRenderer.tsx`** — Server Component that sanitizes at render time and emits `dangerouslySetInnerHTML`. Sanitization on read (not write) keeps stored content lossless, so we can tighten or relax the allowlist later without a content migration.
+- **`lib/sanitize.ts`** — pure-JS allowlist via `sanitize-html` (swapped from `isomorphic-dompurify` because Turbopack choked on jsdom CSS bundling). Tags: `p / br / hr / strong / b / em / i / u / s / code / blockquote / h2 / h3 / h4 / ul / ol / li / a / img`. Forces `target="_blank" rel="noopener noreferrer"` on every anchor. Schemes restricted to `http / https / mailto / tel`. Also exports `htmlToPlainText()` for previews + meta descriptions.
+- **`sh-prose` styles** in `globals.css` — typography for rendered output (headings, lists, code, blockquote, anchors, hr, inline images). Public site renders cleanly without an extra dependency.
+- Wired into `EventForm.body`, `MinistryForm.description`, `StaffForm.bio`. `/ministries/[slug]` renders descriptions through `RichTextRenderer` (was `whitespace-pre-line`).
+
+Build green — 41 routes. Sanitizer covers Edge + Node runtimes.
 
 ## 🛑 Paused — end-to-end testing in progress
 

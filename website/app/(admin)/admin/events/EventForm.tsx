@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { TagPicker } from "@/components/admin/TagPicker";
 import {
   createEventAction,
@@ -226,13 +227,12 @@ export function EventForm({
           />
         </Field>
 
-        <Field name="body" label="Body (markdown)" errors={errors.body}>
-          <textarea
-            id="ev-body"
+        <Field name="body" label="Body" errors={errors.body}>
+          <RichTextEditor
             name="body"
-            defaultValue={defaultValues.body ?? ""}
-            rows={8}
-            className="form-input font-mono text-sm"
+            initialHtml={defaultValues.body ?? ""}
+            pathPrefix={`events/${eventId ?? "new"}`}
+            placeholder="Tell parishioners what to expect…"
           />
         </Field>
       </div>

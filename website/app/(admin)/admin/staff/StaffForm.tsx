@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import {
   createStaffAction,
   updateStaffAction,
@@ -122,13 +123,12 @@ export function StaffForm({
           />
         </AdminField>
 
-        <AdminField name="bio" label="Bio (markdown)" errors={errors.bio}>
-          <textarea
-            id="staff-bio"
+        <AdminField name="bio" label="Bio" errors={errors.bio}>
+          <RichTextEditor
             name="bio"
-            defaultValue={defaultValues.bio ?? ""}
-            rows={8}
-            className="form-input"
+            initialHtml={defaultValues.bio ?? ""}
+            pathPrefix={`staff/${staffId ?? "new"}`}
+            placeholder="A short biography…"
           />
         </AdminField>
       </div>

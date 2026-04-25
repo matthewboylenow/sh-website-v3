@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/site/Container";
 import { PhotoPlaceholder } from "@/components/site/PhotoPlaceholder";
+import { RichTextRenderer } from "@/components/site/RichTextRenderer";
 import { assetUrl } from "@/lib/blob";
 import { getMinistryBySlug } from "@/lib/queries/ministries.query";
 
@@ -95,11 +96,10 @@ export default async function MinistryDetailPage({
           <div className="grid gap-12 md:grid-cols-[2fr_1fr]">
             <article className="prose prose-navy max-w-none">
               {m.description ? (
-                // Pre-wrapped plain text for now; a real rich-text renderer
-                // arrives with Wave 10 (TipTap) and replaces this.
-                <p className="whitespace-pre-line text-[17px] leading-[1.7] text-ink-2">
-                  {m.description}
-                </p>
+                <RichTextRenderer
+                  html={m.description}
+                  className="text-[17px] leading-[1.7]"
+                />
               ) : (
                 <p className="text-ink-3">
                   Description coming soon. A join / inquire / volunteer form
