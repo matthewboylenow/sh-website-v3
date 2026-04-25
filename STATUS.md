@@ -12,10 +12,10 @@ Last updated: **2026-04-25**
 |---|---|---|
 | 0 | Project setup | ✅ Done |
 | 1 | Design system | 🟡 In progress (basic version live; a11y widget + full components.html parity pending) |
-| 2 | Database (Drizzle schema + seed) | ⬜ Queued — needs Neon URL |
+| 2 | Database (Drizzle schema + seed) | ✅ Done (schema applied to Neon, dev seed run) |
 | 3 | Public site — homepage + 3 interiors | ⬜ Queued |
 | 4 | Admin shell, auth, ministry edits, matchmaker editor | ⬜ Queued |
-| 5 | Upload + CDN (Vercel Blob → cdn.sainthelen.org) | ⬜ Queued — needs Blob token + DNS |
+| 5 | Upload + CDN (Vercel Blob → cdn.sainthelen.org) | ⬜ Queued — needs DNS |
 | 6 | Public API routes | ⬜ Queued |
 | 7 | Backups + staging | ⬜ Queued |
 | 8 | External integrations (Resend / Twilio / Fathom / Subsplash) | ⬜ Queued |
@@ -63,15 +63,30 @@ These are deliberate so we can deploy quickly and fill them in over the next ste
 
 ---
 
-## ⬜ Queued — what's next, in spec order
+## ✅ Shipped — Step 2: database
 
-### Step 2 · Database
-- Drop the seven content tables + Auth.js tables + `blobAssets` + `ministryEdits` from `backend.html §03 + §07` into `db/schema.ts`.
-- Drizzle Kit set up; first migration generated.
-- Dev seed at `db/seed/dev.ts` (5 events, 8 ministries, 4 staff, last 12 bulletins).
-- Singleton seed at `db/seed/site-settings.ts`.
-- Day-1 admin (`mboyle@sainthelen.org`) seeded with role + phone.
-- **Blocked by:** Neon project + `DATABASE_URL`. We can stub with a local docker-compose Postgres if needed for local dev before Neon is ready.
+Schema lives at `website/db/schema.ts`; migrations at `website/db/migrations/`; seeds at `website/db/seed/`. Applied against the Neon instance pointed at by `DATABASE_URL` in `.env.local`.
+
+- **13 tables**: the 7 content tables from `backend.html §03` (`events`, `mass_times`, `ministries`, `staff`, `bulletins`, `seasonal_banners`, `site_settings`), Auth.js canonical (`users`, `accounts`, `sessions`, `verification_tokens`) with `role` / `phone` / `preferred_auth_method` / `ministry_id` additions from §07, plus `blob_assets` (our app-owned asset registry) and `ministry_edits` (the dark-flagged self-service queue).
+- **No `locale` columns** — Spanish deferred per resolved decisions.
+- **Singleton enforced** on `site_settings` via `CHECK (id = 1)`.
+- **Circular FK** `users.ministry_id → ministries.id` + `blob_assets.uploaded_by → users.id` handled with `AnyPgColumn` return-type annotations on the lazy `.references()` arrows — standard Drizzle pattern for cycles.
+- **Indexes** beyond primary/unique: `events` on `starts_at` + `status`; `ministries` on `status` + `category`; `mass_times` on `day_of_week` + `override_date`; `seasonal_banners` on `(starts_at, ends_at)`; `ministry_edits` on `ministry_id` + `status`.
+- **Runtime connection** `db/index.ts` uses `@neondatabase/serverless` (Edge-safe). CLI scripts (seed / check / migrate) read `.env.local` via `tsx --env-file`.
+- **Seed**: singleton `site_settings` with parish defaults + day-1 admin `mboyle@sainthelen.org` (role `admin`, placeholder E.164 phone, email auth preferred) + 4 staff (Fr. Tom / Fr. Luis / Maria Chen / Paul Rivera) + 8 ministries covering worship / formation / fellowship / service / sacraments / music / service / formation + 5 events (Harvest Fest, Confirmation Retreat, Lenten Soup Supper, Mother's Day Brunch draft, Corpus Christi Procession) + 10 mass_times rows (Saturday vigil + 4 Sunday + 5 weekday).
+- **Bulletins + seasonal banners + blob assets + ministry edits — not seeded.** They require real blob-storage content, which lands in Step 5.
+- **Scripts**: `pnpm db:generate | db:migrate | db:push | db:studio | db:seed | db:check`. Seed is **idempotent** — second run inserts 0 rows, counts stay stable.
+- Build gates all green: `pnpm typecheck`, `pnpm lint`, `pnpm build`.
+
+### Things to flag to Matthew before Step 3 touches the DB
+
+- The placeholder phone on the day-1 admin is `+15555551234`. Update via `/admin/account` once SMS sign-in is live (Step 4), or edit `users.phone` directly in Neon before then.
+- `site_settings.giving.primaryUrl` is an empty string. No Touchpoint URLs seeded — they go in through `/admin/settings/giving` in Step 4.
+- The migration was run against the single Neon branch behind `DATABASE_URL`. Once we create a `staging` Neon branch (Step 7), we'll run the migrations there too.
+
+---
+
+## ⬜ Queued — what's next, in spec order
 
 ### Step 3 · Public site
 - `(site)/im-new` — welcome form with React Hook Form + Zod, photo placeholders.
@@ -130,4 +145,4 @@ These are deliberate so we can deploy quickly and fill them in over the next ste
 
 ## 🐛 Known issues
 
-None at the moment — basic version is green.
+None at the moment — Step 2 is green.
