@@ -166,7 +166,10 @@ function SmsForm({ callbackUrl }: { callbackUrl: string }) {
               setError(body.error ?? "Couldn't send the code.");
               return;
             }
-            setPhone(p);
+            // Use the server-normalized phone (E.164) so the next-step
+            // signIn() matches the stored value in the DB.
+            const body = (await res.json().catch(() => ({}))) as { phone?: string };
+            setPhone(body.phone ?? p);
             setStep("code");
           } catch {
             setError("Network error — try again.");
@@ -184,12 +187,13 @@ function SmsForm({ callbackUrl }: { callbackUrl: string }) {
             autoComplete="tel"
             inputMode="tel"
             required
-            placeholder="+1 555 555 5555"
+            placeholder="(908) 555-1234"
             className="w-full rounded-md border border-rule bg-white px-4 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-rust/60"
           />
         </Field>
         <p className="text-xs text-ink-3">
-          We&rsquo;ll text you a 6-digit code. Standard message rates apply.
+          US numbers can be plain digits — we&rsquo;ll add the country
+          code. Standard SMS rates apply.
         </p>
         <SubmitBtn pending={pending}>
           Send code <span aria-hidden="true">→</span>

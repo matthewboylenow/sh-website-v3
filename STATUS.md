@@ -17,7 +17,7 @@ Last updated: **2026-04-25**
 | 4 | Admin shell, auth, ministry edits, matchmaker editor | ✅ Done (Waves A–D — all editors live + matchmaker + /ministries) |
 | 5 | Upload + CDN (Vercel Blob) | ✅ Done — uploads in events/ministries/staff/seasonal-banners + bulletins (PDF) + public viewer |
 | 6 | Public API routes | 🟡 Done for launch — welcome / readings / mass-times wired; prayer-request and revalidate deferred |
-| 7 | Backups + staging | ⬜ Queued |
+| 7 | Backups + staging | ⏸️ Deferred (backups, B2 off-platform copy, staging branch — revisit before launch) |
 | 8 | External integrations (Resend / Twilio / Fathom / Subsplash) | ⬜ Queued |
 
 Build sequence is from `design-ref/pages/backend.html §16`.
@@ -269,4 +269,5 @@ The public-facing endpoints from `backend.html §05` that drive forms and extern
 
 ## 🐛 Known issues
 
-None at the moment — Step 2 is green.
+- **Production sign-in needs Vercel env vars set.** Local works because `.env.local` has them; production hits `MissingSecret: Please define a 'secret'` until `AUTH_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`, `TWILIO_*`, `DATABASE_URL`, `BLOB_READ_WRITE_TOKEN` are mirrored in Vercel → Project Settings → Environment Variables → Production, then redeployed. Magic-link email and SMS both depend on this.
+- **USCCB readings scraper** returns null on the live page (markup mismatch). Page falls back to the outbound link. Needs a fresh look at USCCB's current HTML.

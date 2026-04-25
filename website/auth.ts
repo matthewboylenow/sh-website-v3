@@ -11,7 +11,7 @@ import {
   verificationTokens,
 } from "./db/schema";
 import { sendMagicLink } from "./lib/email";
-import { checkSmsCode } from "./lib/sms";
+import { checkSmsCode, normalizePhone } from "./lib/sms";
 
 /**
  * Full Auth.js setup — Node runtime only (the Drizzle adapter and the
@@ -53,8 +53,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         code: { label: "Code", type: "text" },
       },
       async authorize(credentials) {
-        const phone = String(credentials?.phone ?? "").trim();
+        const phoneInput = String(credentials?.phone ?? "").trim();
         const code = String(credentials?.code ?? "").trim();
+        const phone = normalizePhone(phoneInput);
         if (!phone || !code) return null;
 
         const verified = await checkSmsCode(phone, code);

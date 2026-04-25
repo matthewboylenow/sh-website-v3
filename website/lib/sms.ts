@@ -19,6 +19,27 @@ const recentSends = new Map<string, number[]>(); // phone → timestamps
 const PER_PHONE_LIMIT = 5;
 const PER_PHONE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
+/**
+ * Normalize a user-entered phone string into E.164. Accepts shapes
+ * parishioners might type:
+ *   "9085551234"     → "+19085551234"   (10-digit US)
+ *   "(908) 555-1234" → "+19085551234"
+ *   "19085551234"    → "+19085551234"
+ *   "+19085551234"   → "+19085551234"   (already E.164 — unchanged)
+ *
+ * Returns null when the input can't be coerced.
+ */
+export function normalizePhone(input: string): string | null {
+  const trimmed = input.trim();
+  const hasPlus = trimmed.startsWith("+");
+  const digits = trimmed.replace(/\D+/g, "");
+  if (digits.length < 7) return null;
+  if (hasPlus) return `+${digits}`;
+  if (digits.length === 10) return `+1${digits}`; // US default
+  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+  return null;
+}
+
 function rateLimit(phone: string): boolean {
   const now = Date.now();
   const cutoff = now - PER_PHONE_WINDOW_MS;
