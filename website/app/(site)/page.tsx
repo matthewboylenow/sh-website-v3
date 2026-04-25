@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Container } from "@/components/site/Container";
 import { EventCard } from "@/components/site/EventCard";
+import { HeroVideo } from "@/components/site/HeroVideo";
 import { Matchmaker } from "@/components/ministries/Matchmaker";
 import { MinistryCard } from "@/components/site/MinistryCard";
 import { PhotoPlaceholder } from "@/components/site/PhotoPlaceholder";
@@ -40,13 +41,18 @@ export default async function HomePage() {
   return (
     <>
       {/* ---- Hero ------------------------------------------------- */}
-      <section className="relative bg-cream pt-16 pb-24 sm:pt-24 sm:pb-32">
+      <HeroVideo
+        videoUrl={process.env.NEXT_PUBLIC_HERO_VIDEO_URL}
+        posterUrl={process.env.NEXT_PUBLIC_HERO_VIDEO_POSTER}
+      >
         <Container width="wide">
-          <div className="grid gap-12 md:grid-cols-[1.15fr_1fr] md:items-center">
-            <div>
-              <span className="sh-eyebrow">We&rsquo;re glad you&rsquo;re here</span>
-              <h1 className="sh-display mt-4 max-w-[12ch]">Welcome home.</h1>
-              <p className="sh-lede mt-6 max-w-[48ch]">
+          <div className="flex min-h-[640px] flex-col justify-center pt-28 pb-20 sm:min-h-[720px]">
+            <div className="max-w-[40ch]">
+              <span className="sh-eyebrow text-gold">
+                We&rsquo;re glad you&rsquo;re here
+              </span>
+              <h1 className="sh-display mt-4 text-white">Welcome home.</h1>
+              <p className="sh-lede mt-6 max-w-[48ch] text-white/85">
                 Whether it&rsquo;s your first time or your hundredth, there&rsquo;s a
                 seat saved for you at Saint Helen. Mass times, what to expect on
                 Sunday, and the people who make this parish feel like home.
@@ -60,42 +66,35 @@ export default async function HomePage() {
                 </Link>
                 <Link
                   href="/mass"
-                  className="inline-flex items-center rounded-pill border border-rule bg-white px-6 py-3 text-sm font-semibold text-navy transition-colors hover:border-navy"
+                  className="inline-flex items-center rounded-pill border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
                 >
                   Watch Sunday&rsquo;s Mass
                 </Link>
               </div>
 
               {heroMassPeek.length > 0 && (
-                <div className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink-2">
-                  <span className="sh-eyebrow">This Sunday</span>
+                <div className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/80">
+                  <span className="sh-eyebrow text-gold">This Sunday</span>
                   {heroMassPeek.map((m) => (
                     <span
                       key={m.id}
-                      className="font-serif text-base font-bold text-navy"
+                      className="font-serif text-base font-bold text-white"
                     >
                       {formatMassTime(m.time)}
                     </span>
                   ))}
                   <Link
                     href="/mass"
-                    className="text-xs font-semibold text-rust-dark hover:text-rust"
+                    className="text-xs font-semibold text-gold hover:text-white"
                   >
                     Full schedule →
                   </Link>
                 </div>
               )}
             </div>
-
-            <PhotoPlaceholder
-              label="Hero photo"
-              brief="Exterior or congregation photo — warm light, real parishioners. See design-notes.html §02 for the planned shoot."
-              tone="navy"
-              aspect="4/5"
-            />
           </div>
         </Container>
-      </section>
+      </HeroVideo>
 
       {/* ---- Seasonal banner (only when active) ------------------- */}
       {banner && (
