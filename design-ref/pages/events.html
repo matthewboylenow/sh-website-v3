@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Events — Saint Helen</title>
+<link rel="stylesheet" href="../assets/colors_and_type.css" />
+<link rel="stylesheet" href="../assets/kit.css" />
+<link rel="stylesheet" href="../assets/site.css?v=3" />
+<style>
+  .ev-layout { display: grid; grid-template-columns: 240px 1fr; gap: 48px; margin-top: 40px; align-items: start; }
+  @media (max-width: 900px) { .ev-layout { grid-template-columns: 1fr; } }
+
+  .ev-filters { position: sticky; top: 100px; }
+  .ev-filter-group { margin-bottom: 28px; }
+  .ev-filter-group h5 { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid var(--sh-rule); }
+  .ev-chip {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px; border-radius: 8px;
+    font-size: 14px; color: var(--fg-1);
+    cursor: pointer; user-select: none;
+    transition: background 150ms ease;
+  }
+  .ev-chip:hover { background: var(--sh-cream); }
+  .ev-chip.active { background: var(--sh-navy); color: white; }
+  .ev-chip.active .count { color: rgba(255,255,255,0.6); }
+  .ev-chip .count { font-size: 12px; color: var(--fg-3); }
+
+  .ev-toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
+  .ev-search {
+    flex: 1; min-width: 240px;
+    background: white; border: 1px solid var(--sh-rule); border-radius: 999px;
+    padding: 10px 18px; display: flex; align-items: center; gap: 10px;
+  }
+  .ev-search input { flex: 1; border: none; outline: none; font-family: var(--font-sans); font-size: 14px; background: transparent; }
+  .ev-search svg { color: var(--fg-3); flex-shrink: 0; }
+  .ev-view-toggle { display: inline-flex; background: white; border: 1px solid var(--sh-rule); border-radius: 999px; padding: 3px; }
+  .ev-view-toggle button {
+    background: transparent; border: none; padding: 8px 14px;
+    font-size: 13px; font-weight: 500; color: var(--fg-2); border-radius: 999px; cursor: pointer;
+    font-family: var(--font-sans);
+  }
+  .ev-view-toggle button.active { background: var(--sh-navy); color: white; }
+
+  .ev-month-label {
+    font-family: var(--font-serif); font-size: 28px; font-weight: 700;
+    color: var(--sh-navy); margin: 32px 0 16px;
+    display: flex; align-items: baseline; gap: 14px;
+  }
+  .ev-month-label:first-of-type { margin-top: 0; }
+  .ev-month-label .yr { font-family: var(--font-sans); font-size: 13px; color: var(--fg-3); font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; }
+
+  .ev-featured {
+    background: var(--sh-navy); color: white;
+    border-radius: 18px; padding: 32px;
+    display: grid; grid-template-columns: 1fr 1.2fr; gap: 32px; align-items: center;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 760px) { .ev-featured { grid-template-columns: 1fr; padding: 24px; } }
+  .ev-featured h3 { color: white; font-size: 28px; margin: 0 0 8px; }
+  .ev-featured .eyebrow { color: #F5D47A; font-size: 11px; letter-spacing: 0.16em; font-weight: 600; text-transform: uppercase; margin-bottom: 10px; display: block; }
+  .ev-featured p { color: rgba(255,255,255,0.85); font-size: 15px; margin: 0 0 18px; line-height: 1.6; }
+  .ev-featured .ev-date-big {
+    background: linear-gradient(135deg, rgba(245,212,122,0.2), rgba(194,74,45,0.2));
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px; padding: 28px; text-align: center;
+  }
+  .ev-featured .ev-date-big .m { font-size: 13px; letter-spacing: 0.14em; color: #F5D47A; font-weight: 600; text-transform: uppercase; }
+  .ev-featured .ev-date-big .d { font-family: var(--font-serif); font-size: 64px; font-weight: 700; line-height: 1; margin: 6px 0; }
+  .ev-featured .ev-date-big .dow { font-size: 13px; opacity: 0.7; letter-spacing: 0.1em; text-transform: uppercase; }
+</style>
+</head>
+<body data-screen-label="Events Calendar">
+<div id="sh-mast"></div>
+
+<section class="iv-hero iv-hero-split">
+  <div class="wrap-wide">
+    <div class="iv-hero-split-inner">
+      <div>
+        <div class="iv-crumb"><a href="../index.html">Home</a><span class="sep">/</span><span>Events</span></div>
+        <span class="eyebrow">April — June 2026</span>
+        <h1>What's on.</h1>
+        <p class="lede">Everything happening across the parish. Filter by audience or category, or search for something specific. Click any event to see full details, register, or add to your calendar.</p>
+      </div>
+      <figure class="iv-hero-photo ph-day">
+        <span class="ph-tag"><span class="dot"></span>Photo</span>
+        <div class="ph-meta"><span class="chip">Landscape · 5:4</span></div>
+        <div class="ph-mark"><div class="box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg>
+          Parish life in motion
+        </div></div>
+        <figcaption class="ph-caption">
+          <div class="lbl">Photo brief</div>
+          <div class="name">Harvest Fest on the front lawn · wide, golden hour</div>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="sh-section">
+  <div class="wrap-wide">
+
+    <div class="ev-featured">
+      <div class="ev-date-big">
+        <div class="m">May</div>
+        <div class="d">3</div>
+        <div class="dow">Sunday</div>
+      </div>
+      <div>
+        <span class="eyebrow">Featured · All-parish</span>
+        <h3>Harvest Fest 2026</h3>
+        <p>Our biggest day of the year. Live music on the lawn, food trucks, bounce houses for the kids, and the rectory's famous dunk tank. Free, open to the whole town, no registration required.</p>
+        <button class="btn btn-gold">Add to calendar <span class="arr">→</span></button>
+      </div>
+    </div>
+
+    <div class="ev-toolbar">
+      <div class="ev-search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" placeholder="Search events, ministries, people…" id="evSearch" />
+      </div>
+      <div class="ev-view-toggle">
+        <button class="active">List</button>
+        <button>Month</button>
+        <button>My picks</button>
+      </div>
+    </div>
+
+    <div class="ev-layout">
+      <aside class="ev-filters">
+        <div class="ev-filter-group">
+          <h5>Audience</h5>
+          <div class="ev-chip active" data-f="all">All audiences <span class="count">42</span></div>
+          <div class="ev-chip" data-f="families">Families <span class="count">14</span></div>
+          <div class="ev-chip" data-f="youth">Youth &amp; Young Adults <span class="count">8</span></div>
+          <div class="ev-chip" data-f="adults">Adults <span class="count">18</span></div>
+          <div class="ev-chip" data-f="seniors">Seniors <span class="count">6</span></div>
+        </div>
+        <div class="ev-filter-group">
+          <h5>Category</h5>
+          <div class="ev-chip" data-f="worship">Worship</div>
+          <div class="ev-chip" data-f="formation">Faith Formation</div>
+          <div class="ev-chip" data-f="fellowship">Fellowship</div>
+          <div class="ev-chip" data-f="service">Service &amp; Outreach</div>
+          <div class="ev-chip" data-f="sacraments">Sacraments</div>
+        </div>
+        <a class="btn btn-secondary btn-sm" href="#" style="width:100%; justify-content:center;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/></svg>
+          Subscribe to calendar
+        </a>
+      </aside>
+
+      <div class="ev-main">
+        <div class="ev-month-label">April <span class="yr">2026</span></div>
+        <div class="events-list">
+          <div class="event-row">
+            <div class="date-block"><div class="m">Apr</div><div class="d">26</div><div class="dow">Sun</div></div>
+            <div class="info">
+              <h4>Second Sunday of Easter · All Masses</h4>
+              <div class="meta">8:00 AM · 10:00 AM (Family) · 12:00 PM · 6:00 PM (Youth)</div>
+              <div class="tags"><span class="tag">Worship</span><span class="tag">All welcome</span></div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+          <div class="event-row">
+            <div class="date-block"><div class="m">Apr</div><div class="d">28</div><div class="dow">Tue</div></div>
+            <div class="info">
+              <h4>Ageless: Spring luncheon</h4>
+              <div class="meta">12:00 PM · Parish Hall · Registration required</div>
+              <div class="tags"><span class="tag">Fellowship</span><span class="tag">Seniors</span></div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+          <div class="event-row">
+            <div class="date-block"><div class="m">Apr</div><div class="d">30</div><div class="dow">Thu</div></div>
+            <div class="info">
+              <h4>LifeLines small-group gathering</h4>
+              <div class="meta">7:00 PM · Meeting Room 2 · Adults 30–50</div>
+              <div class="tags"><span class="tag">Formation</span><span class="tag">Adults</span></div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+        </div>
+
+        <div class="ev-month-label">May <span class="yr">2026</span></div>
+        <div class="events-list">
+          <div class="event-row">
+            <div class="date-block"><div class="m">May</div><div class="d">3</div><div class="dow">Sun</div></div>
+            <div class="info">
+              <h4>Harvest Fest 2026 · All-parish</h4>
+              <div class="meta">12:00 PM – 6:00 PM · Church lawn &amp; parking lot</div>
+              <div class="tags"><span class="tag">Fellowship</span><span class="tag">All ages</span></div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+          <div class="event-row">
+            <div class="date-block"><div class="m">May</div><div class="d">7</div><div class="dow">Thu</div></div>
+            <div class="info">
+              <h4>First Communion rehearsal</h4>
+              <div class="meta">6:30 PM · Church · Grade 2 families only</div>
+              <div class="tags"><span class="tag">Sacraments</span><span class="tag">Families</span></div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+          <div class="event-row">
+            <div class="date-block"><div class="m">May</div><div class="d">10</div><div class="dow">Sun</div></div>
+            <div class="info">
+              <h4>First Communion Mass</h4>
+              <div class="meta">2:00 PM · Church · Reception follows in the hall</div>
+              <div class="tags"><span class="tag">Sacraments</span><span class="tag">Families</span></div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+          <div class="event-row">
+            <div class="date-block"><div class="m">May</div><div class="d">16</div><div class="dow">Sat</div></div>
+            <div class="info">
+              <h4>Garden Ministry · Volunteer morning</h4>
+              <div class="meta">9:00 AM – 12:00 PM · Parish grounds · Bring gloves</div>
+              <div class="tags"><span class="tag">Service</span><span class="tag">All ages</span></div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+          <div class="event-row">
+            <div class="date-block"><div class="m">May</div><div class="d">20</div><div class="dow">Wed</div></div>
+            <div class="info">
+              <h4>Youth Ministry: Post-Game</h4>
+              <div class="meta">7:30 PM · Youth Lounge · Grades 9–12</div>
+              <div class="tags"><span class="tag">Youth</span><span class="tag">Fellowship</span></div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+          <div class="event-row">
+            <div class="date-block"><div class="m">May</div><div class="d">24</div><div class="dow">Sun</div></div>
+            <div class="info">
+              <h4>Pentecost Sunday · Confirmation Mass</h4>
+              <div class="meta">10:00 AM · Bishop Sweeney presiding</div>
+              <div class="tags"><span class="tag">Sacraments</span><span class="tag">All welcome</span></div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+        </div>
+
+        <div class="ev-month-label">June <span class="yr">2026</span></div>
+        <div class="events-list">
+          <div class="event-row">
+            <div class="date-block"><div class="m">Jun</div><div class="d">6</div><div class="dow">Sat</div></div>
+            <div class="info">
+              <h4>VBS — Vacation Bible School registration opens</h4>
+              <div class="meta">Online · Ages 4–11 · July 13–17 week</div>
+              <div class="tags"><span class="tag">Formation</span><span class="tag">Families</span></div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+          <div class="event-row">
+            <div class="date-block"><div class="m">Jun</div><div class="d">14</div><div class="dow">Sun</div></div>
+            <div class="info">
+              <h4>Father's Day pancake breakfast</h4>
+              <div class="meta">After 8 AM &amp; 10 AM · Hosted by Men of Saint Helen</div>
+              <div class="tags"><span class="tag">Fellowship</span><span class="tag">Families</span></div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+          <div class="event-row">
+            <div class="date-block"><div class="m">Jun</div><div class="d">27</div><div class="dow">Sat</div></div>
+            <div class="info">
+              <h4>Mission trip send-off Mass</h4>
+              <div class="meta">11:00 AM · Church · For our youth going to Appalachia</div>
+              <div class="tags"><span class="tag">Youth</span><span class="tag">Service</span></div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div id="sh-foot"></div>
+<a class="give-fab" href="give.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1a5.5 5.5 0 1 0-7.8 7.8L12 21.4l8.8-8.9a5.5 5.5 0 0 0 0-7.9z"/></svg> Give</a>
+
+<script src="../assets/shell.js"></script>
+<script>
+SH.init({ active: 'events', solidNav: true, depth: 1 });
+
+// Audience filter — single-select within the group
+document.querySelectorAll('.ev-filter-group').forEach(group => {
+  group.querySelectorAll('.ev-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      group.querySelectorAll('.ev-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+});
+
+// View toggle
+document.querySelectorAll('.ev-view-toggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.ev-view-toggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// Search filter
+document.getElementById('evSearch').addEventListener('input', (e) => {
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('.event-row').forEach(row => {
+    const txt = row.textContent.toLowerCase();
+    row.style.display = !q || txt.includes(q) ? '' : 'none';
+  });
+});
+</script>
+</body>
+</html>

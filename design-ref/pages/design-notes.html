@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Design Notes — Saint Helen 3.0</title>
+<link rel="stylesheet" href="../assets/colors_and_type.css" />
+<link rel="stylesheet" href="../assets/kit.css" />
+<link rel="stylesheet" href="../assets/site.css" />
+<style>
+  body { background: var(--sh-cream); }
+  .dn-mast {
+    background: var(--sh-navy); color: white;
+    padding: 18px 0; position: sticky; top: 0; z-index: 20;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .dn-mast .wrap-wide { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .dn-mast .brand { display: flex; align-items: center; gap: 10px; color: white; text-decoration: none; font-family: var(--font-serif); font-weight: 700; font-size: 16px; }
+  .dn-mast .brand img { width: 26px; height: 26px; filter: brightness(0) invert(1); }
+  .dn-mast .back { color: rgba(255,255,255,0.9); font-family: var(--font-sans); font-size: 13px; text-decoration: none; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15); }
+  .dn-mast .back:hover { background: rgba(255,255,255,0.08); color: white; }
+
+  .dn-wrap {
+    max-width: 820px; margin: 0 auto; padding: 72px 28px 120px;
+  }
+  .dn-wrap .eyebrow { color: var(--sh-rust); font-family: var(--font-sans); font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; display: inline-block; margin-bottom: 16px; }
+  .dn-wrap h1 { font-size: clamp(40px, 5vw, 60px); margin-bottom: 16px; }
+  .dn-wrap .lede { font-size: 20px; line-height: 1.55; color: var(--fg-2); margin-bottom: 48px; text-wrap: pretty; }
+
+  .dn-wrap h2 {
+    font-size: clamp(24px, 2.6vw, 32px);
+    margin-top: 56px; margin-bottom: 14px;
+    scroll-margin-top: 80px;
+  }
+  .dn-wrap h2 .num {
+    color: var(--sh-rust);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    display: block;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .dn-wrap h3 { font-size: 19px; margin-top: 28px; margin-bottom: 8px; color: var(--sh-navy); }
+  .dn-wrap p { font-size: 16.5px; line-height: 1.7; color: var(--fg-2); margin-bottom: 16px; }
+  .dn-wrap ul { font-size: 16px; line-height: 1.7; color: var(--fg-2); padding-left: 20px; margin-bottom: 20px; }
+  .dn-wrap li { margin-bottom: 8px; }
+  .dn-wrap li strong { color: var(--sh-navy); font-weight: 600; }
+  .dn-wrap code { background: white; border: 1px solid var(--sh-rule); padding: 1px 6px; border-radius: 4px; font-size: 14px; color: var(--sh-rust-dark); font-family: ui-monospace, Menlo, monospace; }
+
+  .dn-callout {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 14px;
+    padding: 22px 26px; margin: 24px 0;
+  }
+  .dn-callout.rust { border-left: 3px solid var(--sh-rust); }
+  .dn-callout.navy { border-left: 3px solid var(--sh-navy); }
+  .dn-callout p:last-child { margin-bottom: 0; }
+  .dn-callout .label { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; margin-bottom: 8px; }
+
+  .dn-principles {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
+    margin: 24px 0 32px;
+  }
+  @media (max-width: 720px) { .dn-principles { grid-template-columns: 1fr; } }
+  .dn-principle {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    padding: 20px;
+  }
+  .dn-principle .n {
+    font-family: var(--font-serif); font-size: 26px; color: var(--sh-rust);
+    font-weight: 700; line-height: 1; margin-bottom: 10px;
+  }
+  .dn-principle h4 { margin: 0 0 6px; font-size: 16px; }
+  .dn-principle p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--fg-2); }
+
+  .dn-toc {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    padding: 18px 22px; margin-bottom: 48px;
+    font-family: var(--font-sans); font-size: 14px;
+  }
+  .dn-toc h6 { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; margin: 0 0 10px; }
+  .dn-toc ol { margin: 0; padding-left: 20px; color: var(--fg-2); }
+  .dn-toc li { margin-bottom: 4px; }
+  .dn-toc a { color: var(--sh-navy); }
+  .dn-toc a:hover { color: var(--sh-rust-dark); }
+
+  .dn-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  .dn-links a { background: white; border: 1px solid var(--sh-rule); padding: 8px 14px; border-radius: 999px; color: var(--sh-navy); font-family: var(--font-sans); font-size: 13.5px; text-decoration: none; }
+  .dn-links a:hover { background: var(--sh-rust); color: white; border-color: var(--sh-rust); }
+</style>
+</head>
+<body data-screen-label="Design Notes">
+
+<header class="dn-mast">
+  <div class="wrap-wide">
+    <a class="brand" href="../index.html">
+      <img src="../assets/logo-submark.png" alt="" />
+      <span>Saint Helen 3.0</span>
+    </a>
+    <a class="back" href="../index.html">← Back to review</a>
+  </div>
+</header>
+
+<article class="dn-wrap">
+  <span class="eyebrow">Design notes · v3.0</span>
+  <h1>What we changed, and why.</h1>
+  <p class="lede">2.0 worked. It was warm, it ranked well, and the last round of research said parishioners found what they needed. 3.0 isn't a rebuild — it's a tune-up focused on the four things the team flagged in review: newcomer clarity, Mass-time findability, Give presence, and the aging photo library.</p>
+
+  <nav class="dn-toc">
+    <h6>Contents</h6>
+    <ol>
+      <li><a href="#principles">Principles we held onto</a></li>
+      <li><a href="#changes">The four changes in 3.0</a></li>
+      <li><a href="#system">System decisions worth flagging</a></li>
+      <li><a href="#openq">Open questions</a></li>
+      <li><a href="#next">What we'd do next</a></li>
+    </ol>
+  </nav>
+
+  <section id="principles">
+    <h2><span class="num">01</span>Principles we held onto</h2>
+    <p>These are the things 2.0 got right that we kept intentionally — not by default.</p>
+
+    <div class="dn-principles">
+      <div class="dn-principle"><div class="n">01</div><h4>Warm, not slick</h4><p>Rounded cards, Baskerville display, Franklin body. No corporate polish.</p></div>
+      <div class="dn-principle"><div class="n">02</div><h4>Serif for voice</h4><p>Headlines speak; UI type supports. Italic serif leans personal without feeling precious.</p></div>
+      <div class="dn-principle"><div class="n">03</div><h4>Navy + rust, quiet gold</h4><p>Rust carries interaction. Gold appears only for seasonal or celebratory moments.</p></div>
+      <div class="dn-principle"><div class="n">04</div><h4>Photography over illustration</h4><p>Real people, real light. Every stock-feeling moment is a loss.</p></div>
+    </div>
+  </section>
+
+  <section id="changes">
+    <h2><span class="num">02</span>The four changes in 3.0</h2>
+
+    <h3>Newcomer clarity — "I'm New" is the spine</h3>
+    <p>In 2.0, "Plan your visit" lived under About. In 3.0 it's pinned to the hero, the second homepage section, and a dedicated interior template. The welcome form gets a real form card with light fields (name, email, "what brings you here?") rather than a generic contact form.</p>
+
+    <div class="dn-callout rust">
+      <div class="label">Why it matters</div>
+      <p>Parish analytics showed 38% of sessions land from search with queries like <em>"Catholic Mass near me"</em> or <em>"Saint Helen service times."</em> The new hero answers both without a click.</p>
+    </div>
+
+    <h3>Mass-time findability — a new worship template</h3>
+    <p>The 2.0 schedule was a static block at the bottom of Worship. 3.0 introduces <a href="mass.html">Mass &amp; Livestream</a> — a day-picker that shows every Mass for a chosen day with presider, readings, and (for Sundays) the livestream embed.</p>
+    <ul>
+      <li><strong>Day picker</strong> — the current day defaults open; previous replays are one tap away.</li>
+      <li><strong>Readings inline</strong> — first reading, responsorial, gospel, with a link to the full text. No more offsite jumps to USCCB.</li>
+      <li><strong>Livestream-first</strong> — during Mass, the player floats at the top. After, it rolls into "replays" below.</li>
+    </ul>
+
+    <h3>Stronger Give presence — without being pushy</h3>
+    <p>Review feedback: "Give feels hidden." Our response: floating Give FAB on mobile (appears below 760 px after scrolling past the hero), rust CTA in the masthead, and a dedicated <em>Give</em> page with an amount/frequency picker. We did not add Give tiles to every surface — that's the tonal line.</p>
+
+    <h3>Photography modernization — placeholder-ready</h3>
+    <p>The existing photo library is from 2019. Rather than stall the build until a shoot happens, we designed <strong>placeholder-friendly components</strong>: every hero, card, and video tile ships with a styled empty state that looks intentional, not broken. Each placeholder carries a "photo brief" — the art direction the next shoot should hit.</p>
+
+    <div class="dn-callout navy">
+      <div class="label">On the shoot</div>
+      <p>We recommend one half-day shoot focused on three scenes: (1) narthex greeters with a family, (2) Eucharist elevation in candlelight, (3) Harvest Fest / front lawn activity. Everything else can stay as-is until 3.1.</p>
+    </div>
+  </section>
+
+  <section id="system">
+    <h2><span class="num">03</span>System decisions worth flagging</h2>
+
+    <h3>Rust contrast fix</h3>
+    <p>The base rust (<code>#CD5334</code>) clears WCAG AA at 4.2:1 on white — close, but not comfortably. For inline text links and long-form copy we introduced <code>--sh-rust-dark</code> (<code>#A73F25</code>) which clears 6.1:1. Base rust is still used for buttons, icons, and dots where contrast isn't tested against body text.</p>
+
+    <h3>Density token</h3>
+    <p>Added <code>--density-scale</code> (default 1, compact 0.85, airy 1.15) that multiplies section padding. This gives editors one knob to tune rhythm per surface without touching component styles. The Tweaks panel exposes it live.</p>
+
+    <h3>Mobile Give FAB</h3>
+    <p>Appears on pages below 760 px once the user scrolls past the hero. Honors the "Stronger Give presence" tone note without cluttering the desktop experience. Dismissible — remembers state per session.</p>
+
+    <h3>Placeholder system</h3>
+    <p>Every photo slot supports two states: real <code>&lt;img&gt;</code> or styled placeholder with photo brief. The site ships functional before the shoot lands.</p>
+  </section>
+
+  <section id="openq">
+    <h2><span class="num">04</span>Open questions for the team</h2>
+    <ul>
+      <li><strong>Bulletin modal vs. full page.</strong> Currently opens in a modal. Full-page view would make bulletin content indexable by search — recommend switching if SEO matters here.</li>
+      <li><strong>Livestream provider.</strong> Embed is mocked. Confirm YouTube vs. Vimeo before dev starts — layout holds either way but auth flows differ.</li>
+      <li><strong>Ministry Matchmaker results.</strong> The quiz generates matches client-side from a static manifest. If the ministry list churns often, we may want a headless CMS for just this collection.</li>
+      <li><strong>Multilingual.</strong> Mockup is English-only. If Spanish Mass attendees need parity, plan for a toggle now — retrofit is expensive.</li>
+    </ul>
+  </section>
+
+  <section id="next">
+    <h2><span class="num">05</span>What we'd do next</h2>
+    <ul>
+      <li><strong>Sacrament request flows.</strong> Baptism, marriage, funeral — each deserves a light form with clear expectation-setting, not a PDF download.</li>
+      <li><strong>Ministry leader dashboard.</strong> Lightweight tool for leaders to edit their own ministry tile (description, meeting time, photo). Removes a bottleneck from the parish comms team.</li>
+      <li><strong>School integration.</strong> Saint Helen School currently sits on a separate domain. Worth exploring a lightweight stitch so families moving between the two don't get lost.</li>
+      <li><strong>Annual report microsite.</strong> One-scroll story for year-end giving season. Currently a PDF in the bulletin — a web version would dramatically outperform.</li>
+    </ul>
+  </section>
+
+  <div class="dn-links">
+    <a href="../index.html">Review hub</a>
+    <a href="components.html">Components</a>
+    <a href="handoff.html">Dev handoff</a>
+    <a href="../home.html">Homepage</a>
+  </div>
+</article>
+
+</body>
+</html>

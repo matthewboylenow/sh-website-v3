@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Saint Helen — Welcome Home</title>
+<link rel="stylesheet" href="assets/colors_and_type.css" />
+<link rel="stylesheet" href="assets/kit.css" />
+<link rel="stylesheet" href="assets/site.css" />
+</head>
+<body data-screen-label="A Homepage — Welcome Home">
+
+<div id="sh-mast"></div>
+
+<!-- HERO — multi-variant (photo / illustrated / type-led) -->
+<section class="hero">
+  <span class="ph-label">Hero photo placeholder · upload exterior / congregation photo</span>
+  <div class="wrap-wide">
+    <div class="row">
+      <div class="hero-welcome">
+        <div class="eyebrow">We're glad you're here</div>
+        <h1>Welcome home.</h1>
+      </div>
+      <div class="hero-actions">
+        <form class="hero-search" onsubmit="event.preventDefault(); doSearch(this);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="search" placeholder="Search Masses, ministries, events…" />
+          <button type="submit">Search</button>
+        </form>
+        <div class="hero-ctas">
+          <a class="btn btn-rust btn-sm" href="#" onclick="openWelcomeModal(event)">Plan your visit <span class="arr">→</span></a>
+          <a class="btn btn-ghost-light btn-sm" href="pages/mass.html">Watch Sunday's Mass</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SEASONAL BANNER -->
+<section class="seasonal-band">
+  <div class="wrap-wide">
+    <a class="seasonal" href="#">
+      <span class="ph">Seasonal banner image placeholder</span>
+      <div class="inner">
+        <h3>2026 Service Auction</h3>
+        <p>Our biggest fundraiser of the year — Friday, May 3</p>
+        <span class="btn-cta">Learn more <span>→</span></span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- SERVE GRID -->
+<section class="section section-cream">
+  <div class="wrap-wide">
+    <div class="sect-head">
+      <span class="eyebrow">Start here</span>
+      <h2>How can we serve you today?</h2>
+      <span class="rule"></span>
+    </div>
+    <div class="serve-top">
+      <a class="serve-feat" href="pages/plan-your-visit.html">
+        <span class="ph-tag">I'm new photo placeholder</span>
+        <div class="body">
+          <div class="eyebrow">New here?</div>
+          <h3>I'm new</h3>
+          <p>A warm welcome, a guide to our Masses, and easy ways to meet people.</p>
+        </div>
+      </a>
+      <a class="serve-feat" href="pages/mass.html">
+        <span class="ph-tag">Livestream photo placeholder</span>
+        <div class="body">
+          <div class="eyebrow">Can't make it in person?</div>
+          <h3>Watch online</h3>
+          <p>Every weekend Mass livestreamed. Plus replays, 5&amp;THRIVE, and pastor messages.</p>
+        </div>
+      </a>
+    </div>
+    <div class="serve-grid4">
+      <a class="serve-tile" href="pages/mass.html">
+        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/></svg></div>
+        <h4>Mass times</h4>
+        <p>Weekend, weekday, and holy day schedule.</p>
+      </a>
+      <a class="serve-tile" href="#">
+        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v12H3z"/><path d="M3 7l9 7 9-7"/></svg></div>
+        <h4>Mass intentions</h4>
+        <p>Request a Mass intention or memorial offering.</p>
+      </a>
+      <a class="serve-tile navy" href="pages/ministries.html">
+        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="10" r="2.5"/><path d="M3 20c.8-3.5 3.3-5.5 6-5.5s5.2 2 6 5.5"/><path d="M15 20c.5-2 1.8-3.2 3.5-3.2S21.5 18 22 20"/></svg></div>
+        <h4>Ministries</h4>
+        <p>40+ ways to grow, serve, and belong.</p>
+      </a>
+      <a class="serve-tile" href="pages/give.html">
+        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1a5.5 5.5 0 1 0-7.8 7.8L12 21.4l8.8-8.9a5.5 5.5 0 0 0 0-7.9z"/></svg></div>
+        <h4>Give</h4>
+        <p>Support the parish — weekly, one‑time, or planned.</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- PASTOR WELCOME -->
+<section class="section">
+  <div class="wrap-wide">
+    <div class="welcome">
+      <div class="video-wrap">
+        <div class="video-badge">Pastor's Welcome</div>
+        <button class="play-btn" aria-label="Play pastor's welcome video" disabled>
+          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+        </button>
+        <div class="video-ph-label">Video coming soon</div>
+      </div>
+      <div class="copy">
+        <span class="eyebrow">A word from Msgr. Tom</span>
+        <h2>Welcome to Saint Helen.</h2>
+        <p>A short welcome from our pastor — his invitation to visit, what to expect on a Sunday, and why we think you'll feel at home here.</p>
+        <div class="meta">
+          <span>~ 90 seconds</span>
+          <span class="dot"></span>
+          <span>Video &amp; copy placeholder</span>
+        </div>
+        <div class="actions">
+          <a class="btn btn-primary" href="pages/plan-your-visit.html">Plan your visit <span class="arr">→</span></a>
+          <a class="btn btn-secondary" href="#">About our parish</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FIND YOUR PLACE — Ministries spotlight -->
+<section class="section section-navy">
+  <div class="wrap-wide">
+    <div class="sect-head">
+      <span class="eyebrow" style="color: #F5D47A;">Ministries spotlight</span>
+      <h2>Find your place</h2>
+      <span class="rule"></span>
+      <p>Over 40 ministries at Saint Helen — from quiet contemplative prayer to hands‑on outreach. Take 60 seconds and we'll help you find your fit.</p>
+    </div>
+    <div class="find-place">
+      <a class="ministry-card" href="pages/ministries.html">
+        <div class="img" data-ph="Garden Ministry photo"></div>
+        <div class="body">
+          <h4>Garden Ministry</h4>
+          <p>Tending the parish grounds — a quiet, hands‑on way to serve and build friendships.</p>
+          <span class="go">Get involved <span>→</span></span>
+        </div>
+      </a>
+      <a class="ministry-card" href="pages/ministries.html">
+        <div class="img" data-ph="Sing 'N Pray photo"></div>
+        <div class="body">
+          <h4>Sing 'N Pray</h4>
+          <p>A musical prayer gathering open to all voices — no audition, no experience required.</p>
+          <span class="go">Join us <span>→</span></span>
+        </div>
+      </a>
+    </div>
+    <div style="text-align:center; margin-top: 40px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+      <a class="btn btn-rust" href="#" onclick="openMatchmaker(event)">Ministry matchmaker <span class="arr">→</span></a>
+      <a class="btn btn-ghost-light" href="pages/ministries.html">Browse all ministries</a>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED EVENTS -->
+<section class="section section-cream">
+  <div class="wrap-wide">
+    <div class="sect-head-row">
+      <div class="sect-head">
+        <span class="eyebrow">What's happening</span>
+        <h2>Featured events</h2>
+        <span class="rule"></span>
+      </div>
+      <a href="pages/events.html" class="view-all">View all events <span>→</span></a>
+    </div>
+    <div class="events-grid">
+      <a class="event" href="pages/events.html"><div class="img" data-ph="Service Auction photo"></div><div class="body"><div class="date">May 3 · 2026</div><h3>Service Auction</h3><div class="time">Fri · 7:00 PM</div></div></a>
+      <a class="event" href="pages/events.html"><div class="img" data-ph="Inclusive Mass photo"></div><div class="body"><div class="date">May 11 · 2026</div><h3>Inclusive Mass</h3><div class="time">Sat · 4:00 PM</div></div></a>
+      <a class="event" href="pages/events.html"><div class="img" data-ph="CFC Cinco de Mayo photo"></div><div class="body"><div class="date">May 5 · 2026</div><h3>CFC Family Ministry Cinco de Mayo</h3><div class="time">Sun · 5:00 PM</div></div></a>
+      <a class="event" href="pages/events.html"><div class="img" data-ph="Prayer Service photo"></div><div class="body"><div class="date">May 14 · 2026</div><h3>Prayer Service for Emotional Wellness</h3><div class="time">Wed · 7:30 PM</div></div></a>
+    </div>
+  </div>
+</section>
+
+<!-- 5&THRIVE -->
+<section class="section">
+  <div class="wrap-wide">
+    <div class="sect-head">
+      <span class="eyebrow">This week at Saint Helen</span>
+      <h2>5&amp;THRIVE</h2>
+      <span class="rule"></span>
+      <p>Our weekly video rundown — the five biggest things happening at the parish this week, plus everything else you need to know.</p>
+    </div>
+    <div class="thrive">
+      <div class="thrive-video">
+        <div class="badge">New this week</div>
+        <button class="play-btn" aria-label="Play this week's episode" onclick="togglePlay(this)">
+          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+        </button>
+        <div class="bigmark">5&amp;THRIVE<small>Episode 17 · Week of April 20</small></div>
+        <div class="ph">Video thumbnail placeholder</div>
+      </div>
+      <div class="thrive-rundown">
+        <div class="head">The rundown · 6:42</div>
+        <h3 class="h3">Five things this week</h3>
+        <div class="thrive-item"><div class="num">1</div><div class="body"><h4>Service Auction tickets on sale</h4><p>Our biggest fundraiser — Friday, May 3. Early-bird pricing ends Sunday.</p></div></div>
+        <div class="thrive-item"><div class="num">2</div><div class="body"><h4>Spring Women's Retreat this Sunday</h4><p>A quiet afternoon for reflection. Walk-ins welcome.</p></div></div>
+        <div class="thrive-item"><div class="num">3</div><div class="body"><h4>Youth mission trip applications open</h4><p>Grades 9–12 — three weeks in June serving in West Virginia.</p></div></div>
+        <div class="thrive-item"><div class="num">4</div><div class="body"><h4>Garden Ministry spring planting</h4><p>Saturday morning. Gloves and coffee provided.</p></div></div>
+        <div class="thrive-item"><div class="num">5</div><div class="body"><h4>Inclusive Mass returns May 11</h4><p>A Mass for our friends with special needs and their families.</p></div></div>
+        <div class="actions">
+          <a class="btn btn-primary btn-sm" href="#">Watch full episode <span class="arr">→</span></a>
+          <a class="btn btn-secondary btn-sm" href="#">All episodes</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- POST-GAME -->
+<section class="section section-cream">
+  <div class="wrap-wide">
+    <div class="sect-head">
+      <span class="eyebrow">The weekly podcast</span>
+      <h2>The Post‑Game</h2>
+      <span class="rule"></span>
+      <p>A conversation after the weekend — unpacking the homily, the readings, and what it has to do with the week ahead.</p>
+    </div>
+    <div class="postgame">
+      <div class="art">
+        <div class="art-mark">The<br/>Post‑Game<small>Saint Helen</small></div>
+      </div>
+      <div class="info">
+        <div class="kicker">Episode 42 · 28 min · April 21, 2026</div>
+        <h3>Doubt, locked doors, and the peace Jesus keeps offering</h3>
+        <p class="sub">Revisiting Sunday's Gospel — what Thomas teaches us about honest faith, and how to carry Easter peace into a busy week.</p>
+        <div class="player">
+          <button class="play" aria-label="Play latest episode" onclick="togglePodcast(this)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+          </button>
+          <div class="scrub">
+            <div class="bar" onclick="scrub(event, this)"><div class="fill" id="pgFill" style="width: 32%;"></div></div>
+            <div class="time"><span id="pgCur">8:57</span><span>28:14</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="subs">
+        <div class="lbl">Subscribe</div>
+        <div class="row">
+          <a href="#" aria-label="Apple Podcasts" title="Apple Podcasts"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3 19.5v-3.2a7 7 0 1 1 6 0v3.2A10 10 0 0 0 12 2zm0 6a4 4 0 0 0-1.5 7.7v5a1.5 1.5 0 0 0 3 0v-5A4 4 0 0 0 12 8z"/></svg></a>
+          <a href="#" aria-label="Spotify" title="Spotify"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm4.6 14.4a.75.75 0 0 1-1 .25c-2.8-1.7-6.3-2.1-10.4-1.1a.75.75 0 1 1-.35-1.45c4.5-1.1 8.4-.65 11.5 1.25a.75.75 0 0 1 .25 1.05zm1.25-2.8a.95.95 0 0 1-1.3.3c-3.2-2-8.1-2.55-11.9-1.4a.95.95 0 1 1-.55-1.8c4.35-1.3 9.75-.7 13.45 1.6a.95.95 0 0 1 .3 1.3zm.1-2.9C14 8.5 8 8.3 4.7 9.3a1.15 1.15 0 1 1-.65-2.2C7.9 6 14.5 6.25 18.75 8.8a1.15 1.15 0 1 1-1.2 1.95z"/></svg></a>
+          <a href="#" aria-label="YouTube"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 7.2c-.2-.9-.9-1.6-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4c-.9.2-1.6.9-1.8 1.8C2 8.8 2 12 2 12s0 3.2.4 4.8c.2.9.9 1.6 1.8 1.8 1.6.4 7.8.4 7.8.4s6.2 0 7.8-.4c.9-.2 1.6-.9 1.8-1.8.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8zM10 15V9l5 3z"/></svg></a>
+          <a href="#" aria-label="RSS"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="18" r="2.5"/><path d="M3 10a11 11 0 0 1 11 11h-3a8 8 0 0 0-8-8z"/><path d="M3 4a17 17 0 0 1 17 17h-3A14 14 0 0 0 3 7z"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAITH AT EVERY AGE -->
+<section class="section">
+  <div class="wrap-wide">
+    <div class="sect-head">
+      <span class="eyebrow">For every season of life</span>
+      <h2>Faith at every age</h2>
+      <span class="rule"></span>
+    </div>
+    <div class="ages">
+      <a class="age-tile" href="#">
+        <div class="age-circle rust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 3 3 7 0 10-3-3-3-7 0-10z"/><path d="M12 13v8"/><path d="M8 21h8"/></svg></div>
+        <h4>Kids Corner</h4><div class="age">Ages 2–5</div>
+      </a>
+      <a class="age-tile" href="#">
+        <div class="age-circle teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V7l8-4 8 4v12"/><path d="M9 22V12h6v10"/></svg></div>
+        <h4>Faith Formation</h4><div class="age">Grades 1–10</div>
+      </a>
+      <a class="age-tile" href="#">
+        <div class="age-circle green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 4.5-9 4.5-9-4.5L12 3z"/><path d="M3 7.5v6L12 18l9-4.5v-6"/></svg></div>
+        <h4>Youth Ministry</h4><div class="age">Grades 9–12</div>
+      </a>
+      <a class="age-tile" href="#">
+        <div class="age-circle navy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10l8-5 8 5v10"/><path d="M4 20h16"/><path d="M10 20v-6h4v6"/></svg></div>
+        <h4>Adult Discipleship</h4><div class="age">Adults</div>
+      </a>
+      <a class="age-tile" href="#">
+        <div class="age-circle pink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg></div>
+        <h4>Ageless</h4><div class="age">2nd half of life</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- WEEKLY BULLETIN -->
+<section class="section section-cream">
+  <div class="wrap-wide">
+    <div class="sect-head">
+      <span class="eyebrow">Every Sunday</span>
+      <h2>The Weekly Bulletin</h2>
+      <span class="rule"></span>
+    </div>
+    <div class="bulletin-row">
+      <div class="bulletin-date">
+        <span class="tag">This week</span>
+        <div class="m">April</div>
+        <div class="dy">19</div>
+        <div class="yr">Second Sunday of Easter · 2026</div>
+        <button class="view-btn" data-open-bulletin='{"title":"Second Sunday of Easter","date":"April 19, 2026","pages":12}'>
+          View bulletin
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <div class="bulletin-prev">
+        <div class="label">Previous Bulletins</div>
+        <h3>Last three issues</h3>
+        <ul>
+          <li><button class="row" data-open-bulletin='{"title":"Easter Sunday","date":"April 12, 2026","pages":16}'><div class="d">Apr 12</div><div><div class="t">Easter Sunday<small>16 pages · PDF</small></div></div><div class="actions"><span class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><span class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg></span></div></button></li>
+          <li><button class="row" data-open-bulletin='{"title":"Palm Sunday","date":"April 5, 2026","pages":14}'><div class="d">Apr 5</div><div><div class="t">Palm Sunday<small>14 pages · PDF</small></div></div><div class="actions"><span class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><span class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg></span></div></button></li>
+          <li><button class="row" data-open-bulletin='{"title":"Fifth Sunday of Lent","date":"March 29, 2026","pages":12}'><div class="d">Mar 29</div><div><div class="t">Fifth Sunday of Lent<small>12 pages · PDF</small></div></div><div class="actions"><span class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><span class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg></span></div></button></li>
+        </ul>
+        <a class="archive-link" href="#">View full bulletin archive <span>→</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SUPPORT -->
+<section class="support">
+  <div class="wrap-wide">
+    <span class="eyebrow">Stewardship</span>
+    <h2>Support our mission</h2>
+    <p>Every gift — large or small, one-time or weekly — supports the worship, service, and discipleship that happens here every day.</p>
+    <a class="btn btn-rust" href="pages/give.html">Give now <span class="arr">→</span></a>
+  </div>
+</section>
+
+<div id="sh-foot"></div>
+
+<!-- Give FAB (mobile) -->
+<a class="give-fab" href="pages/give.html">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1a5.5 5.5 0 1 0-7.8 7.8L12 21.4l8.8-8.9a5.5 5.5 0 0 0 0-7.9z"/></svg>
+  Give
+</a>
+
+<!-- Tweaks toggle -->
+<button class="tweaks-toggle-fab" id="tweaksToggle" aria-label="Open tweaks panel">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+</button>
+
+<!-- Tweaks panel -->
+<div class="tweaks-panel" id="tweaksPanel">
+  <div class="tp-head">
+    <h4>Tweaks</h4>
+    <button aria-label="Close" onclick="closeTweaks()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="tp-body">
+    <div class="tp-group">
+      <span class="tp-label">Hero variant</span>
+      <div class="tp-opts">
+        <button class="tp-chip active" data-tweak="hero" data-value="photo">Photo</button>
+        <button class="tp-chip" data-tweak="hero" data-value="illustrated">Illustrated</button>
+        <button class="tp-chip" data-tweak="hero" data-value="type-led">Type-led</button>
+      </div>
+    </div>
+    <div class="tp-group">
+      <span class="tp-label">Accent intensity</span>
+      <div class="tp-opts">
+        <button class="tp-chip" data-tweak="accent" data-value="calm">Calm</button>
+        <button class="tp-chip active" data-tweak="accent" data-value="balanced">Balanced</button>
+        <button class="tp-chip" data-tweak="accent" data-value="vibrant">Vibrant</button>
+      </div>
+    </div>
+    <div class="tp-group">
+      <span class="tp-label">Density</span>
+      <div class="tp-opts">
+        <button class="tp-chip" data-tweak="density" data-value="compact">Compact</button>
+        <button class="tp-chip active" data-tweak="density" data-value="balanced">Balanced</button>
+        <button class="tp-chip" data-tweak="density" data-value="airy">Airy</button>
+      </div>
+    </div>
+    <div class="tp-group">
+      <span class="tp-label">Navy band placement</span>
+      <div class="tp-opts">
+        <button class="tp-chip active" data-tweak="navy" data-value="ministries">Ministries</button>
+        <button class="tp-chip" data-tweak="navy" data-value="postgame">Post-Game</button>
+        <button class="tp-chip" data-tweak="navy" data-value="none">None</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Welcome Form Modal (I'm New) -->
+<div class="sh-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+  <div class="sh-sheet">
+    <div class="sh-sheet-head">
+      <h3 id="welcomeTitle">We'd love to meet you</h3>
+      <button class="closex" onclick="closeWelcomeModal()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sh-sheet-body">
+      <p style="color: var(--fg-2); margin-bottom: 20px;">Tell us a little about yourself and we'll send a warm welcome plus anything you need to plan your first visit. No pressure — we won't blow up your inbox.</p>
+      <div class="sh-field-row">
+        <div class="sh-field"><label>First name</label><input type="text" placeholder="First" /></div>
+        <div class="sh-field"><label>Last name</label><input type="text" placeholder="Last" /></div>
+      </div>
+      <div class="sh-field"><label>Email</label><input type="email" placeholder="you@example.com" /></div>
+      <div class="sh-field">
+        <label>What brings you to Saint Helen?</label>
+        <select>
+          <option>Just exploring — I want to visit soon</option>
+          <option>I'm new to the area</option>
+          <option>Looking for a parish home</option>
+          <option>Coming back to the Church</option>
+          <option>I have kids for Faith Formation</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="submitWelcome(this)">Send my welcome <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Matchmaker Modal -->
+<div class="sh-overlay" id="mmOverlay" role="dialog" aria-modal="true">
+  <div class="sh-sheet" style="max-width: 640px;">
+    <div class="sh-sheet-head">
+      <h3>Ministry matchmaker</h3>
+      <button class="closex" onclick="closeMatchmaker()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sh-sheet-body" id="mmBody"></div>
+  </div>
+</div>
+
+<!-- Bulletin Modal -->
+<div class="modal-backdrop" id="bulletinModal" role="dialog" aria-modal="true" aria-labelledby="bulletinModalTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="title" id="bulletinModalTitle">Second Sunday of Easter<small id="bulletinModalSub">April 19, 2026 · Bulletin</small></div>
+      <div class="tools">
+        <button class="tool-btn" id="zoomOut" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+        <span class="zoom-lbl" id="zoomLabel">100%</span>
+        <button class="tool-btn" id="zoomIn" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="tool-btn" id="zoomReset" aria-label="Reset zoom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg></button>
+        <button class="tool-btn rust" id="downloadBulletin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg></button>
+        <button class="tool-btn" id="closeBulletin" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <div class="modal-page" id="modalPage">
+        <div class="ph-head">
+          <img src="assets/logo-submark.png" alt="" />
+          <div class="ph-name">Saint Helen<small>Parish Bulletin</small></div>
+        </div>
+        <h2 id="modalPageTitle">Second Sunday of Easter</h2>
+        <div class="ph-dek">Bulletin PDF preview placeholder</div>
+        <div class="ph-divider">From the pastor</div>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse facilisis porta lobortis.</p>
+        <div class="ph-divider">Mass Intentions · Week of April 20</div>
+        <p>Monday · For the repose of the soul of Margaret Donnelly, requested by the Donnelly family.</p>
+        <p>Tuesday · For Vincent Moretti on the anniversary of his passing.</p>
+        <div class="ph-divider">This week in the parish</div>
+        <p>Spring Women's Retreat — Sunday at 2 PM. Walk-ins welcome.</p>
+      </div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button id="prevPage">←</button>
+    <span class="page-of">Page <span id="pageNum">1</span> of <span id="pageCount">12</span></span>
+    <button id="nextPage">→</button>
+  </div>
+</div>
+
+<script src="assets/shell.js"></script>
+<script src="assets/bulletin-modal.js"></script>
+<script>
+  SH.init({ active: 'home' });
+
+  // --- Welcome modal ---
+  function openWelcomeModal(e){ if(e) e.preventDefault(); document.getElementById('welcomeOverlay').classList.add('open'); }
+  function closeWelcomeModal(){ document.getElementById('welcomeOverlay').classList.remove('open'); }
+  function submitWelcome(btn){
+    btn.innerHTML = '✓ Welcome sent — we\'ll be in touch';
+    btn.style.background = 'var(--sh-navy)';
+    setTimeout(closeWelcomeModal, 1600);
+  }
+  document.getElementById('welcomeOverlay').addEventListener('click', (e) => { if (e.target.id === 'welcomeOverlay') closeWelcomeModal(); });
+
+  function doSearch(form){
+    const q = form.querySelector('input').value;
+    if(!q) return;
+    alert('Search demo: "' + q + '"\n\nIn production, this would route to the search index.');
+  }
+
+  // --- Matchmaker ---
+  const MM_QUESTIONS = [
+    { q: "What season of life are you in?", opts: [
+      { k: 'young', t: 'High school or college', s: 'Ages 14–22' },
+      { k: 'young-adult', t: 'Young adult', s: 'In my 20s or 30s' },
+      { k: 'family', t: 'Raising kids', s: 'Family life' },
+      { k: 'midlife', t: 'Mid-life and beyond', s: '50s–70s' },
+    ]},
+    { q: "How do you like to connect with God?", opts: [
+      { k: 'quiet', t: 'Quiet contemplation', s: 'Prayer, silence, reflection' },
+      { k: 'music', t: 'Through music and liturgy', s: 'Singing, reading, serving at Mass' },
+      { k: 'community', t: 'In community', s: 'Small groups, conversation' },
+      { k: 'service', t: 'Hands-on service', s: 'Giving back, showing up' },
+    ]},
+    { q: "How much time do you have?", opts: [
+      { k: 'little', t: 'Just a little', s: 'An hour or two a month' },
+      { k: 'some', t: 'A regular rhythm', s: 'Weekly or bi-weekly' },
+      { k: 'lots', t: "I'm all in", s: 'Multiple nights a week' },
+      { k: 'flex', t: 'Flexible', s: 'Depends on the season' },
+    ]},
+  ];
+
+  const MM_MATCHES = {
+    default: [
+      { t: 'LifeLines groups', s: 'Small-group faith sharing on a set evening each week.' },
+      { t: 'Sing \'N Pray', s: 'Musical prayer gathering — no audition, no experience required.' },
+      { t: 'Garden Ministry', s: 'Tending the parish grounds. Quiet, hands-on, one Saturday a month.' },
+    ],
+    young: [
+      { t: 'Youth Ministry', s: 'Grades 9–12. Weekly gatherings, retreats, mission trips.' },
+      { t: 'Mission trips', s: 'Three weeks in June serving in West Virginia.' },
+      { t: 'Lectors', s: 'Proclaim the Scripture at weekend Masses.' },
+    ],
+    'young-adult': [
+      { t: 'LifeLines groups', s: 'Faith sharing in your living room — six weeks at a time.' },
+      { t: 'Music ministry', s: 'Cantor, choir, or contemporary band.' },
+      { t: 'Social justice', s: 'Monthly meetings, ongoing service projects.' },
+    ],
+    family: [
+      { t: 'Faith Formation', s: 'Sunday mornings for grades 1–10.' },
+      { t: 'CFC Family Ministry', s: 'Monthly Mass + potluck for Catholic families.' },
+      { t: 'Meals ministry', s: 'Drop a meal to a family in need. One-off commitment.' },
+    ],
+    midlife: [
+      { t: 'Ageless', s: 'Second half of life — fellowship, learning, service.' },
+      { t: 'Bereavement ministry', s: 'Walk with families through grief.' },
+      { t: 'Eucharistic ministers', s: 'Bring Communion to the homebound.' },
+    ],
+  };
+
+  let mmStep = 0, mmAns = {};
+  function openMatchmaker(e){ if(e) e.preventDefault(); mmStep = 0; mmAns = {}; renderMM(); document.getElementById('mmOverlay').classList.add('open'); }
+  function closeMatchmaker(){ document.getElementById('mmOverlay').classList.remove('open'); }
+  document.getElementById('mmOverlay').addEventListener('click', (e) => { if (e.target.id === 'mmOverlay') closeMatchmaker(); });
+
+  function renderMM(){
+    const body = document.getElementById('mmBody');
+    if (mmStep >= MM_QUESTIONS.length){
+      const seasonKey = mmAns[0] && mmAns[0].k;
+      const matches = MM_MATCHES[seasonKey] || MM_MATCHES.default;
+      body.innerHTML = `
+        <div class="mm-result">
+          <div class="mm-step-count">Your matches</div>
+          <h3>We think you'd love these.</h3>
+          <p style="color: var(--fg-2); max-width: 440px; margin: 0 auto;">Based on your answers. Reach out to any of these and we'll connect you with a leader.</p>
+          <div class="mm-matches">
+            ${matches.map(m => `
+              <a class="mm-match" href="#">
+                <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1a5.5 5.5 0 1 0-7.8 7.8L12 21.4l8.8-8.9a5.5 5.5 0 0 0 0-7.9z"/></svg></div>
+                <h5>${m.t}</h5>
+                <p>${m.s}</p>
+              </a>`).join('')}
+          </div>
+          <div style="margin-top: 28px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-secondary btn-sm" onclick="mmStep=0; mmAns={}; renderMM()">Start over</button>
+            <a class="btn btn-primary btn-sm" href="pages/ministries.html">Browse all ministries <span class="arr">→</span></a>
+          </div>
+        </div>`;
+      return;
+    }
+    const q = MM_QUESTIONS[mmStep];
+    const pct = ((mmStep) / MM_QUESTIONS.length) * 100;
+    body.innerHTML = `
+      <div class="mm-step-count">Question ${mmStep + 1} of ${MM_QUESTIONS.length}</div>
+      <div class="mm-progress"><div class="fill" style="width: ${pct}%;"></div></div>
+      <div class="mm-q">${q.q}</div>
+      <div class="mm-options">
+        ${q.opts.map(o => `
+          <button class="mm-option" data-key="${o.k}" onclick="pickMM('${o.k}', '${o.t.replace(/'/g,"\\'")}')">
+            <div class="mm-option-title">${o.t}</div>
+            <div class="mm-option-sub">${o.s}</div>
+          </button>`).join('')}
+      </div>
+      ${mmStep > 0 ? `<div class="mm-nav"><button class="btn btn-secondary btn-sm" onclick="mmStep--; renderMM()">← Back</button><div></div></div>` : ''}
+    `;
+  }
+  function pickMM(k, t){
+    mmAns[mmStep] = { k, t };
+    mmStep++;
+    renderMM();
+  }
+
+  // --- Podcast player ---
+  function togglePodcast(btn){
+    const playing = btn.classList.toggle('playing');
+    btn.innerHTML = playing
+      ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>';
+  }
+  function scrub(e, bar){
+    const r = bar.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    document.getElementById('pgFill').style.width = (pct * 100) + '%';
+    const total = 28 * 60 + 14;
+    const cur = Math.round(total * pct);
+    const m = Math.floor(cur / 60), s = cur % 60;
+    document.getElementById('pgCur').textContent = `${m}:${String(s).padStart(2,'0')}`;
+  }
+  function togglePlay(btn){
+    const playing = btn.classList.toggle('playing');
+    btn.innerHTML = playing
+      ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>';
+  }
+
+  // --- Tweaks panel ---
+  const tweakToggle = document.getElementById('tweaksToggle');
+  const tweakPanel = document.getElementById('tweaksPanel');
+  let tweaksAvailable = false;
+
+  function closeTweaks(){
+    tweakPanel.classList.remove('open');
+    try { window.parent.postMessage({type: '__edit_mode_dismissed'}, '*'); } catch(e){}
+  }
+  function openTweaks(){ tweakPanel.classList.add('open'); }
+
+  tweakToggle.addEventListener('click', () => {
+    if (tweakPanel.classList.contains('open')) closeTweaks();
+    else openTweaks();
+  });
+
+  // Register listener first
+  window.addEventListener('message', (e) => {
+    if (e.data && e.data.type === '__activate_edit_mode') openTweaks();
+    if (e.data && e.data.type === '__deactivate_edit_mode') tweakPanel.classList.remove('open');
+  });
+  try { window.parent.postMessage({type: '__edit_mode_available'}, '*'); } catch(e){}
+
+  // Show toggle after short delay if not inside Claude chrome
+  setTimeout(() => { if (!tweaksAvailable) tweakToggle.classList.add('visible'); }, 800);
+
+  // Apply tweak values
+  function applyTweak(name, value){
+    const body = document.body;
+    if (name === 'hero'){
+      body.classList.remove('hero-photo','hero-illustrated','hero-type-led');
+      body.classList.add('hero-' + value);
+      // Update the hero placeholder label
+      const ph = document.querySelector('.hero .ph-label');
+      if (value === 'photo' && ph) ph.textContent = 'Hero photo placeholder · upload exterior / congregation photo';
+      if (value === 'illustrated' && ph) ph.textContent = 'Illustrated hero · navy gradient with brand mark';
+    } else if (name === 'accent'){
+      body.classList.remove('accent-calm','accent-vibrant');
+      if (value !== 'balanced') body.classList.add('accent-' + value);
+    } else if (name === 'density'){
+      body.classList.remove('density-compact','density-airy');
+      if (value !== 'balanced') body.classList.add('density-' + value);
+    } else if (name === 'navy'){
+      // Toggle navy band on sections
+      const ministries = document.querySelector('.section-navy');
+      const postgame = document.querySelectorAll('.section')[4]; // postgame card
+      document.querySelectorAll('.section').forEach(s => s.dataset.origBg = s.dataset.origBg || s.className);
+      if (value === 'ministries'){
+        if (ministries) { ministries.classList.remove('section-cream'); ministries.classList.add('section-navy'); }
+      }
+      // Note: simplified for demo — full impl would swap more deliberately
+    }
+  }
+
+  document.querySelectorAll('.tp-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const tweak = chip.dataset.tweak;
+      const value = chip.dataset.value;
+      document.querySelectorAll(`.tp-chip[data-tweak="${tweak}"]`).forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      applyTweak(tweak, value);
+      // Persist via edit mode
+      try { window.parent.postMessage({type: '__edit_mode_set_keys', edits: {[tweak]: value}}, '*'); } catch(e){}
+    });
+  });
+</script>
+
+</body>
+</html>

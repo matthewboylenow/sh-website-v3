@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mass & Livestream — Saint Helen</title>
+<link rel="stylesheet" href="../assets/colors_and_type.css" />
+<link rel="stylesheet" href="../assets/kit.css" />
+<link rel="stylesheet" href="../assets/site.css?v=3" />
+<style>
+  .mass-split { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: start; margin-top: 40px; }
+  @media (max-width: 960px) { .mass-split { grid-template-columns: 1fr; } }
+  .readings-card { background: var(--sh-navy); color: white; border-radius: 18px; padding: 32px; }
+  .readings-card h3 { color: white; margin: 0 0 18px; }
+  .readings-card .eyebrow { color: #F5D47A; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 10px; display: block; }
+  .reading-item { padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.15); }
+  .reading-item:first-of-type { border-top: none; }
+  .reading-item .label { font-size: 12px; color: rgba(255,255,255,0.7); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
+  .reading-item .cite { font-family: var(--font-serif); font-size: 18px; font-weight: 700; }
+  .reading-item p { color: rgba(255,255,255,0.85); margin: 6px 0 0; font-size: 14px; }
+</style>
+</head>
+<body data-screen-label="Mass & Livestream">
+<div id="sh-mast"></div>
+
+<section class="iv-hero iv-hero-split">
+  <div class="wrap-wide">
+    <div class="iv-hero-split-inner">
+      <div>
+        <div class="iv-crumb"><a href="../index.html">Home</a><span class="sep">/</span><span>Worship</span><span class="sep">/</span><span>Mass schedule</span></div>
+        <span class="eyebrow">Second Sunday of Easter · April 20</span>
+        <h1>Mass &amp; livestream.</h1>
+        <p class="lede">Pick a day and we'll show you every Mass offered that day, who's presiding, and the readings. Sunday Masses are livestreamed; replays stay up for the week.</p>
+      </div>
+      <figure class="iv-hero-photo ph-warm">
+        <span class="ph-tag"><span class="dot"></span>Photo</span>
+        <div class="ph-meta"><span class="chip">Landscape · 5:4</span></div>
+        <div class="ph-mark"><div class="box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><path d="M6 9c0-3 2-6 6-6s6 3 6 6"/><path d="M4 21h16"/></svg>
+          Sanctuary during Mass
+        </div></div>
+        <figcaption class="ph-caption">
+          <div class="lbl">Photo brief</div>
+          <div class="name">Elevation of the Eucharist · candlelight, shallow depth</div>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="sh-section">
+  <div class="wrap-wide">
+    <div class="sect-head">
+      <span class="eyebrow">Pick a day</span>
+      <h2>This week's schedule</h2>
+      <span class="rule"></span>
+    </div>
+
+    <div class="mass-week" id="massWeek">
+      <div class="mass-day" data-day="0"><div class="mass-day-name">Sun</div><div class="mass-day-date">19</div><div class="mass-day-dot"></div></div>
+      <div class="mass-day active" data-day="1"><div class="mass-day-name">Mon · Today</div><div class="mass-day-date">20</div><div class="mass-day-dot"></div></div>
+      <div class="mass-day" data-day="2"><div class="mass-day-name">Tue</div><div class="mass-day-date">21</div><div class="mass-day-dot"></div></div>
+      <div class="mass-day" data-day="3"><div class="mass-day-name">Wed</div><div class="mass-day-date">22</div><div class="mass-day-dot"></div></div>
+      <div class="mass-day" data-day="4"><div class="mass-day-name">Thu</div><div class="mass-day-date">23</div><div class="mass-day-dot"></div></div>
+      <div class="mass-day" data-day="5"><div class="mass-day-name">Fri</div><div class="mass-day-date">24</div><div class="mass-day-dot"></div></div>
+      <div class="mass-day" data-day="6"><div class="mass-day-name">Sat</div><div class="mass-day-date">25</div><div class="mass-day-dot"></div></div>
+    </div>
+
+    <div class="mass-split">
+      <div>
+        <h3 id="dayHeading" style="font-size: 24px;">Monday, April 20</h3>
+        <div class="mass-times-list" id="dayTimes">
+          <div class="mass-time-card"><div class="time">9:00 AM</div><div class="label">Daily Mass · Msgr. Tom</div><span class="tag">Live now</span></div>
+          <div class="mass-time-card"><div class="time">7:00 PM</div><div class="label">Eucharistic Adoration</div></div>
+        </div>
+        <div style="margin-top: 24px; background: var(--sh-cream); padding: 20px; border-radius: 14px; display: flex; gap: 18px; align-items: center;">
+          <div style="width: 48px; height: 48px; background: var(--sh-rust); border-radius: 50%; display: grid; place-items: center; color: white;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+          </div>
+          <div style="flex: 1;">
+            <div style="font-weight: 600; color: var(--sh-navy);">Sunday livestream replay</div>
+            <div style="font-size: 13px; color: var(--fg-3);">Watch this weekend's Mass anytime this week</div>
+          </div>
+          <a class="btn btn-secondary btn-sm" href="#">Watch →</a>
+        </div>
+      </div>
+
+      <div class="readings-card">
+        <span class="eyebrow">Today's readings</span>
+        <h3>Monday of the Second Week of Easter</h3>
+        <div class="reading-item">
+          <div class="label">First Reading</div>
+          <div class="cite">Acts 4:23–31</div>
+          <p>The place where they were gathered shook, and they were all filled with the Holy Spirit.</p>
+        </div>
+        <div class="reading-item">
+          <div class="label">Responsorial</div>
+          <div class="cite">Psalm 2</div>
+        </div>
+        <div class="reading-item">
+          <div class="label">Gospel</div>
+          <div class="cite">John 3:1–8</div>
+          <p>No one can enter the kingdom of God without being born of water and Spirit.</p>
+        </div>
+        <a class="btn btn-rust btn-sm" href="#" style="margin-top: 14px;">Full readings <span class="arr">→</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sh-section" style="background: var(--sh-cream);">
+  <div class="wrap-wide">
+    <div class="sect-head">
+      <span class="eyebrow">Weekend rhythm</span>
+      <h2>Weekly Mass schedule</h2>
+      <span class="rule"></span>
+    </div>
+    <div class="mass-times-list">
+      <div class="mass-time-card"><div class="time">5:00 PM</div><div class="label">Saturday Vigil</div><span class="tag">Livestream</span></div>
+      <div class="mass-time-card"><div class="time">8:00 AM</div><div class="label">Sunday</div></div>
+      <div class="mass-time-card"><div class="time">10:00 AM</div><div class="label">Sunday · Family</div><span class="tag">Kids Corner</span></div>
+      <div class="mass-time-card"><div class="time">12:00 PM</div><div class="label">Sunday</div><span class="tag">Livestream</span></div>
+      <div class="mass-time-card"><div class="time">6:00 PM</div><div class="label">Sunday · Youth-led</div></div>
+      <div class="mass-time-card"><div class="time">9:00 AM</div><div class="label">Mon–Fri · Daily Mass</div></div>
+    </div>
+  </div>
+</section>
+
+<div id="sh-foot"></div>
+<a class="give-fab" href="give.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1a5.5 5.5 0 1 0-7.8 7.8L12 21.4l8.8-8.9a5.5 5.5 0 0 0 0-7.9z"/></svg> Give</a>
+
+<script src="../assets/shell.js"></script>
+<script>
+SH.init({ solidNav: true, depth: 1 });
+
+const DAY_DATA = {
+  0: { title: 'Sunday, April 19', times: [
+    { t: '5:00 PM', l: 'Saturday Vigil · Msgr. Tom', tag: 'Livestream' },
+    { t: '8:00 AM', l: 'Sunday · Fr. Jim' },
+    { t: '10:00 AM', l: 'Sunday Family · Msgr. Tom', tag: 'Kids Corner' },
+    { t: '12:00 PM', l: 'Sunday · Fr. Jim', tag: 'Livestream' },
+    { t: '6:00 PM', l: 'Sunday Youth · Fr. Mike' },
+  ]},
+  1: { title: 'Monday, April 20 · Today', times: [
+    { t: '9:00 AM', l: 'Daily Mass · Msgr. Tom', tag: 'Live now' },
+    { t: '7:00 PM', l: 'Eucharistic Adoration' },
+  ]},
+  2: { title: 'Tuesday, April 21', times: [
+    { t: '9:00 AM', l: 'Daily Mass · Fr. Jim' },
+  ]},
+  3: { title: 'Wednesday, April 22', times: [
+    { t: '9:00 AM', l: 'Daily Mass · Msgr. Tom' },
+    { t: '7:00 PM', l: 'Choir rehearsal (public welcome)' },
+  ]},
+  4: { title: 'Thursday, April 23', times: [
+    { t: '9:00 AM', l: 'Daily Mass · Fr. Mike' },
+    { t: '7:00 PM', l: 'Eucharistic Adoration' },
+  ]},
+  5: { title: 'Friday, April 24', times: [
+    { t: '9:00 AM', l: 'Daily Mass · Msgr. Tom' },
+    { t: '3:00 PM', l: 'Divine Mercy Chaplet' },
+  ]},
+  6: { title: 'Saturday, April 25', times: [
+    { t: '9:00 AM', l: 'Daily Mass · Fr. Jim' },
+    { t: '3:30 PM', l: 'Reconciliation' },
+    { t: '5:00 PM', l: 'Saturday Vigil', tag: 'Livestream' },
+  ]},
+};
+
+document.querySelectorAll('#massWeek .mass-day').forEach(day => {
+  day.addEventListener('click', () => {
+    document.querySelectorAll('#massWeek .mass-day').forEach(d => d.classList.remove('active'));
+    day.classList.add('active');
+    const d = DAY_DATA[day.dataset.day];
+    document.getElementById('dayHeading').textContent = d.title;
+    document.getElementById('dayTimes').innerHTML = d.times.map(t => `
+      <div class="mass-time-card"><div class="time">${t.t}</div><div class="label">${t.l}</div>${t.tag ? `<span class="tag">${t.tag}</span>` : ''}</div>
+    `).join('');
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Developer Handoff — Saint Helen 3.0</title>
+<link rel="stylesheet" href="../assets/colors_and_type.css" />
+<link rel="stylesheet" href="../assets/kit.css" />
+<link rel="stylesheet" href="../assets/site.css" />
+<style>
+  body { background: var(--sh-cream); }
+  .ho-mast {
+    background: var(--sh-navy); color: white;
+    padding: 18px 0; position: sticky; top: 0; z-index: 20;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .ho-mast .wrap-wide { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .ho-mast .brand { display: flex; align-items: center; gap: 10px; color: white; text-decoration: none; font-family: var(--font-serif); font-weight: 700; font-size: 16px; }
+  .ho-mast .brand img { width: 26px; height: 26px; filter: brightness(0) invert(1); }
+  .ho-mast .back { color: rgba(255,255,255,0.9); font-family: var(--font-sans); font-size: 13px; text-decoration: none; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15); }
+  .ho-mast .back:hover { background: rgba(255,255,255,0.08); color: white; }
+
+  .ho-hero { padding: 72px 0 40px; background: linear-gradient(180deg, var(--sh-cream) 0%, white 100%); }
+  .ho-hero .wrap-wide { max-width: 960px; }
+  .ho-hero .eyebrow { color: var(--sh-rust); font-family: var(--font-sans); font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; display: inline-block; margin-bottom: 16px; }
+  .ho-hero h1 { font-size: clamp(40px, 5vw, 60px); margin-bottom: 16px; }
+  .ho-hero .lede { font-size: 19px; line-height: 1.55; color: var(--fg-2); max-width: 680px; }
+
+  .ho-quick {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+    margin-top: 36px;
+  }
+  @media (max-width: 780px) { .ho-quick { grid-template-columns: 1fr 1fr; } }
+  .ho-quick .q {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .ho-quick .q .label { font-family: var(--font-sans); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; margin-bottom: 6px; }
+  .ho-quick .q .val { font-family: var(--font-serif); font-size: 16px; font-weight: 600; color: var(--sh-navy); }
+  .ho-quick .q .sub { font-family: var(--font-sans); font-size: 12.5px; color: var(--fg-3); margin-top: 2px; }
+
+  .ho-wrap { max-width: 960px; margin: 0 auto; padding: 48px 28px 120px; }
+
+  .ho-section { margin-bottom: 64px; scroll-margin-top: 80px; }
+  .ho-section > h2 {
+    font-size: clamp(26px, 2.8vw, 34px);
+    margin-bottom: 8px;
+    display: flex; align-items: baseline; gap: 16px;
+  }
+  .ho-section > h2 .num {
+    color: var(--sh-rust); font-family: var(--font-sans);
+    font-size: 14px; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .ho-section > p { font-size: 16.5px; line-height: 1.65; color: var(--fg-2); max-width: 720px; margin-bottom: 24px; }
+
+  .ho-section h3 { font-size: 19px; margin: 28px 0 10px; color: var(--sh-navy); }
+  .ho-section h4 { font-size: 15px; margin: 18px 0 8px; color: var(--sh-navy); font-family: var(--font-sans); font-weight: 600; letter-spacing: 0.01em; }
+
+  .ho-section p { font-size: 15.5px; line-height: 1.7; color: var(--fg-2); margin-bottom: 14px; }
+  .ho-section ul { font-size: 15px; line-height: 1.7; color: var(--fg-2); padding-left: 20px; margin-bottom: 16px; }
+  .ho-section li { margin-bottom: 8px; }
+  .ho-section li strong { color: var(--sh-navy); font-weight: 600; }
+  .ho-section code { background: white; border: 1px solid var(--sh-rule); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; color: var(--sh-rust-dark); font-family: ui-monospace, Menlo, Consolas, monospace; }
+
+  /* Code blocks */
+  pre {
+    background: #0F1A35; color: #D9E1F0;
+    padding: 20px 22px; border-radius: 10px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 13px; line-height: 1.6;
+    overflow-x: auto;
+    margin: 14px 0 20px;
+  }
+  pre .k { color: #F5D47A; } /* keyword */
+  pre .s { color: #E0694A; } /* string */
+  pre .c { color: #7F8BA8; font-style: italic; } /* comment */
+  pre .f { color: #A5D7FF; } /* function / prop */
+  pre .t { color: #F5D47A; } /* tag */
+
+  .ho-stack {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+    margin: 14px 0 24px;
+  }
+  @media (max-width: 720px) { .ho-stack { grid-template-columns: 1fr; } }
+  .stack-card {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .stack-card .label { font-family: var(--font-sans); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; margin-bottom: 6px; }
+  .stack-card .name { font-family: var(--font-serif); font-size: 17px; font-weight: 600; color: var(--sh-navy); margin-bottom: 4px; }
+  .stack-card p { font-size: 13.5px; margin: 0; color: var(--fg-2); line-height: 1.55; }
+
+  .ho-toc {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    padding: 18px 22px; margin-bottom: 48px;
+    font-family: var(--font-sans); font-size: 14px;
+  }
+  .ho-toc h6 { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; margin: 0 0 10px; }
+  .ho-toc ol { margin: 0; padding-left: 20px; color: var(--fg-2); columns: 2; gap: 32px; }
+  @media (max-width: 600px) { .ho-toc ol { columns: 1; } }
+  .ho-toc li { margin-bottom: 4px; break-inside: avoid; }
+  .ho-toc a { color: var(--sh-navy); }
+  .ho-toc a:hover { color: var(--sh-rust-dark); }
+
+  .ho-callout {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    padding: 18px 22px; margin: 16px 0 22px;
+    border-left: 3px solid var(--sh-rust);
+  }
+  .ho-callout .label { font-family: var(--font-sans); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sh-rust-dark); font-weight: 600; margin-bottom: 6px; }
+  .ho-callout p:last-child { margin-bottom: 0; }
+  .ho-callout.navy { border-left-color: var(--sh-navy); }
+  .ho-callout.navy .label { color: var(--sh-navy); }
+
+  /* File tree */
+  .tree {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    padding: 22px 26px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 13px; line-height: 1.85;
+    color: var(--fg-2);
+    margin: 14px 0 20px;
+  }
+  .tree .dir { color: var(--sh-navy); font-weight: 600; }
+  .tree .note { color: var(--fg-3); font-style: italic; font-family: var(--font-sans); font-size: 12.5px; margin-left: 12px; }
+  .tree .hi { color: var(--sh-rust-dark); font-weight: 600; }
+
+  /* Mapping table */
+  .map-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: white;
+    border: 1px solid var(--sh-rule);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 14px 0 22px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+  }
+  .map-table th, .map-table td {
+    padding: 12px 18px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--sh-rule);
+  }
+  .map-table tr:last-child td { border-bottom: 0; }
+  .map-table th {
+    background: var(--sh-cream);
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--fg-3); font-weight: 600;
+  }
+  .map-table td code { display: inline-block; margin: 1px 0; }
+  .map-table td:first-child { font-weight: 600; color: var(--sh-navy); width: 28%; }
+  .map-table td:nth-child(2) { color: var(--fg-2); font-size: 13.5px; width: 32%; }
+  .map-table td:nth-child(3) { font-size: 13.5px; color: var(--fg-2); }
+
+  .check-list {
+    list-style: none; padding: 0; margin: 16px 0 20px;
+  }
+  .check-list li {
+    padding: 10px 0 10px 32px;
+    position: relative;
+    border-bottom: 1px solid var(--sh-rule);
+    font-size: 15px; color: var(--fg-2);
+  }
+  .check-list li:last-child { border-bottom: 0; }
+  .check-list li::before {
+    content: ''; position: absolute; left: 0; top: 13px;
+    width: 18px; height: 18px; border-radius: 4px;
+    border: 1.5px solid var(--sh-rule-soft);
+    background: white;
+  }
+  .check-list li.done { color: var(--fg-3); }
+  .check-list li.done::before {
+    background: var(--sh-rust); border-color: var(--sh-rust);
+  }
+  .check-list li.done::after {
+    content: ''; position: absolute; left: 4px; top: 17px;
+    width: 10px; height: 5px;
+    border-left: 2px solid white; border-bottom: 2px solid white;
+    transform: rotate(-45deg);
+  }
+  .check-list li strong { color: var(--sh-navy); font-weight: 600; }
+
+  .pill-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+  .pill-badge.rust { background: var(--sh-rust-pale); color: var(--sh-rust-dark); }
+  .pill-badge.navy { background: var(--sh-navy-pale); color: var(--sh-navy); }
+  .pill-badge.muted { background: var(--sh-cream-alt); color: var(--fg-3); }
+
+  .ho-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+  .ho-links a { background: white; border: 1px solid var(--sh-rule); padding: 10px 16px; border-radius: 999px; color: var(--sh-navy); font-family: var(--font-sans); font-size: 13.5px; text-decoration: none; font-weight: 500; }
+  .ho-links a:hover { background: var(--sh-rust); color: white; border-color: var(--sh-rust); }
+
+  .ho-prompt {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    padding: 20px 22px; margin: 14px 0 20px;
+  }
+  .ho-prompt .who {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3); font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .ho-prompt .who .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sh-rust); }
+  .ho-prompt .msg { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.7; color: var(--fg-1); white-space: pre-wrap; }
+</style>
+</head>
+<body data-screen-label="Dev Handoff">
+
+<header class="ho-mast">
+  <div class="wrap-wide">
+    <a class="brand" href="../index.html">
+      <img src="../assets/logo-submark.png" alt="" />
+      <span>Saint Helen 3.0</span>
+    </a>
+    <a class="back" href="../index.html">← Back to review</a>
+  </div>
+</header>
+
+<section class="ho-hero">
+  <div class="wrap-wide">
+    <span class="eyebrow">Developer handoff · Claude Code / Codespaces</span>
+    <h1>Ship it.</h1>
+    <p class="lede">A practical guide for the engineer (human or Claude) picking up Saint Helen 3.0 and porting it into a real codebase. Target stack, file mapping, component contracts, and a paste-ready kickoff prompt.</p>
+
+    <div class="ho-quick">
+      <div class="q"><div class="label">Target stack</div><div class="val">Next.js 15</div><div class="sub">App Router · RSC</div></div>
+      <div class="q"><div class="label">Styling</div><div class="val">Tailwind + CSS vars</div><div class="sub">tokens preserved</div></div>
+      <div class="q"><div class="label">Components</div><div class="val">shadcn/ui</div><div class="sub">as base, restyled</div></div>
+      <div class="q"><div class="label">Backend</div><div class="val">Neon + Drizzle</div><div class="sub">custom, no CMS</div></div>
+    </div>
+  </div>
+</section>
+
+<article class="ho-wrap">
+
+  <nav class="ho-toc">
+    <h6>Contents</h6>
+    <ol>
+      <li><a href="#stack">01 · Target stack &amp; why</a></li>
+      <li><a href="#files">02 · What's in this project</a></li>
+      <li><a href="#tokens">03 · Tokens → Tailwind</a></li>
+      <li><a href="#components">04 · Component mapping</a></li>
+      <li><a href="#routes">05 · Route map</a></li>
+      <li><a href="#cms">06 · Content model — see Backend doc</a></li>
+      <li><a href="#interactions">07 · Interactive behaviors</a></li>
+      <li><a href="#a11y">08 · Accessibility &amp; SEO</a></li>
+      <li><a href="#prompt">09 · Claude Code kickoff prompt</a></li>
+      <li><a href="#checklist">10 · Launch checklist</a></li>
+    </ol>
+  </nav>
+
+  <!-- ================= 01 ================= -->
+  <section id="stack" class="ho-section">
+    <h2><span class="num">01</span>Target stack &amp; why</h2>
+    <p>The mockup is built with hand-rolled HTML + CSS so it's portable — but it was designed against this stack. Every component has a natural landing spot here.</p>
+
+    <div class="ho-stack">
+      <div class="stack-card">
+        <div class="label">Framework</div>
+        <div class="name">Next.js 15 (App Router)</div>
+        <p>RSC by default; <code>"use client"</code> only for interactive islands (filters, day picker, matchmaker quiz, bulletin modal).</p>
+      </div>
+      <div class="stack-card">
+        <div class="label">Styling</div>
+        <div class="name">Tailwind CSS 3.4+</div>
+        <p>Token-driven. Our CSS variables from <code>colors_and_type.css</code> translate cleanly into <code>tailwind.config.ts</code>.</p>
+      </div>
+      <div class="stack-card">
+        <div class="label">Components</div>
+        <div class="name">shadcn/ui</div>
+        <p>Use Dialog, Popover, Sheet, Tabs, Form. Restyle rather than replace — the kit already matches our radius + shadow scale.</p>
+      </div>
+      <div class="stack-card">
+        <div class="label">Database</div>
+        <div class="name">Neon Postgres + Drizzle</div>
+        <p>Custom backend — no external CMS. Parish staff edit content at <code>/admin</code> routes inside the same Next.js app. Full schema in the <a href="backend.html">Backend Architecture doc</a>.</p>
+      </div>
+      <div class="stack-card">
+        <div class="label">Files</div>
+        <div class="name">Vercel Blob</div>
+        <p>Photos and bulletin PDFs uploaded directly from the admin UI. Served through <code>cdn.sainthelen.org</code> so assets carry the parish domain.</p>
+      </div>
+      <div class="stack-card">
+        <div class="label">Auth</div>
+        <div class="name">Auth.js · magic links</div>
+        <p>Email magic-link sign-in via Resend. Three roles: admin, editor, ministry_lead.</p>
+      </div>
+      <div class="stack-card">
+        <div class="label">Forms</div>
+        <div class="name">React Hook Form + Zod</div>
+        <p>Welcome form, prayer requests, sacrament requests. Submit to a Route Handler; relay to parish CRM.</p>
+      </div>
+      <div class="stack-card">
+        <div class="label">Hosting</div>
+        <div class="name">Vercel</div>
+        <p>Preview deploys per PR, ISR for bulletin/events, Edge runtime for the <code>/api/readings</code> proxy.</p>
+      </div>
+    </div>
+
+    <div class="ho-callout navy">
+      <div class="label">Why custom backend, not a hosted CMS?</div>
+      <p>This site has tiny data volumes (dozens of ministries, weekly bulletin, a handful of events per month) and 3–8 total editors. A custom <code>/admin</code> UI over Postgres is simpler than a CMS, purpose-built for parish workflows, and eliminates vendor lock-in and monthly fees. Full architecture — schema, API, admin wireframes, upload flow — in the <a href="backend.html">Backend doc</a>.</p>
+    </div>
+  </section>
+
+  <!-- ================= 02 ================= -->
+  <section id="files" class="ho-section">
+    <h2><span class="num">02</span>What's in this project</h2>
+    <p>Everything in this project is static HTML/CSS/JS. Nothing here needs to be preserved verbatim — it's a fidelity reference, not code to lift.</p>
+
+    <div class="tree">
+<span class="dir">assets/</span>
+  colors_and_type.css        <span class="note">all design tokens (port to Tailwind config)</span>
+  kit.css                    <span class="note">component styles (port to components/*)</span>
+  site.css                   <span class="note">page-level glue (port to app/(site)/layout + CSS module)</span>
+  shell.js                   <span class="note">masthead, mega-menu, sticky scroll (→ Header client component)</span>
+  bulletin-modal.js          <span class="note">modal open/close (→ shadcn Dialog)</span>
+  logo-*.png                 <span class="note">copy to /public as-is</span>
+<span class="dir">pages/</span>
+  plan-your-visit.html       <span class="note">→ app/(site)/im-new/page.tsx</span>
+  mass.html                  <span class="note">→ app/(site)/mass/page.tsx + day picker client island</span>
+  events.html                <span class="note">→ app/(site)/events/page.tsx + filters client island</span>
+  <span class="hi">components.html</span>            <span class="note">this design system — for reference</span>
+  <span class="hi">design-notes.html</span>          <span class="note">intent doc — read before you start</span>
+  <span class="hi">handoff.html</span>               <span class="note">you are here</span>
+<span class="dir">home.html</span>                  <span class="note">→ app/(site)/page.tsx</span>
+<span class="dir">index.html</span>                 <span class="note">review hub — not part of the shipped site</span>
+    </div>
+
+    <div class="ho-callout">
+      <div class="label">Read first</div>
+      <p><strong>Always read <a href="design-notes.html">design-notes.html</a> before writing code.</strong> It explains the intent behind each 3.0 change. Fidelity to the pixel matters less than fidelity to the why.</p>
+    </div>
+  </section>
+
+  <!-- ================= 03 ================= -->
+  <section id="tokens" class="ho-section">
+    <h2><span class="num">03</span>Tokens → Tailwind</h2>
+    <p>Port <code>colors_and_type.css</code> into <code>tailwind.config.ts</code>. The full inventory lives on <a href="components.html">the components page</a>; here's the config-level translation.</p>
+
+    <pre><span class="c">// tailwind.config.ts</span>
+<span class="k">import</span> <span class="k">type</span> { Config } <span class="k">from</span> <span class="s">"tailwindcss"</span>;
+
+<span class="k">export default</span> {
+  content: [<span class="s">"./app/**/*.{ts,tsx}"</span>, <span class="s">"./components/**/*.{ts,tsx}"</span>],
+  theme: {
+    extend: {
+      colors: {
+        navy:  { DEFAULT: <span class="s">"#1F346D"</span>, dark: <span class="s">"#0F1A35"</span>, light: <span class="s">"#2E4A8F"</span>, pale: <span class="s">"#E8EBEF"</span> },
+        rust:  { DEFAULT: <span class="s">"#CD5334"</span>, dark: <span class="s">"#A73F25"</span>, light: <span class="s">"#E0694A"</span>, pale: <span class="s">"#FAE8E4"</span> },
+        cream: { DEFAULT: <span class="s">"#FAF9F7"</span>, alt: <span class="s">"#F5F3F0"</span> },
+        gold:  <span class="s">"#D4AF37"</span>,
+        rule:  { DEFAULT: <span class="s">"#E5E5E5"</span>, soft: <span class="s">"#EFEDEA"</span> },
+      },
+      fontFamily: {
+        serif: [<span class="s">"Libre Baskerville"</span>, <span class="s">"Georgia"</span>, <span class="s">"serif"</span>],
+        sans:  [<span class="s">"Libre Franklin"</span>, <span class="s">"system-ui"</span>, <span class="s">"sans-serif"</span>],
+      },
+      borderRadius: { sm: <span class="s">"8px"</span>, md: <span class="s">"12px"</span>, lg: <span class="s">"16px"</span>, xl: <span class="s">"24px"</span> },
+      boxShadow: {
+        xs:    <span class="s">"0 1px 2px rgba(15,26,53,0.05)"</span>,
+        md:    <span class="s">"0 6px 18px rgba(15,26,53,0.08), 0 2px 4px rgba(15,26,53,0.04)"</span>,
+        hover: <span class="s">"0 22px 48px rgba(15,26,53,0.16), 0 6px 14px rgba(15,26,53,0.08)"</span>,
+      },
+    },
+  },
+} <span class="k">satisfies</span> Config;</pre>
+
+    <div class="ho-callout navy">
+      <div class="label">Keep the CSS vars</div>
+      <p>Don't delete <code>:root</code> variables — the density-scale system and the Tweaks panel rely on runtime tweaking. Keep them in a global <code>@layer base</code>; Tailwind utilities sit on top.</p>
+    </div>
+  </section>
+
+  <!-- ================= 04 ================= -->
+  <section id="components" class="ho-section">
+    <h2><span class="num">04</span>Component mapping</h2>
+    <p>One-to-one translation of the CSS classes in the mockup → React components you'll build. Keep file/component names predictable — the comms team will grep for them.</p>
+
+    <table class="map-table">
+      <thead><tr><th>Mockup class</th><th>Component file</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>.mast</code></td><td><code>components/site/Header.tsx</code></td><td>Client. Sticky + scroll state. Mega-menu via shadcn <code>NavigationMenu</code>.</td></tr>
+        <tr><td><code>.hero</code></td><td><code>components/site/Hero.tsx</code></td><td>Server component. Image via <code>blobAssets</code> → CDN; copy + search prop-driven.</td></tr>
+        <tr><td><code>.iv-hero</code> + variants</td><td><code>components/site/InteriorHero.tsx</code></td><td>Accepts <code>title, lede, eyebrow, breadcrumbs, photo?, photoBrief?</code>.</td></tr>
+        <tr><td><code>.iv-hero-photo</code></td><td><code>components/site/PhotoPlaceholder.tsx</code></td><td>Falls through to real <code>&lt;Image&gt;</code> when provided; shows brief otherwise.</td></tr>
+        <tr><td><code>.seasonal</code></td><td><code>components/site/SeasonalBanner.tsx</code></td><td>CMS-controlled on/off; date-gated.</td></tr>
+        <tr><td><code>.events-grid</code> + <code>.event</code></td><td><code>components/site/EventCard.tsx</code> &middot; <code>EventsGrid.tsx</code></td><td>EventsGrid server; EventCard presentational.</td></tr>
+        <tr><td><code>.ev-toolbar</code> + <code>.ev-filters</code></td><td><code>components/events/EventsFilters.tsx</code></td><td>Client island. URL-synced filter state.</td></tr>
+        <tr><td><code>.mass-week</code> + <code>.mass-split</code></td><td><code>components/mass/DayPicker.tsx</code> &middot; <code>DaySchedule.tsx</code></td><td>Client. Defaults to today; keyboard navigable.</td></tr>
+        <tr><td><code>.readings-card</code></td><td><code>components/mass/ReadingsCard.tsx</code></td><td>Fetches from USCCB proxy (Edge handler, cached daily).</td></tr>
+        <tr><td><code>.thrive</code> + <code>.postgame</code></td><td><code>components/site/FeaturedMedia.tsx</code></td><td>Shared skeleton; variant prop for video vs audio.</td></tr>
+        <tr><td><code>.bulletin-row</code></td><td><code>components/site/BulletinWidget.tsx</code></td><td>Client for the modal. Pulls latest 6 via Drizzle query in parent Server Component.</td></tr>
+        <tr><td><code>.find-place</code> + matchmaker</td><td><code>components/ministries/Matchmaker.tsx</code></td><td>3-step quiz. Answers client-side against ministry manifest.</td></tr>
+        <tr><td><code>.iv-welcome-card</code></td><td><code>components/forms/WelcomeForm.tsx</code></td><td>RHF + Zod. Posts to <code>/api/welcome</code>.</td></tr>
+        <tr><td><code>.btn</code> + variants</td><td><code>components/ui/Button.tsx</code></td><td>Extend shadcn <code>Button</code>; add <code>rust</code> and <code>gold</code> variants.</td></tr>
+        <tr><td><code>.tag-chip</code></td><td><code>components/ui/Tag.tsx</code></td><td>Variants: <code>rust | navy | gold</code>.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ================= 05 ================= -->
+  <section id="routes" class="ho-section">
+    <h2><span class="num">05</span>Route map</h2>
+    <p>App Router structure. <code>(site)</code> is the public-facing group; <code>(admin)</code> hosts our custom admin UI.</p>
+
+    <div class="tree">
+<span class="dir">app/</span>
+  <span class="dir">(site)/</span>
+    layout.tsx                  <span class="note">Header + Footer + fonts</span>
+    page.tsx                    <span class="note">home.html</span>
+    im-new/page.tsx             <span class="note">plan-your-visit.html</span>
+    mass/page.tsx               <span class="note">mass.html · ISR 5min</span>
+    events/page.tsx             <span class="note">events.html · ISR 1hr</span>
+    events/[slug]/page.tsx      <span class="note">event detail (not mocked yet — see open Qs)</span>
+    ministries/page.tsx         <span class="note">includes Matchmaker</span>
+    give/page.tsx
+    bulletin/page.tsx
+    contact/page.tsx
+  <span class="dir">(admin)/</span>
+    admin/layout.tsx            <span class="note">auth-gated shell (rail + topbar)</span>
+    admin/page.tsx              <span class="note">dashboard</span>
+    admin/events/page.tsx       <span class="note">list view</span>
+    admin/events/[id]/page.tsx  <span class="note">editor</span>
+    admin/(ministries|staff|bulletins|mass-times|seasonal|settings|users)/...
+  <span class="dir">api/</span>
+    welcome/route.ts            <span class="note">POST · welcome form relay</span>
+    readings/route.ts           <span class="note">GET · USCCB proxy, daily cache</span>
+    matchmaker/route.ts         <span class="note">POST · quiz → top ministries</span>
+    revalidate/route.ts         <span class="note">admin-triggered tag revalidation</span>
+    admin/events/route.ts       <span class="note">CRUD · role-gated</span>
+    admin/upload/route.ts       <span class="note">Vercel Blob client-upload token</span>
+    auth/[...nextauth]/route.ts <span class="note">Auth.js magic-link handlers</span>
+    </div>
+  </section>
+
+  <!-- ================= 06 ================= -->
+  <section id="cms" class="ho-section">
+    <h2><span class="num">06</span>Content model</h2>
+    <p>Seven tables in Postgres cover the entire site: <code>events</code>, <code>massTimes</code>, <code>ministries</code>, <code>staff</code>, <code>bulletins</code>, <code>seasonalBanners</code>, <code>siteSettings</code> — plus <code>users</code> / Auth.js tables and a <code>blobAssets</code> registry.</p>
+
+    <div class="ho-callout navy">
+      <div class="label">Full schema lives in the Backend doc</div>
+      <p>The complete Drizzle schema (every column, every type, every relationship), migration workflow, seed strategy, and API route map are documented separately in <a href="backend.html"><strong>Backend Architecture →</strong></a>. That doc is the source of truth for anything database-shaped.</p>
+    </div>
+
+    <h3>Query pattern</h3>
+    <p>Public reads happen in Server Components via direct Drizzle queries — no API layer, no GraphQL, no codegen. Wrap each query in <code>unstable_cache</code> with a tag so admin mutations can revalidate precisely (see Backend doc §09). Co-locate queries with the component that consumes them (e.g. <code>EventCard.query.ts</code>). Avoid a central <code>queries.ts</code> — it becomes a tar pit.</p>
+  </section>
+
+  <!-- ================= 07 ================= -->
+  <section id="interactions" class="ho-section">
+    <h2><span class="num">07</span>Interactive behaviors — contracts</h2>
+    <p>The non-obvious pieces. What they do, how they should behave once in React.</p>
+
+    <h3>Mega-menu</h3>
+    <ul>
+      <li>Opens on hover (desktop) and click (keyboard / touch). 140ms open delay, 220ms close delay to avoid flicker.</li>
+      <li>Escape closes. Tab cycles through visible links. First link in the opened panel gets focus on keyboard activation.</li>
+      <li>On mobile (&lt; 900 px) the whole thing collapses into a <code>Sheet</code>.</li>
+    </ul>
+
+    <h3>Day picker (Mass page)</h3>
+    <ul>
+      <li>Default-selects today in the user's local timezone.</li>
+      <li>Arrow keys ←/→ move between days. Enter opens the day's schedule.</li>
+      <li>If the selected day is a Sunday with an active livestream, a <strong>Live now</strong> chip appears on the first matching Mass card.</li>
+    </ul>
+
+    <h3>Events filters</h3>
+    <ul>
+      <li>Filter state syncs to URL (<code>?audience=families&category=worship</code>) so links are shareable.</li>
+      <li>Search is fuzzy (uses <code>fuse.js</code> client-side). Trigger on <code>/</code> from anywhere on the page.</li>
+      <li>"My picks" saves selected events to localStorage. Clears on explicit reset.</li>
+    </ul>
+
+    <h3>Ministry matchmaker</h3>
+    <ul>
+      <li>Three questions → tag weights → top-5 ministries sorted by match score.</li>
+      <li>Scoring is client-side but the manifest comes from <code>/api/matchmaker</code> (cached, returns top-5). Keeps weights server-authoritative so comms can tune matches without a deploy.</li>
+      <li>Results page includes "email me these" — hits the welcome form endpoint with ministry IDs attached.</li>
+    </ul>
+
+    <h3>Bulletin modal</h3>
+    <ul>
+      <li>shadcn <code>Dialog</code>. Fullscreen on mobile. PDF viewer is a native <code>&lt;iframe&gt;</code> with a download fallback link.</li>
+      <li>Opens with the bulletin slug in the URL hash for deep-linking.</li>
+    </ul>
+
+    <h3>Give FAB</h3>
+    <ul>
+      <li>Only appears on viewports below 760 px and only after 400 px of scroll. Dismissible; remembers state per session (<code>sessionStorage</code>).</li>
+      <li>Never shown on the Give page itself.</li>
+    </ul>
+  </section>
+
+  <!-- ================= 08 ================= -->
+  <section id="a11y" class="ho-section">
+    <h2><span class="num">08</span>Accessibility &amp; SEO</h2>
+
+    <h3>Accessibility — what we've already baked in</h3>
+    <ul>
+      <li>Focus ring uses rust on a 3 px offset. Visible on both cream and white.</li>
+      <li>Rust-on-white body text is blocked — we use <code>--sh-rust-dark</code> (6.1:1) instead.</li>
+      <li>All buttons are real <code>&lt;button&gt;</code> elements, not divs. Links carry discernible text.</li>
+      <li>Day picker and filter chips expose <code>role="tablist"</code> / <code>role="tab"</code>; arrow-key nav; <code>aria-selected</code>.</li>
+    </ul>
+
+    <h3>SEO — priorities</h3>
+    <ul>
+      <li><strong>Mass times page</strong> needs a <code>Schema.org Event</code> block per Mass. This is how Google surfaces Mass times in the local box.</li>
+      <li><strong>Events</strong> get <code>Event</code> schema with <code>offers</code> for registration-required items.</li>
+      <li><strong>Organization</strong> schema on every page via the root layout — address, geo, sameAs (Facebook, YouTube, Instagram).</li>
+      <li>Sitemap generated from the database at request time. Revalidated on publish via tag.</li>
+    </ul>
+  </section>
+
+  <!-- ================= 09 ================= -->
+  <section id="prompt" class="ho-section">
+    <h2><span class="num">09</span>Claude Code kickoff prompt</h2>
+    <p>Paste this into Claude Code after cloning an empty Next.js 15 + Tailwind starter with this project mounted as a reference. Adjust path to suit your setup.</p>
+
+    <div class="ho-prompt">
+      <div class="who"><span class="dot"></span>Paste into Claude Code</div>
+      <div class="msg">You're scaffolding the Saint Helen 3.0 parish website.
+
+Reference materials are mounted at ./design-ref/ — a static HTML mockup. Before writing any code:
+
+1. Read design-ref/pages/design-notes.html in full. Understand the four 3.0 changes.
+2. Skim design-ref/pages/components.html for the token set and component inventory.
+3. Skim design-ref/pages/handoff.html (this doc) — especially the component mapping and route map.
+
+Then:
+
+- Port design-ref/assets/colors_and_type.css tokens into tailwind.config.ts per the handoff doc.
+- Copy the CSS custom properties into app/globals.css under @layer base (we rely on them at runtime).
+- Generate the app/(site) route tree matching the route map. Every page is a Server Component; add "use client" islands only for: Header mega-menu, mass day picker, events filters, matchmaker, bulletin modal, mobile Give FAB.
+- Build components in the order listed in the component mapping table, one at a time. After each component, show me the diff before moving on.
+- Match the mockup pixel-for-pixel on desktop (1440px) first; responsive down to 360px second.
+- Stub every data source with typed fixtures in /fixtures initially so we can review the UI in isolation. Do NOT wire the database yet.
+- Do NOT implement the forms' network calls yet — just RHF + Zod validation; onSubmit logs to console.
+
+Stop after the homepage and the three interior pages (im-new, mass, events) are rendering with fixtures. I'll review before you scaffold the database, admin UI, and remaining pages.
+
+After the UI review, you'll pick up design-ref/pages/backend.html — that doc drives Steps 2 through 6 (Neon + Drizzle schema, custom admin, auth, Vercel Blob uploads, API routes).</div>
+    </div>
+
+    <div class="ho-callout navy">
+      <div class="label">Tip</div>
+      <p>If you're in <strong>Codespaces</strong>, add this project as a read-only mount in <code>.devcontainer/devcontainer.json</code> so Claude Code can reference it without it cluttering the repo.</p>
+    </div>
+  </section>
+
+  <!-- ================= 10 ================= -->
+  <section id="checklist" class="ho-section">
+    <h2><span class="num">10</span>Launch checklist</h2>
+    <p>Before the DNS flip.</p>
+
+    <ul class="check-list">
+      <li class="done"><strong>Tokens ported.</strong> Tailwind config + <code>@layer base</code> CSS vars.</li>
+      <li class="done"><strong>Home + 3 interiors rendering with fixtures.</strong> Match mockup at 1440 px and 390 px.</li>
+      <li><strong>Drizzle schema migrated.</strong> All 7 content tables + auth + <code>blobAssets</code> + <code>ministryEdits</code>. Backend doc §03 + §07.</li>
+      <li><strong>Admin UI shipped.</strong> Events / ministries / mass-times / staff / bulletins / settings / users / account editors. Role-gated.</li>
+      <li><strong>Dual auth live.</strong> Magic-link email (Resend) + SMS code (Twilio Verify). Day-1 admin <code>mboyle@sainthelen.org</code> seeded with phone. Backend doc §07.</li>
+      <li><strong>Resend domain verified.</strong> SPF / DKIM / DMARC records added on <code>send.sainthelen.org</code>. Backend doc §11.</li>
+      <li><strong>Twilio Verify service created + tested.</strong> Per-user-per-hour rate cap in place.</li>
+      <li><strong>Vercel Blob + <code>cdn.sainthelen.org</code> wired.</strong> DNS CNAME in place, first photo uploaded end-to-end.</li>
+      <li><strong>Touchpoint giving links saved.</strong> Primary URL + recurring URL configured in <code>/admin/settings/giving</code>. Backend doc §11.</li>
+      <li><strong>Fathom analytics live.</strong> Production-only script, custom events firing on welcome form / Mass-time click / bulletin open.</li>
+      <li><strong>Backups running.</strong> Weekly cron <code>pg_dump</code> → Blob (12-week retention) + monthly Backblaze B2 copy. First restore drill completed. Backend doc §12.</li>
+      <li><strong>Accessibility audit passed.</strong> Independent WCAG 2.2 AA review + at least one keyboard-only and one screen-reader user test. Widget enabled. Backend doc §13.</li>
+      <li><strong>Staging environment live.</strong> <code>staging.sainthelen.org</code> deployed from <code>staging</code> branch, separate Neon branch, deployment-protection password in 1Password. Backend doc §14.</li>
+      <li><strong>Ministry self-service shipped dark.</strong> <code>ENABLE_MINISTRY_SELF_SERVICE=false</code>; flip post-launch with one or two pilot ministries.</li>
+      <li><strong>Schema.org on Mass &amp; Events.</strong> Validated in Google's Rich Results Test.</li>
+      <li><strong>Welcome form relay live.</strong> Posts to parish CRM inbox; fallback to <code>parish-general@</code>.</li>
+      <li><strong>Livestream embed.</strong> Confirmed provider (YouTube / Vimeo) and auth model.</li>
+      <li><strong>Photography shoot scheduled.</strong> Three scenes per the design notes. Placeholders stay live until assets land.</li>
+      <li><strong>Bulletin archive imported.</strong> Jan 2026 forward (≈3 months at launch) for search continuity.</li>
+      <li><strong>301s from 2.0 URLs.</strong> Map drafted with parish staff; implemented in <code>middleware.ts</code>.</li>
+      <li><strong>Lighthouse passes.</strong> &gt; 90 on Performance, Accessibility, Best Practices, SEO on the home and Mass pages.</li>
+      <li><strong>Copy review.</strong> Full walkthrough with Fr. Tom on staging before DNS flip.</li>
+      <li><strong>DNS flip plan.</strong> Apex <code>sainthelen.org</code> + <code>www.</code> point at Vercel; <code>cdn.</code> CNAME live; <code>send.</code> records intact; staging stays as QA target.</li>
+    </ul>
+  </section>
+
+  <div class="ho-links">
+    <a href="../index.html">← Review hub</a>
+    <a href="design-notes.html">Design notes</a>
+    <a href="components.html">Components inventory</a>
+    <a href="../home.html">Homepage</a>
+  </div>
+</article>
+
+</body>
+</html>

@@ -1,0 +1,195 @@
+/* ==========================================================================
+   Saint Helen Design System — Colors & Type
+   ========================================================================== */
+
+/* Fonts — Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Libre+Franklin:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  /* ---- Primary palette --------------------------------------------------- */
+  --sh-navy:        #1F346D; /* headers, overlays, primary buttons */
+  --sh-rust:        #CD5334; /* CTAs, accents, interactive */
+  --sh-cream:       #FAF9F7; /* soft section backgrounds */
+  --sh-gold:        #D4AF37; /* small accents, sparingly */
+  --sh-white:       #FFFFFF;
+
+  /* ---- Extended palette -------------------------------------------------- */
+  --sh-navy-dark:   #0F1A35; /* depth, footers */
+  --sh-navy-light:  #2E4A8F; /* hover on navy */
+  --sh-navy-pale:   #E8EBEF; /* subtle tinted bg */
+  --sh-rust-dark:   #A73F25; /* button hover */
+  --sh-rust-light:  #E0694A; /* soft accents */
+  --sh-rust-pale:   #FAE8E4; /* tinted panels */
+  --sh-cream-alt:   #F5F3F0; /* alternate section bg */
+
+  /* ---- Neutrals ---------------------------------------------------------- */
+  --sh-ink:         #1A1A1A;
+  --sh-ink-2:       #3A3A3A;
+  --sh-ink-3:       #6B6B6B;
+  --sh-ink-4:       #9A9A9A;
+  --sh-rule:        #E5E5E5; /* card/section borders */
+  --sh-rule-soft:   #EFEDEA;
+
+  /* ---- Semantic foreground ---------------------------------------------- */
+  --fg-1: var(--sh-ink);       /* primary body text */
+  --fg-2: var(--sh-ink-2);     /* secondary */
+  --fg-3: var(--sh-ink-3);     /* muted / meta */
+  --fg-inv: var(--sh-white);   /* on navy / image overlays */
+  --fg-brand: var(--sh-navy);  /* display / headline color */
+  --fg-accent: var(--sh-rust); /* links, accent text */
+
+  /* ---- Semantic backgrounds --------------------------------------------- */
+  --bg-page:       var(--sh-white);
+  --bg-soft:       var(--sh-cream);
+  --bg-soft-alt:   var(--sh-cream-alt);
+  --bg-tint:       var(--sh-navy-pale);
+  --bg-tint-warm:  var(--sh-rust-pale);
+  --bg-dark:       var(--sh-navy);
+  --bg-darker:     var(--sh-navy-dark);
+  --bg-card:       var(--sh-white);
+
+  /* ---- Borders ---------------------------------------------------------- */
+  --border-card:   1px solid var(--sh-rule);
+  --border-soft:   1px solid var(--sh-rule-soft);
+
+  /* ---- Radii ------------------------------------------------------------ */
+  --radius-xs:  4px;
+  --radius-sm:  8px;   /* buttons */
+  --radius-md:  12px;  /* cards (default) */
+  --radius-lg:  16px;  /* larger cards, panels */
+  --radius-xl:  24px;
+  --radius-pill: 999px; /* pill buttons (50px works too) */
+
+  /* ---- Shadows — soft at rest, deeper on hover -------------------------- */
+  --shadow-xs:  0 1px 2px rgba(15, 26, 53, 0.05);
+  --shadow-sm:  0 2px 6px rgba(15, 26, 53, 0.06), 0 1px 2px rgba(15,26,53,0.04);
+  --shadow-md:  0 6px 18px rgba(15, 26, 53, 0.08), 0 2px 4px rgba(15,26,53,0.04);
+  --shadow-lg:  0 16px 40px rgba(15, 26, 53, 0.12), 0 4px 10px rgba(15,26,53,0.06);
+  --shadow-hover: 0 22px 48px rgba(15, 26, 53, 0.16), 0 6px 14px rgba(15,26,53,0.08);
+
+  /* ---- Spacing scale (8-pt base) --------------------------------------- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  24px;
+  --space-6:  32px;
+  --space-7:  48px;
+  --space-8:  64px;
+  --space-9:  80px;  /* section padding */
+  --space-10: 112px;
+
+  /* ---- Layout ----------------------------------------------------------- */
+  --container-narrow: 780px;
+  --container:        1200px;
+  --container-wide:   1320px;
+
+  /* ---- Motion ----------------------------------------------------------- */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-bounce:   cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --dur-fast:   150ms;
+  --dur-base:   300ms;
+  --dur-slow:   500ms;
+
+  /* ---- Type families ---------------------------------------------------- */
+  --font-serif: 'Libre Baskerville', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --font-sans:  'Libre Franklin', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* ---- Type scale (modular, fluid-ish) --------------------------------- */
+  --fs-display:  clamp(44px, 6vw, 76px);
+  --fs-h1:       clamp(36px, 4.4vw, 56px);
+  --fs-h2:       clamp(28px, 3.2vw, 40px);
+  --fs-h3:       clamp(22px, 2.2vw, 28px);
+  --fs-h4:       20px;
+  --fs-h5:       17px;
+  --fs-eyebrow:  13px;
+  --fs-body:     17px;
+  --fs-body-lg:  19px;
+  --fs-small:    14px;
+  --fs-xsmall:   12px;
+
+  /* ---- Line heights ----------------------------------------------------- */
+  --lh-tight:   1.1;
+  --lh-heading: 1.2;
+  --lh-snug:    1.35;
+  --lh-body:    1.65;
+  --lh-loose:   1.8;
+
+  /* ---- Tracking --------------------------------------------------------- */
+  --track-eyebrow:  0.14em;
+  --track-heading: -0.005em;
+  --track-tight:   -0.02em;
+}
+
+/* ==========================================================================
+   Base elements — semantic defaults
+   ========================================================================== */
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--fg-1);
+  background: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-serif);
+  color: var(--fg-brand);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--track-heading);
+  font-weight: 700;
+  margin: 0 0 0.6em;
+  text-wrap: balance;
+}
+
+h1 { font-size: var(--fs-h1); line-height: var(--lh-tight); letter-spacing: var(--track-tight); }
+h2 { font-size: var(--fs-h2); }
+h3 { font-size: var(--fs-h3); }
+h4 { font-size: var(--fs-h4); }
+h5 { font-size: var(--fs-h5); }
+
+.sh-display { font-family: var(--font-serif); font-size: var(--fs-display); line-height: var(--lh-tight); letter-spacing: var(--track-tight); font-weight: 700; color: var(--fg-brand); }
+
+.sh-eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--fs-eyebrow);
+  font-weight: 600;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--fg-accent);
+}
+
+p { margin: 0 0 1em; text-wrap: pretty; }
+.sh-lede { font-size: var(--fs-body-lg); line-height: var(--lh-snug); color: var(--fg-2); }
+
+a { color: var(--fg-accent); text-decoration: none; transition: color var(--dur-fast) var(--ease-standard); }
+a:hover { color: var(--sh-rust-dark); }
+
+small, .sh-small { font-size: var(--fs-small); color: var(--fg-3); }
+.sh-meta { font-size: var(--fs-xsmall); color: var(--fg-3); letter-spacing: 0.02em; }
+
+/* Accent decorative underline — use on centered section headings */
+.sh-rule {
+  display: inline-block;
+  width: 56px;
+  height: 3px;
+  background: var(--sh-rust);
+  border-radius: 2px;
+  margin: 0 0 var(--space-4);
+}
+
+/* Focus — WCAG 2.1 AA */
+:focus-visible {
+  outline: 2px solid var(--sh-rust);
+  outline-offset: 3px;
+  border-radius: var(--radius-xs);
+}
+
+/* Selection */
+::selection { background: var(--sh-rust); color: var(--sh-white); }

@@ -1,0 +1,1391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Backend Architecture — Saint Helen 3.0</title>
+<link rel="stylesheet" href="../assets/colors_and_type.css" />
+<link rel="stylesheet" href="../assets/kit.css" />
+<link rel="stylesheet" href="../assets/site.css?v=3" />
+<style>
+  body { background: var(--sh-cream); }
+  .be-mast {
+    background: var(--sh-navy); color: white;
+    padding: 18px 0; position: sticky; top: 0; z-index: 20;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .be-mast .wrap-wide { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .be-mast .brand { display: flex; align-items: center; gap: 10px; color: white; text-decoration: none; font-family: var(--font-serif); font-weight: 700; font-size: 16px; }
+  .be-mast .brand img { width: 26px; height: 26px; filter: brightness(0) invert(1); }
+  .be-mast .back { color: rgba(255,255,255,0.9); font-family: var(--font-sans); font-size: 13px; text-decoration: none; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15); }
+  .be-mast .back:hover { background: rgba(255,255,255,0.08); color: white; }
+
+  .be-hero { padding: 72px 0 40px; background: linear-gradient(180deg, var(--sh-cream) 0%, white 100%); }
+  .be-hero .wrap-wide { max-width: 960px; }
+  .be-hero .eyebrow { color: var(--sh-rust); font-family: var(--font-sans); font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; display: inline-block; margin-bottom: 16px; }
+  .be-hero h1 { font-size: clamp(40px, 5vw, 60px); margin-bottom: 16px; }
+  .be-hero .lede { font-size: 19px; line-height: 1.55; color: var(--fg-2); max-width: 680px; }
+
+  .be-stack-bar {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+    margin-top: 36px;
+  }
+  @media (max-width: 820px) { .be-stack-bar { grid-template-columns: repeat(2, 1fr); } }
+  .be-stack-bar .s {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .be-stack-bar .s .label { font-family: var(--font-sans); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; margin-bottom: 4px; }
+  .be-stack-bar .s .val { font-family: var(--font-serif); font-size: 15px; font-weight: 600; color: var(--sh-navy); }
+  .be-stack-bar .s .sub { font-family: var(--font-sans); font-size: 11.5px; color: var(--fg-3); margin-top: 2px; }
+
+  .be-wrap { max-width: 960px; margin: 0 auto; padding: 48px 28px 120px; }
+
+  .be-toc {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    padding: 18px 22px; margin-bottom: 48px;
+    font-family: var(--font-sans); font-size: 14px;
+  }
+  .be-toc h6 { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; margin: 0 0 10px; }
+  .be-toc ol { margin: 0; padding-left: 20px; color: var(--fg-2); columns: 2; gap: 32px; }
+  @media (max-width: 600px) { .be-toc ol { columns: 1; } }
+  .be-toc li { margin-bottom: 4px; break-inside: avoid; }
+  .be-toc a { color: var(--sh-navy); }
+  .be-toc a:hover { color: var(--sh-rust-dark); }
+
+  .be-section { margin-bottom: 64px; scroll-margin-top: 80px; }
+  .be-section > h2 {
+    font-size: clamp(26px, 2.8vw, 34px);
+    margin-bottom: 10px;
+    display: flex; align-items: baseline; gap: 16px;
+  }
+  .be-section > h2 .num {
+    color: var(--sh-rust); font-family: var(--font-sans);
+    font-size: 14px; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .be-section > p { font-size: 16.5px; line-height: 1.65; color: var(--fg-2); max-width: 720px; margin-bottom: 24px; }
+  .be-section h3 { font-size: 19px; margin: 28px 0 10px; color: var(--sh-navy); }
+  .be-section h4 { font-size: 15px; margin: 18px 0 8px; color: var(--sh-navy); font-family: var(--font-sans); font-weight: 600; letter-spacing: 0.01em; }
+  .be-section p { font-size: 15.5px; line-height: 1.7; color: var(--fg-2); margin-bottom: 14px; }
+  .be-section ul { font-size: 15px; line-height: 1.7; color: var(--fg-2); padding-left: 20px; margin-bottom: 16px; }
+  .be-section li { margin-bottom: 8px; }
+  .be-section li strong { color: var(--sh-navy); font-weight: 600; }
+  .be-section code { background: white; border: 1px solid var(--sh-rule); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; color: var(--sh-rust-dark); font-family: ui-monospace, Menlo, Consolas, monospace; }
+
+  pre {
+    background: #0F1A35; color: #D9E1F0;
+    padding: 20px 22px; border-radius: 10px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 13px; line-height: 1.65;
+    overflow-x: auto; margin: 14px 0 20px;
+  }
+  pre .k { color: #F5D47A; }
+  pre .s { color: #E0694A; }
+  pre .c { color: #7F8BA8; font-style: italic; }
+  pre .f { color: #A5D7FF; }
+  pre .t { color: #C5E0B4; }
+  pre .n { color: #FFB56A; }
+
+  .be-callout {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    padding: 18px 22px; margin: 16px 0 22px;
+    border-left: 3px solid var(--sh-rust);
+  }
+  .be-callout.navy { border-left-color: var(--sh-navy); }
+  .be-callout.gold { border-left-color: var(--sh-gold); }
+  .be-callout .label { font-family: var(--font-sans); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sh-rust-dark); font-weight: 600; margin-bottom: 6px; }
+  .be-callout.navy .label { color: var(--sh-navy); }
+  .be-callout.gold .label { color: #7A5A0C; }
+  .be-callout p:last-child { margin-bottom: 0; }
+
+  /* Diagram */
+  .be-diagram {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 14px;
+    padding: 32px 28px; margin: 8px 0 24px;
+  }
+  .be-diagram-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 10px;
+    align-items: stretch;
+  }
+  @media (max-width: 780px) {
+    .be-diagram-flow { grid-template-columns: 1fr; }
+    .be-diagram-flow .arrow { display: none; }
+  }
+  .be-node {
+    background: var(--sh-cream); border: 1px solid var(--sh-rule); border-radius: 10px;
+    padding: 14px 16px;
+    font-family: var(--font-sans);
+  }
+  .be-node .tag { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; margin-bottom: 6px; }
+  .be-node .name { font-size: 14px; font-weight: 600; color: var(--sh-navy); font-family: var(--font-serif); margin-bottom: 2px; }
+  .be-node .sub { font-size: 12px; color: var(--fg-3); line-height: 1.5; }
+  .be-node.prim { background: var(--sh-navy); border-color: var(--sh-navy); }
+  .be-node.prim .tag { color: rgba(255,255,255,0.6); }
+  .be-node.prim .name { color: white; }
+  .be-node.prim .sub { color: rgba(255,255,255,0.75); }
+  .be-node.rust { background: var(--sh-rust-pale); border-color: rgba(205,83,52,0.3); }
+  .be-node.rust .name { color: var(--sh-rust-dark); }
+  .arrow { display: grid; place-items: center; color: var(--fg-3); font-size: 18px; }
+  .be-diagram-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 14px; }
+  @media (max-width: 780px) { .be-diagram-row { grid-template-columns: 1fr; } }
+
+  /* Schema table cards */
+  .be-schema-card {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    overflow: hidden; margin-bottom: 14px;
+  }
+  .be-schema-card .head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 14px 20px; background: var(--sh-cream);
+    border-bottom: 1px solid var(--sh-rule);
+    font-family: var(--font-sans);
+  }
+  .be-schema-card .head .name { font-family: var(--font-serif); font-size: 18px; font-weight: 600; color: var(--sh-navy); }
+  .be-schema-card .head code { background: white; border: 1px solid var(--sh-rule); font-size: 12px; padding: 2px 8px; }
+  .be-schema-card .head .purpose { font-size: 13px; color: var(--fg-3); }
+  .be-schema-card pre { margin: 0; border-radius: 0; }
+
+  /* API routes table */
+  .api-table {
+    width: 100%;
+    border-collapse: separate; border-spacing: 0;
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    overflow: hidden; margin: 14px 0 22px;
+    font-family: var(--font-sans); font-size: 13.5px;
+  }
+  .api-table th, .api-table td {
+    padding: 11px 16px; text-align: left; vertical-align: top;
+    border-bottom: 1px solid var(--sh-rule);
+  }
+  .api-table tr:last-child td { border-bottom: 0; }
+  .api-table th {
+    background: var(--sh-cream);
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--fg-3); font-weight: 600;
+  }
+  .api-table td.method { width: 80px; }
+  .api-table td.path { font-family: ui-monospace, Menlo, monospace; color: var(--sh-navy); font-weight: 600; width: 34%; }
+  .api-table td.scope { width: 90px; }
+  .api-table td.scope .p { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; }
+  .api-table td.scope .p.pub { background: #E8F3EC; color: #2E6E47; }
+  .api-table td.scope .p.priv { background: var(--sh-navy-pale); color: var(--sh-navy); }
+  .api-table td.desc { color: var(--fg-2); font-size: 13px; line-height: 1.5; }
+  .m-tag {
+    display: inline-block; padding: 3px 8px; border-radius: 5px;
+    font-family: ui-monospace, Menlo, monospace; font-size: 11px; font-weight: 700;
+  }
+  .m-tag.get { background: #E1EDFB; color: #1D4E8F; }
+  .m-tag.post { background: #E3F2E7; color: #2E6E47; }
+  .m-tag.patch { background: #FDF4D6; color: #7A5A0C; }
+  .m-tag.del { background: #FBE3E3; color: #8A2424; }
+
+  /* Role matrix */
+  .roles-table {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    overflow: hidden; margin: 14px 0 22px;
+    font-family: var(--font-sans); font-size: 13.5px;
+  }
+  .roles-table th, .roles-table td {
+    padding: 12px 16px; border-bottom: 1px solid var(--sh-rule); text-align: left;
+  }
+  .roles-table tr:last-child td { border-bottom: 0; }
+  .roles-table th {
+    background: var(--sh-cream); font-size: 11px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--fg-3); font-weight: 600;
+  }
+  .roles-table td:first-child { font-weight: 600; color: var(--sh-navy); }
+  .roles-table td.y { text-align: center; color: var(--sh-rust); font-weight: 700; }
+  .roles-table td.n { text-align: center; color: var(--sh-ink-4); }
+  .roles-table td.p { text-align: center; color: var(--sh-navy); font-weight: 600; font-size: 12px; }
+
+  /* Wireframe stack */
+  .wire {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 14px;
+    overflow: hidden; margin: 14px 0 22px;
+  }
+  .wire-bar {
+    background: var(--sh-navy); color: white;
+    padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--font-sans); font-size: 13px;
+  }
+  .wire-bar .left { display: flex; align-items: center; gap: 10px; }
+  .wire-bar .logo { width: 18px; height: 18px; background: white; border-radius: 4px; opacity: 0.9; }
+  .wire-bar .navs { display: flex; gap: 14px; color: rgba(255,255,255,0.7); font-size: 12.5px; }
+  .wire-bar .navs .active { color: white; font-weight: 600; border-bottom: 2px solid var(--sh-rust); padding-bottom: 2px; }
+  .wire-bar .user { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(255,255,255,0.75); }
+  .wire-bar .user .av { width: 22px; height: 22px; border-radius: 50%; background: var(--sh-rust); color: white; display: grid; place-items: center; font-size: 10px; font-weight: 700; }
+
+  .wire-body { display: grid; grid-template-columns: 200px 1fr; min-height: 360px; }
+  .wire-rail { background: var(--sh-cream); border-right: 1px solid var(--sh-rule); padding: 16px 12px; }
+  .wire-rail .grp { font-family: var(--font-sans); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; margin: 6px 10px 6px; }
+  .wire-rail .item { font-family: var(--font-sans); font-size: 13px; color: var(--fg-2); padding: 7px 10px; border-radius: 6px; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
+  .wire-rail .item.active { background: white; color: var(--sh-navy); font-weight: 600; border: 1px solid var(--sh-rule); }
+  .wire-rail .item .n { font-size: 11px; color: var(--fg-3); background: white; padding: 1px 6px; border-radius: 10px; border: 1px solid var(--sh-rule); }
+  .wire-rail .item.active .n { background: var(--sh-rust); color: white; border-color: var(--sh-rust); }
+
+  .wire-main { padding: 20px 24px; }
+  .wire-main h5 { font-family: var(--font-serif); font-size: 19px; color: var(--sh-navy); margin: 0 0 4px; }
+  .wire-main .crumb { font-family: var(--font-sans); font-size: 12px; color: var(--fg-3); margin-bottom: 10px; }
+  .wire-main .toolbar { display: flex; gap: 8px; justify-content: space-between; align-items: center; margin: 10px 0 14px; font-family: var(--font-sans); font-size: 12.5px; }
+  .wire-main .toolbar .search { flex: 1; background: var(--sh-cream); border: 1px solid var(--sh-rule); border-radius: 6px; padding: 6px 10px; color: var(--fg-3); font-size: 12px; max-width: 280px; }
+  .wire-main .btn-tiny { background: var(--sh-rust); color: white; border: 0; font-family: var(--font-sans); font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; }
+  .wire-main .btn-tiny.ghost { background: white; color: var(--sh-navy); border: 1px solid var(--sh-rule); }
+  .wire-list { border: 1px solid var(--sh-rule); border-radius: 8px; overflow: hidden; font-family: var(--font-sans); font-size: 12.5px; }
+  .wire-list .row { display: grid; grid-template-columns: 70px 1fr 120px 120px 80px; padding: 8px 14px; border-bottom: 1px solid var(--sh-rule); align-items: center; }
+  .wire-list .row.head { background: var(--sh-cream); font-size: 10.5px; color: var(--fg-3); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; }
+  .wire-list .row:last-child { border-bottom: 0; }
+  .wire-list .row .dt { color: var(--sh-navy); font-weight: 600; }
+  .wire-list .row .st { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 600; }
+  .wire-list .row .st.pub { background: #E3F2E7; color: #2E6E47; }
+  .wire-list .row .st.draft { background: #FDF4D6; color: #7A5A0C; }
+
+  /* Form wire */
+  .wire-form { display: grid; grid-template-columns: 1fr 280px; gap: 24px; }
+  .wire-form .f-group { margin-bottom: 14px; }
+  .wire-form .f-group label { font-family: var(--font-sans); font-size: 11.5px; color: var(--fg-3); font-weight: 600; letter-spacing: 0.04em; display: block; margin-bottom: 4px; }
+  .wire-form .f-group .input { background: var(--sh-cream); border: 1px solid var(--sh-rule); border-radius: 6px; padding: 8px 10px; font-family: var(--font-sans); font-size: 13px; color: var(--sh-navy); }
+  .wire-form .f-group .input.long { min-height: 56px; }
+  .wire-form .f-group .tags { display: flex; gap: 4px; flex-wrap: wrap; }
+  .wire-form .f-group .tag { background: var(--sh-rust-pale); color: var(--sh-rust-dark); padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .wire-form .side { border-left: 1px solid var(--sh-rule); padding-left: 20px; }
+  .wire-form .side h6 { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; margin: 0 0 10px; }
+  .wire-form .side .meta-row { display: flex; justify-content: space-between; font-family: var(--font-sans); font-size: 12px; color: var(--fg-2); padding: 6px 0; border-bottom: 1px dashed var(--sh-rule); }
+  .wire-form .side .meta-row span:last-child { color: var(--sh-navy); font-weight: 600; }
+  .wire-form .side .photo-slot { border: 1.5px dashed var(--sh-rule); border-radius: 8px; aspect-ratio: 4/3; display: grid; place-items: center; font-family: var(--font-sans); font-size: 11.5px; color: var(--fg-3); margin-top: 10px; background: var(--sh-cream); }
+
+  .be-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+  .be-links a { background: white; border: 1px solid var(--sh-rule); padding: 10px 16px; border-radius: 999px; color: var(--sh-navy); font-family: var(--font-sans); font-size: 13.5px; text-decoration: none; font-weight: 500; }
+  .be-links a:hover { background: var(--sh-rust); color: white; border-color: var(--sh-rust); }
+
+  .be-prompt {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    padding: 20px 22px; margin: 14px 0 20px;
+  }
+  .be-prompt .who {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3); font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .be-prompt .who .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sh-rust); }
+  .be-prompt .msg { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.7; color: var(--fg-1); white-space: pre-wrap; }
+
+  .env-block {
+    background: #0F1A35; color: #D9E1F0;
+    padding: 18px 22px; border-radius: 10px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 13px; line-height: 1.7;
+    margin: 14px 0 20px;
+  }
+  .env-block .k { color: #F5D47A; }
+  .env-block .v { color: #E0694A; }
+  .env-block .c { color: #7F8BA8; font-style: italic; }
+</style>
+</head>
+<body data-screen-label="Backend Architecture">
+
+<header class="be-mast">
+  <div class="wrap-wide">
+    <a class="brand" href="../index.html">
+      <img src="../assets/logo-submark.png" alt="" />
+      <span>Saint Helen 3.0</span>
+    </a>
+    <a class="back" href="../index.html">← Back to review</a>
+  </div>
+</header>
+
+<section class="be-hero">
+  <div class="wrap-wide">
+    <span class="eyebrow">Backend architecture · custom, no CMS</span>
+    <h1>Our own stack. Our own data.</h1>
+    <p class="lede">Neon for Postgres. Drizzle for the schema. Custom <code>/admin</code> routes for editors. Vercel Blob behind <code>cdn.sainthelen.org</code> for photos and bulletins. No third-party content service, no vendor lock-in, no monthly CMS bill.</p>
+
+    <div class="be-stack-bar">
+      <div class="s"><div class="label">Database</div><div class="val">Neon Postgres</div><div class="sub">serverless, branched</div></div>
+      <div class="s"><div class="label">ORM</div><div class="val">Drizzle</div><div class="sub">typed, migrations-as-code</div></div>
+      <div class="s"><div class="label">Admin</div><div class="val">/admin routes</div><div class="sub">same Next.js app</div></div>
+      <div class="s"><div class="label">Auth</div><div class="val">Auth.js</div><div class="sub">magic-link email</div></div>
+      <div class="s"><div class="label">Files</div><div class="val">Vercel Blob</div><div class="sub">cdn.sainthelen.org</div></div>
+    </div>
+  </div>
+</section>
+
+<article class="be-wrap">
+
+  <nav class="be-toc">
+    <h6>Contents</h6>
+    <ol>
+      <li><a href="#overview">01 · System at a glance</a></li>
+      <li><a href="#db">02 · Database — Neon setup</a></li>
+      <li><a href="#schema">03 · Drizzle schema (all 7 tables)</a></li>
+      <li><a href="#migrations">04 · Migrations &amp; seeding</a></li>
+      <li><a href="#api">05 · API route map</a></li>
+      <li><a href="#admin">06 · Admin UI wireframes</a></li>
+      <li><a href="#auth">07 · Auth, roles &amp; ministry self-service</a></li>
+      <li><a href="#blob">08 · File storage — Vercel Blob + custom CDN</a></li>
+      <li><a href="#revalidate">09 · Cache, revalidation, ISR</a></li>
+      <li><a href="#env">10 · Environment &amp; secrets</a></li>
+      <li><a href="#integrations">11 · Integrations — Touchpoint, Fathom, Resend, Twilio</a></li>
+      <li><a href="#backups">12 · Backup strategy</a></li>
+      <li><a href="#a11y">13 · Accessibility — WCAG 2.2 AA + widget</a></li>
+      <li><a href="#staging">14 · Staging environment</a></li>
+      <li><a href="#deferred">15 · Explicitly deferred</a></li>
+      <li><a href="#prompt">16 · Updated kickoff prompt</a></li>
+      <li><a href="#future">17 · Future tickets</a></li>
+    </ol>
+  </nav>
+
+  <!-- ================= 01 ================= -->
+  <section id="overview" class="be-section">
+    <h2><span class="num">01</span>System at a glance</h2>
+    <p>The entire system is one Next.js 15 app deployed on Vercel. Everything — public site, admin UI, API, database connection, file uploads — lives in the same repo and deploys together.</p>
+
+    <div class="be-diagram">
+      <div class="be-diagram-flow">
+        <div class="be-node">
+          <div class="tag">Visitor</div>
+          <div class="name">sainthelen.org</div>
+          <div class="sub">Public pages — home, Mass, events, ministries, give</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="be-node prim">
+          <div class="tag">Next.js 15 on Vercel</div>
+          <div class="name">RSC + Route Handlers</div>
+          <div class="sub">Server Components fetch directly from the DB. Public reads are ISR-cached.</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="be-node">
+          <div class="tag">Database</div>
+          <div class="name">Neon Postgres</div>
+          <div class="sub">Serverless. Branch per preview deploy. Auto-scales to zero.</div>
+        </div>
+      </div>
+
+      <div class="be-diagram-row">
+        <div class="be-node rust">
+          <div class="tag">Parish staff</div>
+          <div class="name">/admin routes</div>
+          <div class="sub">Same Next.js app. Magic-link auth. Custom forms for each content type.</div>
+        </div>
+        <div class="be-node rust">
+          <div class="tag">Assets</div>
+          <div class="name">Vercel Blob</div>
+          <div class="sub">Served from <code>cdn.sainthelen.org</code>. Photos, bulletin PDFs, staff headshots.</div>
+        </div>
+        <div class="be-node rust">
+          <div class="tag">Outbound</div>
+          <div class="name">Resend</div>
+          <div class="sub">Welcome-form relay, prayer requests, magic-link emails.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="be-callout navy">
+      <div class="label">Why this shape</div>
+      <p>Parish sites change weekly, not hourly. Data volumes are tiny (hundreds of events, dozens of ministries, one weekly bulletin). A custom backend over Postgres is simpler than a CMS, the admin UI can be purpose-built for the two or three people who use it, and nothing about this stack gets in the way of moving hosts if that ever becomes necessary.</p>
+    </div>
+  </section>
+
+  <!-- ================= 02 ================= -->
+  <section id="db" class="be-section">
+    <h2><span class="num">02</span>Database — Neon setup</h2>
+    <p>Neon gives us Postgres with serverless pooling, auto-scaling to zero, and a <strong>branch per deploy</strong> — which means every PR preview gets its own isolated copy of the database. Production is untouched until the PR merges.</p>
+
+    <h3>Project layout</h3>
+    <ul>
+      <li><strong>One Neon project</strong> — <code>sainthelen</code></li>
+      <li><strong>Two roles</strong> — <code>sainthelen_owner</code> (migrations), <code>sainthelen_app</code> (runtime reads/writes, no schema access)</li>
+      <li><strong>Three branches at minimum</strong> — <code>main</code> (prod), <code>staging</code> (the parish team's QA copy), and automatic preview branches per PR</li>
+    </ul>
+
+    <h3>Connection</h3>
+    <p>Use Neon's serverless driver for Edge compatibility and the standard <code>postgres</code> driver for Node. Drizzle handles both — one config, two transports.</p>
+
+    <pre><span class="c">// db/index.ts</span>
+<span class="k">import</span> { drizzle } <span class="k">from</span> <span class="s">"drizzle-orm/neon-http"</span>;
+<span class="k">import</span> { neon } <span class="k">from</span> <span class="s">"@neondatabase/serverless"</span>;
+<span class="k">import</span> * <span class="k">as</span> schema <span class="k">from</span> <span class="s">"./schema"</span>;
+
+<span class="k">const</span> <span class="f">sql</span> = <span class="f">neon</span>(process.env.<span class="n">DATABASE_URL</span>!);
+<span class="k">export const</span> <span class="f">db</span> = <span class="f">drizzle</span>(sql, { schema });</pre>
+
+    <div class="be-callout">
+      <div class="label">Branching pattern</div>
+      <p>Every PR gets a Neon branch cloned from <code>main</code>. The Vercel preview deploy reads from it. When the PR merges, migrations run once against <code>main</code> and the branch is deleted. Staff can QA from staging; engineers never touch production data.</p>
+    </div>
+  </section>
+
+  <!-- ================= 03 ================= -->
+  <section id="schema" class="be-section">
+    <h2><span class="num">03</span>Drizzle schema</h2>
+    <p>Seven tables cover the entire site. Every column is typed; every foreign key is explicit. Drop this into <code>db/schema.ts</code>.</p>
+
+    <div class="be-schema-card">
+      <div class="head"><div><span class="name">events</span> · <span class="purpose">parish events, retreats, one-offs</span></div><code>table: events</code></div>
+<pre><span class="k">export const</span> <span class="f">events</span> = <span class="f">pgTable</span>(<span class="s">"events"</span>, {
+  id:           uuid(<span class="s">"id"</span>).<span class="f">defaultRandom</span>().<span class="f">primaryKey</span>(),
+  slug:         text(<span class="s">"slug"</span>).<span class="f">notNull</span>().<span class="f">unique</span>(),
+  title:        text(<span class="s">"title"</span>).<span class="f">notNull</span>(),
+  lede:         text(<span class="s">"lede"</span>),
+  body:         text(<span class="s">"body"</span>),                     <span class="c">// markdown</span>
+  startsAt:     timestamp(<span class="s">"starts_at"</span>, { withTimezone: <span class="k">true</span> }).<span class="f">notNull</span>(),
+  endsAt:       timestamp(<span class="s">"ends_at"</span>,   { withTimezone: <span class="k">true</span> }).<span class="f">notNull</span>(),
+  location:     text(<span class="s">"location"</span>),
+  audiences:    text(<span class="s">"audiences"</span>).<span class="f">array</span>().<span class="f">default</span>(sql<span class="s">`'{}'`</span>),
+  categories:   text(<span class="s">"categories"</span>).<span class="f">array</span>().<span class="f">default</span>(sql<span class="s">`'{}'`</span>),
+  photoBlobKey: text(<span class="s">"photo_blob_key"</span>),           <span class="c">// points at blobAssets.key</span>
+  registerUrl:  text(<span class="s">"register_url"</span>),
+  isFeatured:   boolean(<span class="s">"is_featured"</span>).<span class="f">default</span>(<span class="k">false</span>),
+  status:       text(<span class="s">"status"</span>, { enum: [<span class="s">"draft"</span>, <span class="s">"published"</span>, <span class="s">"archived"</span>] }).<span class="f">notNull</span>().<span class="f">default</span>(<span class="s">"draft"</span>),
+  createdBy:    uuid(<span class="s">"created_by"</span>).<span class="f">references</span>(() =&gt; users.id),
+  createdAt:    timestamp(<span class="s">"created_at"</span>).<span class="f">defaultNow</span>().<span class="f">notNull</span>(),
+  updatedAt:    timestamp(<span class="s">"updated_at"</span>).<span class="f">defaultNow</span>().<span class="f">notNull</span>(),
+});</pre>
+    </div>
+
+    <div class="be-schema-card">
+      <div class="head"><div><span class="name">massTimes</span> · <span class="purpose">weekly recurring schedule + overrides</span></div><code>table: mass_times</code></div>
+<pre><span class="k">export const</span> <span class="f">massTimes</span> = <span class="f">pgTable</span>(<span class="s">"mass_times"</span>, {
+  id:           uuid(<span class="s">"id"</span>).<span class="f">defaultRandom</span>().<span class="f">primaryKey</span>(),
+  dayOfWeek:    smallint(<span class="s">"day_of_week"</span>),              <span class="c">// 0–6, null for one-off holy-days</span>
+  time:         time(<span class="s">"time"</span>).<span class="f">notNull</span>(),               <span class="c">// e.g. 10:00</span>
+  kind:         text(<span class="s">"kind"</span>, { enum: [<span class="s">"sunday"</span>, <span class="s">"vigil"</span>, <span class="s">"daily"</span>, <span class="s">"holy_day"</span>] }).<span class="f">notNull</span>(),
+  label:        text(<span class="s">"label"</span>),                      <span class="c">// "Family Mass", "Youth-led"</span>
+  presiderId:   uuid(<span class="s">"presider_id"</span>).<span class="f">references</span>(() =&gt; staff.id),
+  liveStreamUrl: text(<span class="s">"live_stream_url"</span>),
+  <span class="c">// for one-off dates that override the weekly pattern:</span>
+  overrideDate: date(<span class="s">"override_date"</span>),
+  overrideKind: text(<span class="s">"override_kind"</span>, { enum: [<span class="s">"canceled"</span>, <span class="s">"added"</span>, <span class="s">"moved"</span>] }),
+  notes:        text(<span class="s">"notes"</span>),
+  isActive:     boolean(<span class="s">"is_active"</span>).<span class="f">default</span>(<span class="k">true</span>),
+  updatedAt:    timestamp(<span class="s">"updated_at"</span>).<span class="f">defaultNow</span>().<span class="f">notNull</span>(),
+});</pre>
+    </div>
+
+    <div class="be-schema-card">
+      <div class="head"><div><span class="name">ministries</span> · <span class="purpose">Find Your Place + Matchmaker source</span></div><code>table: ministries</code></div>
+<pre><span class="k">export const</span> <span class="f">ministries</span> = <span class="f">pgTable</span>(<span class="s">"ministries"</span>, {
+  id:              uuid(<span class="s">"id"</span>).<span class="f">defaultRandom</span>().<span class="f">primaryKey</span>(),
+  slug:            text(<span class="s">"slug"</span>).<span class="f">notNull</span>().<span class="f">unique</span>(),
+  name:            text(<span class="s">"name"</span>).<span class="f">notNull</span>(),
+  tagline:         text(<span class="s">"tagline"</span>),
+  description:     text(<span class="s">"description"</span>),                <span class="c">// markdown</span>
+  audiences:       text(<span class="s">"audiences"</span>).<span class="f">array</span>().<span class="f">default</span>(sql<span class="s">`'{}'`</span>),
+  category:        text(<span class="s">"category"</span>, { enum: [<span class="s">"worship"</span>,<span class="s">"formation"</span>,<span class="s">"fellowship"</span>,<span class="s">"service"</span>,<span class="s">"sacraments"</span>,<span class="s">"music"</span>] }),
+  matchmakerTags:  text(<span class="s">"matchmaker_tags"</span>).<span class="f">array</span>().<span class="f">default</span>(sql<span class="s">`'{}'`</span>), <span class="c">// weights the quiz against</span>
+  meetingCadence:  text(<span class="s">"meeting_cadence"</span>),          <span class="c">// "2nd Thursdays, 7 PM"</span>
+  leadStaffId:     uuid(<span class="s">"lead_staff_id"</span>).<span class="f">references</span>(() =&gt; staff.id),
+  photoBlobKey:    text(<span class="s">"photo_blob_key"</span>),
+  contactEmail:    text(<span class="s">"contact_email"</span>),
+  isAcceptingNew:  boolean(<span class="s">"is_accepting_new"</span>).<span class="f">default</span>(<span class="k">true</span>),
+  orderingPriority: integer(<span class="s">"ordering_priority"</span>).<span class="f">default</span>(0),
+  status:          text(<span class="s">"status"</span>, { enum: [<span class="s">"draft"</span>, <span class="s">"published"</span>, <span class="s">"archived"</span>] }).<span class="f">notNull</span>().<span class="f">default</span>(<span class="s">"draft"</span>),
+  updatedAt:       timestamp(<span class="s">"updated_at"</span>).<span class="f">defaultNow</span>().<span class="f">notNull</span>(),
+});</pre>
+    </div>
+
+    <div class="be-schema-card">
+      <div class="head"><div><span class="name">staff</span> · <span class="purpose">pastor, clergy, lay staff, ministry leads</span></div><code>table: staff</code></div>
+<pre><span class="k">export const</span> <span class="f">staff</span> = <span class="f">pgTable</span>(<span class="s">"staff"</span>, {
+  id:           uuid(<span class="s">"id"</span>).<span class="f">defaultRandom</span>().<span class="f">primaryKey</span>(),
+  slug:         text(<span class="s">"slug"</span>).<span class="f">notNull</span>().<span class="f">unique</span>(),
+  name:         text(<span class="s">"name"</span>).<span class="f">notNull</span>(),
+  role:         text(<span class="s">"role"</span>).<span class="f">notNull</span>(),              <span class="c">// "Pastor", "Director of Music"</span>
+  bio:          text(<span class="s">"bio"</span>),
+  email:        text(<span class="s">"email"</span>),
+  photoBlobKey: text(<span class="s">"photo_blob_key"</span>),
+  orderingPriority: integer(<span class="s">"ordering_priority"</span>).<span class="f">default</span>(0),
+  isActive:     boolean(<span class="s">"is_active"</span>).<span class="f">default</span>(<span class="k">true</span>),
+  updatedAt:    timestamp(<span class="s">"updated_at"</span>).<span class="f">defaultNow</span>().<span class="f">notNull</span>(),
+});</pre>
+    </div>
+
+    <div class="be-schema-card">
+      <div class="head"><div><span class="name">bulletins</span> · <span class="purpose">weekly PDF archive</span></div><code>table: bulletins</code></div>
+<pre><span class="k">export const</span> <span class="f">bulletins</span> = <span class="f">pgTable</span>(<span class="s">"bulletins"</span>, {
+  id:            uuid(<span class="s">"id"</span>).<span class="f">defaultRandom</span>().<span class="f">primaryKey</span>(),
+  weekOf:        date(<span class="s">"week_of"</span>).<span class="f">notNull</span>().<span class="f">unique</span>(),
+  title:         text(<span class="s">"title"</span>),                         <span class="c">// "Second Sunday of Easter"</span>
+  pdfBlobKey:    text(<span class="s">"pdf_blob_key"</span>).<span class="f">notNull</span>(),
+  thumbBlobKey:  text(<span class="s">"thumb_blob_key"</span>),              <span class="c">// generated on upload</span>
+  pageCount:     integer(<span class="s">"page_count"</span>),
+  publishedAt:   timestamp(<span class="s">"published_at"</span>),
+  createdAt:     timestamp(<span class="s">"created_at"</span>).<span class="f">defaultNow</span>().<span class="f">notNull</span>(),
+});</pre>
+    </div>
+
+    <div class="be-schema-card">
+      <div class="head"><div><span class="name">seasonalBanners</span> · <span class="purpose">time-boxed homepage banner</span></div><code>table: seasonal_banners</code></div>
+<pre><span class="k">export const</span> <span class="f">seasonalBanners</span> = <span class="f">pgTable</span>(<span class="s">"seasonal_banners"</span>, {
+  id:           uuid(<span class="s">"id"</span>).<span class="f">defaultRandom</span>().<span class="f">primaryKey</span>(),
+  title:        text(<span class="s">"title"</span>).<span class="f">notNull</span>(),           <span class="c">// "Holy Week 2026"</span>
+  subtitle:     text(<span class="s">"subtitle"</span>),
+  ctaLabel:     text(<span class="s">"cta_label"</span>),
+  ctaUrl:       text(<span class="s">"cta_url"</span>),
+  photoBlobKey: text(<span class="s">"photo_blob_key"</span>),
+  startsAt:     timestamp(<span class="s">"starts_at"</span>).<span class="f">notNull</span>(),
+  endsAt:       timestamp(<span class="s">"ends_at"</span>).<span class="f">notNull</span>(),
+  isActive:     boolean(<span class="s">"is_active"</span>).<span class="f">default</span>(<span class="k">true</span>),
+  updatedAt:    timestamp(<span class="s">"updated_at"</span>).<span class="f">defaultNow</span>().<span class="f">notNull</span>(),
+});</pre>
+    </div>
+
+    <div class="be-schema-card">
+      <div class="head"><div><span class="name">siteSettings</span> · <span class="purpose">singleton — everything global</span></div><code>table: site_settings</code></div>
+<pre><span class="k">export const</span> <span class="f">siteSettings</span> = <span class="f">pgTable</span>(<span class="s">"site_settings"</span>, {
+  id:                smallint(<span class="s">"id"</span>).<span class="f">primaryKey</span>(),        <span class="c">// always 1 — enforce single row</span>
+  contactEmail:      text(<span class="s">"contact_email"</span>).<span class="f">notNull</span>(),
+  contactPhone:      text(<span class="s">"contact_phone"</span>),
+  address:           jsonb(<span class="s">"address"</span>),                  <span class="c">// { street, city, state, zip, geo }</span>
+  socialLinks:       jsonb(<span class="s">"social_links"</span>),             <span class="c">// { facebook, youtube, instagram }</span>
+  welcomeFormRecipients: text(<span class="s">"welcome_form_recipients"</span>).<span class="f">array</span>().<span class="f">default</span>(sql<span class="s">`'{}'`</span>),
+  giveUrl:           text(<span class="s">"give_url"</span>),
+  footerCopy:        text(<span class="s">"footer_copy"</span>),
+  densityScale:      numeric(<span class="s">"density_scale"</span>, { precision: 3, scale: 2 }).<span class="f">default</span>(<span class="s">"1.00"</span>),
+  updatedAt:         timestamp(<span class="s">"updated_at"</span>).<span class="f">defaultNow</span>().<span class="f">notNull</span>(),
+});</pre>
+    </div>
+
+    <h3>Auth tables (Auth.js)</h3>
+    <p>Auth.js manages these — you don't write the CRUD yourself — but they live in the same Postgres instance.</p>
+
+    <div class="be-schema-card">
+      <div class="head"><div><span class="name">users, accounts, sessions, verificationTokens</span> · <span class="purpose">Auth.js canonical schema + role column</span></div><code>tables: users, accounts, sessions, verification_tokens</code></div>
+<pre><span class="k">export const</span> <span class="f">users</span> = <span class="f">pgTable</span>(<span class="s">"users"</span>, {
+  id:          uuid(<span class="s">"id"</span>).<span class="f">defaultRandom</span>().<span class="f">primaryKey</span>(),
+  email:       text(<span class="s">"email"</span>).<span class="f">notNull</span>().<span class="f">unique</span>(),
+  name:        text(<span class="s">"name"</span>),
+  emailVerified: timestamp(<span class="s">"email_verified"</span>),
+  image:       text(<span class="s">"image"</span>),
+  role:        text(<span class="s">"role"</span>, { enum: [<span class="s">"admin"</span>, <span class="s">"editor"</span>, <span class="s">"ministry_lead"</span>] }).<span class="f">notNull</span>().<span class="f">default</span>(<span class="s">"editor"</span>),
+  ministryId:  uuid(<span class="s">"ministry_id"</span>).<span class="f">references</span>(() =&gt; ministries.id), <span class="c">// scoped edit rights</span>
+  createdAt:   timestamp(<span class="s">"created_at"</span>).<span class="f">defaultNow</span>().<span class="f">notNull</span>(),
+});
+<span class="c">// accounts, sessions, verificationTokens — stock Auth.js schema</span></pre>
+    </div>
+
+    <div class="be-schema-card">
+      <div class="head"><div><span class="name">blobAssets</span> · <span class="purpose">our own registry over Vercel Blob</span></div><code>table: blob_assets</code></div>
+<pre><span class="k">export const</span> <span class="f">blobAssets</span> = <span class="f">pgTable</span>(<span class="s">"blob_assets"</span>, {
+  key:         text(<span class="s">"key"</span>).<span class="f">primaryKey</span>(),           <span class="c">// our stable id — what other tables reference</span>
+  blobUrl:     text(<span class="s">"blob_url"</span>).<span class="f">notNull</span>(),         <span class="c">// the Vercel Blob URL (rewritten to cdn.sainthelen.org)</span>
+  mimeType:    text(<span class="s">"mime_type"</span>).<span class="f">notNull</span>(),
+  byteSize:    integer(<span class="s">"byte_size"</span>).<span class="f">notNull</span>(),
+  width:       integer(<span class="s">"width"</span>),                    <span class="c">// images only</span>
+  height:      integer(<span class="s">"height"</span>),
+  alt:         text(<span class="s">"alt"</span>),
+  caption:     text(<span class="s">"caption"</span>),
+  credit:      text(<span class="s">"credit"</span>),                      <span class="c">// photographer</span>
+  uploadedBy:  uuid(<span class="s">"uploaded_by"</span>).<span class="f">references</span>(() =&gt; users.id),
+  uploadedAt:  timestamp(<span class="s">"uploaded_at"</span>).<span class="f">defaultNow</span>().<span class="f">notNull</span>(),
+});</pre>
+    </div>
+
+    <div class="be-callout navy">
+      <div class="label">Why blobAssets exists</div>
+      <p>Other tables reference assets by <strong>our</strong> key — not the blob URL. That means we can rotate the underlying CDN or migrate to a different file store later without a schema migration on seven tables. The indirection pays for itself the first time a URL format changes.</p>
+    </div>
+  </section>
+
+  <!-- ================= 04 ================= -->
+  <section id="migrations" class="be-section">
+    <h2><span class="num">04</span>Migrations &amp; seeding</h2>
+    <p>Drizzle Kit generates migrations from schema diffs and applies them in order. Seeds live alongside.</p>
+
+    <pre><span class="c"># Generate a migration after editing schema.ts</span>
+pnpm drizzle-kit generate
+
+<span class="c"># Apply pending migrations to the current DATABASE_URL</span>
+pnpm drizzle-kit migrate
+
+<span class="c"># Inspect / query during development</span>
+pnpm drizzle-kit studio</pre>
+
+    <h3>Seeding strategy</h3>
+    <ul>
+      <li><strong><code>db/seed/site-settings.ts</code></strong> — inserts the singleton row with sensible defaults on first install.</li>
+      <li><strong><code>db/seed/dev.ts</code></strong> — fixture data for local dev (5 events, 8 ministries, 4 staff, last 12 bulletins). Idempotent.</li>
+      <li><strong><code>db/seed/prod-bootstrap.ts</code></strong> — runs once on launch day: imports Fr. Tom + clergy, last 52 bulletins from the 2.0 archive, and the weekly Mass schedule.</li>
+    </ul>
+
+    <div class="be-callout">
+      <div class="label">Migration discipline</div>
+      <p>Never edit a committed migration file. If something's wrong, write another migration that fixes it forward. This is the only way preview branches stay in sync with main.</p>
+    </div>
+  </section>
+
+  <!-- ================= 05 ================= -->
+  <section id="api" class="be-section">
+    <h2><span class="num">05</span>API route map</h2>
+    <p>Public reads are mostly handled via RSC + direct Drizzle queries — no API layer needed. Route Handlers exist for (a) mutations, (b) anything called from client components, and (c) external relays.</p>
+
+    <table class="api-table">
+      <thead><tr><th>Method</th><th>Path</th><th>Scope</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td class="method"><span class="m-tag get">GET</span></td><td class="path">/api/mass-times</td><td class="scope"><span class="p pub">public</span></td><td class="desc">Returns the week's schedule expanded from the recurring pattern + overrides. Cached 5 min.</td></tr>
+        <tr><td class="method"><span class="m-tag get">GET</span></td><td class="path">/api/readings</td><td class="scope"><span class="p pub">public</span></td><td class="desc">Edge handler. Proxies the USCCB daily readings; cached daily.</td></tr>
+        <tr><td class="method"><span class="m-tag post">POST</span></td><td class="path">/api/welcome</td><td class="scope"><span class="p pub">public</span></td><td class="desc">Welcome form relay. Validates with Zod; sends via Resend to <code>siteSettings.welcomeFormRecipients</code>.</td></tr>
+        <tr><td class="method"><span class="m-tag post">POST</span></td><td class="path">/api/prayer-request</td><td class="scope"><span class="p pub">public</span></td><td class="desc">Same as welcome but to prayer-team recipients. Rate-limited to 3/hour/IP.</td></tr>
+        <tr><td class="method"><span class="m-tag post">POST</span></td><td class="path">/api/matchmaker</td><td class="scope"><span class="p pub">public</span></td><td class="desc">Accepts quiz answers, returns top-5 ministries. Stateless.</td></tr>
+        <tr><td class="method"><span class="m-tag get">GET</span></td><td class="path">/api/admin/events</td><td class="scope"><span class="p priv">admin</span></td><td class="desc">List events w/ filters. Pagination via cursor.</td></tr>
+        <tr><td class="method"><span class="m-tag post">POST</span></td><td class="path">/api/admin/events</td><td class="scope"><span class="p priv">admin</span></td><td class="desc">Create event. Draft by default.</td></tr>
+        <tr><td class="method"><span class="m-tag patch">PATCH</span></td><td class="path">/api/admin/events/[id]</td><td class="scope"><span class="p priv">admin</span></td><td class="desc">Update. Publish transitions revalidate <code>/events</code> + <code>/events/[slug]</code>.</td></tr>
+        <tr><td class="method"><span class="m-tag del">DELETE</span></td><td class="path">/api/admin/events/[id]</td><td class="scope"><span class="p priv">admin</span></td><td class="desc">Soft delete — sets status to <code>archived</code>. Hard delete is DB-only.</td></tr>
+        <tr><td class="method"><span class="m-tag get">GET</span></td><td class="path">/api/admin/ministries, /mass-times, /staff, /bulletins, /seasonal-banners</td><td class="scope"><span class="p priv">admin</span></td><td class="desc">Symmetric CRUD for each content type. Same shape as events.</td></tr>
+        <tr><td class="method"><span class="m-tag post">POST</span></td><td class="path">/api/admin/upload</td><td class="scope"><span class="p priv">admin</span></td><td class="desc">Returns a Vercel Blob client-upload token. Client uploads directly to Blob; server records a row in <code>blobAssets</code> on completion.</td></tr>
+        <tr><td class="method"><span class="m-tag get">GET</span></td><td class="path">/api/auth/[...nextauth]</td><td class="scope"><span class="p pub">public</span></td><td class="desc">Auth.js handlers — magic-link send, verify, session, sign-out.</td></tr>
+        <tr><td class="method"><span class="m-tag post">POST</span></td><td class="path">/api/revalidate</td><td class="scope"><span class="p priv">admin</span></td><td class="desc">On-demand <code>revalidateTag</code>. Fires automatically from admin mutations; manual button exists too.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Pattern — admin Route Handler</h3>
+    <pre><span class="c">// app/api/admin/events/route.ts</span>
+<span class="k">import</span> { NextResponse } <span class="k">from</span> <span class="s">"next/server"</span>;
+<span class="k">import</span> { auth } <span class="k">from</span> <span class="s">"@/auth"</span>;
+<span class="k">import</span> { db } <span class="k">from</span> <span class="s">"@/db"</span>;
+<span class="k">import</span> { events } <span class="k">from</span> <span class="s">"@/db/schema"</span>;
+<span class="k">import</span> { EventCreateSchema } <span class="k">from</span> <span class="s">"@/lib/validators"</span>;
+<span class="k">import</span> { revalidateTag } <span class="k">from</span> <span class="s">"next/cache"</span>;
+
+<span class="k">export async function</span> <span class="f">POST</span>(req: Request) {
+  <span class="k">const</span> session = <span class="k">await</span> <span class="f">auth</span>();
+  <span class="k">if</span> (!session?.user || session.user.role === <span class="s">"ministry_lead"</span>)
+    <span class="k">return</span> NextResponse.<span class="f">json</span>({ error: <span class="s">"forbidden"</span> }, { status: 403 });
+
+  <span class="k">const</span> parsed = EventCreateSchema.<span class="f">safeParse</span>(<span class="k">await</span> req.<span class="f">json</span>());
+  <span class="k">if</span> (!parsed.success)
+    <span class="k">return</span> NextResponse.<span class="f">json</span>({ error: parsed.error.flatten() }, { status: 400 });
+
+  <span class="k">const</span> [row] = <span class="k">await</span> db.<span class="f">insert</span>(events).<span class="f">values</span>({ ...parsed.data, createdBy: session.user.id }).<span class="f">returning</span>();
+  <span class="f">revalidateTag</span>(<span class="s">"events"</span>);
+  <span class="k">return</span> NextResponse.<span class="f">json</span>(row, { status: 201 });
+}</pre>
+  </section>
+
+  <!-- ================= 06 ================= -->
+  <section id="admin" class="be-section">
+    <h2><span class="num">06</span>Admin UI wireframes</h2>
+    <p>The admin lives at <code>/admin</code> behind auth. Same app shell across every content type — list view, detail/editor view. Comms can learn it in ten minutes.</p>
+
+    <h3>List view — events</h3>
+    <div class="wire">
+      <div class="wire-bar">
+        <div class="left">
+          <div class="logo"></div>
+          <span>Saint Helen Admin</span>
+          <span class="navs"><span class="active">Events</span><span>Mass times</span><span>Ministries</span><span>Staff</span><span>Bulletins</span></span>
+        </div>
+        <div class="user"><div class="av">FT</div>fr.tom@sainthelen.org</div>
+      </div>
+      <div class="wire-body">
+        <aside class="wire-rail">
+          <div class="grp">Content</div>
+          <div class="item active">Events <span class="n">42</span></div>
+          <div class="item">Mass times <span class="n">7</span></div>
+          <div class="item">Ministries <span class="n">18</span></div>
+          <div class="item">Staff <span class="n">12</span></div>
+          <div class="item">Bulletins <span class="n">52</span></div>
+          <div class="item">Seasonal banners <span class="n">2</span></div>
+          <div class="grp" style="margin-top: 14px;">Settings</div>
+          <div class="item">Site settings</div>
+          <div class="item">Users &amp; roles</div>
+          <div class="item">Media library</div>
+        </aside>
+        <div class="wire-main">
+          <div class="crumb">Admin / Events</div>
+          <h5>Events</h5>
+          <div class="toolbar">
+            <div class="search">🔍 Search title, audience, category…</div>
+            <div style="display:flex; gap: 6px;">
+              <button class="btn-tiny ghost">Filters</button>
+              <button class="btn-tiny">+ New event</button>
+            </div>
+          </div>
+          <div class="wire-list">
+            <div class="row head">
+              <div>Date</div><div>Title</div><div>Audience</div><div>Updated</div><div>Status</div>
+            </div>
+            <div class="row">
+              <div class="dt">May 3</div><div>Harvest Fest 2026</div><div>All-parish</div><div style="color: var(--fg-3);">2 hrs ago</div><div><span class="st pub">Published</span></div>
+            </div>
+            <div class="row">
+              <div class="dt">Apr 27</div><div>Confirmation Retreat</div><div>Youth</div><div style="color: var(--fg-3);">Yesterday</div><div><span class="st pub">Published</span></div>
+            </div>
+            <div class="row">
+              <div class="dt">Apr 25</div><div>Lenten Soup Supper</div><div>Adults</div><div style="color: var(--fg-3);">3 days ago</div><div><span class="st pub">Published</span></div>
+            </div>
+            <div class="row">
+              <div class="dt">May 12</div><div>Mother's Day Brunch</div><div>Families</div><div style="color: var(--fg-3);">Just now</div><div><span class="st draft">Draft</span></div>
+            </div>
+            <div class="row">
+              <div class="dt">Jun 8</div><div>Corpus Christi Procession</div><div>All-parish</div><div style="color: var(--fg-3);">1 week ago</div><div><span class="st pub">Published</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Detail view — event editor</h3>
+    <div class="wire">
+      <div class="wire-bar">
+        <div class="left">
+          <div class="logo"></div>
+          <span>Saint Helen Admin</span>
+          <span class="navs"><span class="active">Events</span><span>Mass times</span><span>Ministries</span><span>Staff</span><span>Bulletins</span></span>
+        </div>
+        <div class="user"><div class="av">FT</div>fr.tom@sainthelen.org</div>
+      </div>
+      <div class="wire-body">
+        <aside class="wire-rail">
+          <div class="grp">Content</div>
+          <div class="item active">Events <span class="n">42</span></div>
+          <div class="item">Mass times <span class="n">7</span></div>
+          <div class="item">Ministries <span class="n">18</span></div>
+          <div class="item">Staff <span class="n">12</span></div>
+          <div class="item">Bulletins <span class="n">52</span></div>
+        </aside>
+        <div class="wire-main">
+          <div class="crumb">Admin / Events / Harvest Fest 2026</div>
+          <div style="display:flex; justify-content: space-between; align-items: baseline;">
+            <h5>Harvest Fest 2026</h5>
+            <div style="display:flex; gap: 6px;">
+              <button class="btn-tiny ghost">Preview</button>
+              <button class="btn-tiny ghost">Unpublish</button>
+              <button class="btn-tiny">Save</button>
+            </div>
+          </div>
+          <div class="wire-form" style="margin-top: 16px;">
+            <div>
+              <div class="f-group"><label>Title</label><div class="input">Harvest Fest 2026</div></div>
+              <div class="f-group"><label>Slug</label><div class="input" style="color: var(--fg-3);">harvest-fest-2026 · auto</div></div>
+              <div class="f-group"><label>Lede</label><div class="input long">Our biggest day of the year. Live music, food trucks, bounce houses, and the rectory's famous dunk tank.</div></div>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="f-group"><label>Starts</label><div class="input">May 3, 2026 · 11:00 AM</div></div>
+                <div class="f-group"><label>Ends</label><div class="input">May 3, 2026 · 6:00 PM</div></div>
+              </div>
+              <div class="f-group"><label>Audience</label><div class="tags"><span class="tag">All-parish</span><span class="tag">Families</span></div></div>
+              <div class="f-group"><label>Categories</label><div class="tags"><span class="tag">Fellowship</span></div></div>
+              <div class="f-group"><label>Body (markdown)</label><div class="input long" style="min-height: 80px;">Join us on the front lawn for our biggest day of the year…</div></div>
+            </div>
+            <div class="side">
+              <h6>Status</h6>
+              <div class="meta-row"><span>State</span><span>Published</span></div>
+              <div class="meta-row"><span>Featured</span><span>Yes</span></div>
+              <div class="meta-row"><span>Created</span><span>Apr 2</span></div>
+              <div class="meta-row"><span>By</span><span>Maria Chen</span></div>
+              <h6 style="margin-top: 18px;">Hero photo</h6>
+              <div class="photo-slot">
+                Drop image<br><span style="font-size: 10px; color: var(--sh-ink-4);">JPG, PNG · 2400px+ wide</span>
+              </div>
+              <h6 style="margin-top: 18px;">Register URL</h6>
+              <div class="input" style="font-size: 11.5px; color: var(--fg-3);">— optional —</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="be-callout">
+      <div class="label">Editor UX choices worth calling out</div>
+      <p><strong>One form per type.</strong> No nested schemas, no sanity-style references UI. Where relationships exist (event → venue, ministry → lead staff), we use a typeahead that hits <code>/api/admin/staff?q=…</code>. <strong>Draft by default.</strong> New rows start in draft; publishing is explicit. <strong>Inline uploads.</strong> The photo slot is a client-upload that goes straight to Blob; the row in <code>blobAssets</code> is created on completion and the editor stays on the page.</p>
+    </div>
+  </section>
+
+  <!-- ================= 07 ================= -->
+  <section id="auth" class="be-section">
+    <h2><span class="num">07</span>Auth, roles &amp; ministry self-service</h2>
+    <p><strong>Auth.js with two parallel sign-in methods: magic-link email (Resend) and SMS one-time-code (Twilio Verify).</strong> No passwords. Sign-in screen offers two tabs — "Email me a link" or "Text me a code." Either lands the user with a 30-day session cookie. Same session model, same role checks, same audit trail.</p>
+
+    <div class="be-callout navy">
+      <div class="label">Day-1 admin</div>
+      <p>Seed file inserts a single user on first deploy: <code>mboyle@sainthelen.org</code>, role <code>admin</code>, also with <code>phone</code> set so SMS works from day one. From there, additional users are invited through <code>/admin/users</code> — no migration needed.</p>
+    </div>
+
+    <h3>Sign-in flow</h3>
+    <ol style="padding-left: 22px; color: var(--fg-2); font-size: 15px; line-height: 1.7;">
+      <li>User goes to <code>/admin</code>, gets redirected to <code>/sign-in</code> (no session).</li>
+      <li>Picks <strong>Email link</strong> or <strong>Text me a code</strong>.
+        <ul>
+          <li><strong>Email:</strong> Auth.js emits a verification token, Resend delivers the link, user clicks → session created.</li>
+          <li><strong>SMS:</strong> server calls Twilio Verify <code>verifications.create({ to, channel: 'sms' })</code>, Twilio sends the 6-digit code, user enters it on the sign-in page, server calls <code>verificationChecks.create({ to, code })</code> → session created.</li>
+        </ul>
+      </li>
+      <li>Either path lands at <code>/admin</code> with the same cookie. Sessions last 30 days; sliding refresh on activity.</li>
+      <li>Sign-out clears the cookie. "Sign me out everywhere" rotates the user's session version, invalidating all active sessions in one click.</li>
+    </ol>
+
+    <p>The user record gains two columns to support this: <code>phone</code> (E.164 format, unique, nullable) and <code>preferredAuthMethod</code> (<code>'email' | 'sms'</code>, defaults to email). Twilio Verify handles its own rate-limiting; we add a per-user-per-hour cap on top to prevent SMS bill abuse if credentials leak.</p>
+
+    <h3>Three roles</h3>
+    <table class="roles-table">
+      <thead><tr><th>Capability</th><th>Admin</th><th>Editor</th><th>Ministry lead</th></tr></thead>
+      <tbody>
+        <tr><td>Edit events, bulletins, seasonal banners</td><td class="y">✓</td><td class="y">✓</td><td class="n">—</td></tr>
+        <tr><td>Edit Mass times</td><td class="y">✓</td><td class="y">✓</td><td class="n">—</td></tr>
+        <tr><td>Edit staff directory</td><td class="y">✓</td><td class="n">—</td><td class="n">—</td></tr>
+        <tr><td>Edit any ministry</td><td class="y">✓</td><td class="y">✓</td><td class="n">—</td></tr>
+        <tr><td>Edit <em>their own</em> ministry (draft only)</td><td class="y">✓</td><td class="y">✓</td><td class="p">own only</td></tr>
+        <tr><td>Edit site settings</td><td class="y">✓</td><td class="n">—</td><td class="n">—</td></tr>
+        <tr><td>Manage users &amp; roles</td><td class="y">✓</td><td class="n">—</td><td class="n">—</td></tr>
+        <tr><td>Approve / reject pending edits</td><td class="y">✓</td><td class="n">—</td><td class="n">—</td></tr>
+        <tr><td>Publish / unpublish</td><td class="y">✓</td><td class="y">✓</td><td class="p">never</td></tr>
+      </tbody>
+    </table>
+
+    <p>Role is a column on <code>users</code>. Middleware at <code>middleware.ts</code> gates <code>/admin/*</code>; route handlers re-check on write. Ministry leads have <code>ministryId</code> set on their user row and the <code>ministries.update</code> query is scoped with <code>WHERE id = :ministryId</code>.</p>
+
+    <div class="be-callout">
+      <div class="label">User self-service</div>
+      <p>From <code>/admin/account</code>, any signed-in user can: update their name, change or add a phone number, switch their preferred auth method, and trigger "sign me out everywhere." Admins additionally see <code>/admin/users</code> for inviting, role-changing, deactivating, and reactivating others. There's no password reset flow because there are no passwords — if someone loses access to both email and phone, an admin re-issues their account.</p>
+    </div>
+
+    <h3>Ministry self-service — draft &amp; approve workflow</h3>
+    <p><strong>Built but disabled at launch.</strong> Code ships in the v1 release; the feature flag <code>ENABLE_MINISTRY_SELF_SERVICE</code> stays <code>false</code> until post-launch. Once flipped, ministry leads can be invited per-ministry as a controlled rollout.</p>
+
+    <h4>The flow</h4>
+    <ol style="padding-left: 22px; color: var(--fg-2); font-size: 15px; line-height: 1.7;">
+      <li>Admin invites <code>leader@example.com</code> with role <code>ministry_lead</code> + <code>ministryId</code> set to e.g. "Knights of Columbus."</li>
+      <li>Lead signs in, lands at <code>/admin</code>, sees only <strong>their</strong> ministry edit page — no list of others, no events, no bulletins, no settings. Single-purpose view.</li>
+      <li>Lead edits one or more <strong>fields</strong> (Option A model below). Changes go into a <code>ministryEdits</code> row keyed to that ministry, status <code>pending</code>.</li>
+      <li>Admin gets a notification — email + a badge in the admin shell ("3 pending edits"). Opens <code>/admin/approvals</code>, sees a queue of pending edits with a <strong>diff view</strong> (current value vs. proposed, side-by-side per field).</li>
+      <li>Admin clicks <strong>Approve</strong> → changes apply to <code>ministries</code>, <code>revalidateTag("ministries")</code> fires, edit row is archived. Or <strong>Reject</strong> with a note → edit row goes back to lead with the reason.</li>
+    </ol>
+
+    <h4>Why "controlled blocks," not free-form</h4>
+    <p>Ministry leads cannot break the layout. They cannot add or reorder anything. They edit a fixed set of fields with constrained inputs:</p>
+
+    <table class="roles-table">
+      <thead><tr><th>Field</th><th>Input type</th><th>Constraint</th></tr></thead>
+      <tbody>
+        <tr><td>Tagline</td><td>Single-line text</td><td>120 chars max</td></tr>
+        <tr><td>Description</td><td>Markdown textarea</td><td>1000 chars max, plain markdown only — no raw HTML, no embeds</td></tr>
+        <tr><td>Meeting cadence</td><td>Single-line text</td><td>80 chars max (e.g. "2nd Thursdays, 7 PM")</td></tr>
+        <tr><td>Photo</td><td>Single image upload</td><td>Goes through the same Blob flow; admin can replace at approval time</td></tr>
+        <tr><td>Contact email</td><td>Email input</td><td>Validated; one address only</td></tr>
+        <tr><td>FAQ items</td><td>List of Q/A pairs</td><td>Up to 5 items, each Q ≤ 140 chars / A ≤ 500 chars</td></tr>
+        <tr><td>Accepting new members</td><td>Toggle</td><td>Boolean only</td></tr>
+      </tbody>
+    </table>
+
+    <p>That's it for v1. <strong>No</strong> rich text editor with arbitrary HTML, <strong>no</strong> custom CSS, <strong>no</strong> drag-and-drop sections, <strong>no</strong> embedded videos, <strong>no</strong> ability to add or remove fields. Every approved ministry page renders to the same template. This is what "very controlled" looks like in practice.</p>
+
+    <div class="be-callout gold">
+      <div class="label">Block editor v2 — deferred to §15</div>
+      <p>If, post-launch, parish staff want a more flexible editor (add a custom section, reorder, embed something), that's the v2 conversation. Field-based v1 is deliberately rigid so the first six months of self-service produce consistent, on-brand pages every time.</p>
+    </div>
+
+    <h4>Schema additions for the workflow</h4>
+<pre><span class="k">export const</span> <span class="f">ministryEdits</span> = <span class="f">pgTable</span>(<span class="s">"ministry_edits"</span>, {
+  id:           uuid(<span class="s">"id"</span>).<span class="f">defaultRandom</span>().<span class="f">primaryKey</span>(),
+  ministryId:   uuid(<span class="s">"ministry_id"</span>).<span class="f">references</span>(() =&gt; ministries.id).<span class="f">notNull</span>(),
+  submittedBy:  uuid(<span class="s">"submitted_by"</span>).<span class="f">references</span>(() =&gt; users.id).<span class="f">notNull</span>(),
+  proposed:     jsonb(<span class="s">"proposed"</span>).<span class="f">notNull</span>(),    <span class="c">// only the fields they changed</span>
+  status:       text(<span class="s">"status"</span>, { enum: [<span class="s">"pending"</span>, <span class="s">"approved"</span>, <span class="s">"rejected"</span>, <span class="s">"withdrawn"</span>] }).<span class="f">notNull</span>().<span class="f">default</span>(<span class="s">"pending"</span>),
+  reviewedBy:   uuid(<span class="s">"reviewed_by"</span>).<span class="f">references</span>(() =&gt; users.id),
+  reviewerNote: text(<span class="s">"reviewer_note"</span>),
+  submittedAt:  timestamp(<span class="s">"submitted_at"</span>).<span class="f">defaultNow</span>().<span class="f">notNull</span>(),
+  reviewedAt:   timestamp(<span class="s">"reviewed_at"</span>),
+});</pre>
+
+    <div class="be-callout">
+      <div class="label">Invite flow</div>
+      <p>Admin opens <code>/admin/users</code>, enters name + email + (optional) phone + role. Row is inserted with <code>emailVerified: null</code>. On first sign-in via either method, the row activates. Audit trail records who invited whom and when.</p>
+    </div>
+  </section>
+
+  <!-- ================= 08 ================= -->
+  <section id="blob" class="be-section">
+    <h2><span class="num">08</span>File storage — Vercel Blob + custom CDN</h2>
+    <p>Uploads go to <strong>Vercel Blob</strong> directly from the admin UI (client upload token, no server round-trip for the bytes). The stored blob URL is rewritten through <strong><code>cdn.sainthelen.org</code></strong> so every public-facing asset carries the parish domain.</p>
+
+    <h3>Upload flow</h3>
+    <ol style="padding-left: 22px; color: var(--fg-2); font-size: 15px; line-height: 1.7;">
+      <li>Editor drops a photo into the event editor.</li>
+      <li>Client calls <code>/api/admin/upload</code> — server validates role, returns a Vercel Blob client-upload token scoped to a path like <code>events/&lt;uuid&gt;/&lt;filename&gt;</code>.</li>
+      <li>Browser uploads bytes directly to Blob storage using that token.</li>
+      <li>On success, client calls back to <code>/api/admin/upload/complete</code> with the returned <code>url</code>, <code>size</code>, <code>mime</code>. Server:
+        <ul>
+          <li>Runs <code>sharp</code> to read dimensions and generate a WebP derivative for the event hero size.</li>
+          <li>Inserts a row in <code>blobAssets</code> with a stable key (e.g. <code>evt_harvest-fest-2026_hero</code>).</li>
+          <li>Returns the key; client writes it into <code>events.photoBlobKey</code>.</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h3>Custom domain</h3>
+    <p>Vercel Blob URLs look like <code>https://xxx.public.blob.vercel-storage.com/…</code>. We front them with a Vercel rewrite so assets are served from <code>cdn.sainthelen.org</code> instead.</p>
+
+    <pre><span class="c">// next.config.ts</span>
+<span class="k">export default</span> {
+  <span class="k">async</span> <span class="f">rewrites</span>() {
+    <span class="k">return</span> [
+      {
+        source: <span class="s">"/cdn/:path*"</span>,
+        destination: <span class="s">"https://&lt;blob-store-id&gt;.public.blob.vercel-storage.com/:path*"</span>,
+      },
+    ];
+  },
+};</pre>
+
+    <p>Then DNS: <code>cdn.sainthelen.org</code> → CNAME to the Vercel app, and the rewrite maps anything under <code>/cdn/*</code> to the Blob origin. The app's asset helper translates a <code>blobAssets.key</code> to <code>https://cdn.sainthelen.org/cdn/&lt;path&gt;</code>.</p>
+
+    <div class="be-callout navy">
+      <div class="label">Why custom domain matters</div>
+      <p>Photos and bulletins shared on social media, forwarded in email, or scraped into Google's image index will all carry the <code>sainthelen.org</code> origin. That's brand hygiene <em>and</em> SEO. The abstraction also means we can swap Blob for S3 or Cloudflare R2 in the future by editing one rewrite — no content URLs change.</p>
+    </div>
+
+    <h3>Image delivery</h3>
+    <ul>
+      <li>All public-site images render via <code>next/image</code>. <code>images.remotePatterns</code> whitelists <code>cdn.sainthelen.org</code>.</li>
+      <li>We upload one source file; Next generates sized WebP variants at request time and caches them on the edge.</li>
+      <li>The design system already ships placeholder components, so an event without a photo still renders cleanly.</li>
+    </ul>
+  </section>
+
+  <!-- ================= 09 ================= -->
+  <section id="revalidate" class="be-section">
+    <h2><span class="num">09</span>Cache, revalidation, ISR</h2>
+    <p>RSC fetches the DB directly. We layer Next's fetch cache on top with tags so admin mutations can revalidate precisely.</p>
+
+    <h3>Tags in use</h3>
+    <ul>
+      <li><code>events</code> — invalidated on any event publish / unpublish / delete.</li>
+      <li><code>events:&lt;slug&gt;</code> — scoped to the detail page.</li>
+      <li><code>ministries</code>, <code>mass-times</code>, <code>staff</code>, <code>bulletins</code>, <code>seasonal</code>, <code>site-settings</code> — same pattern.</li>
+    </ul>
+
+    <pre><span class="c">// In a Server Component that reads events:</span>
+<span class="k">import</span> { unstable_cache } <span class="k">as</span> cache } <span class="k">from</span> <span class="s">"next/cache"</span>;
+
+<span class="k">const</span> getPublishedEvents = <span class="f">cache</span>(
+  <span class="k">async</span> () =&gt; db.<span class="f">select</span>().<span class="f">from</span>(events).<span class="f">where</span>(eq(events.status, <span class="s">"published"</span>)),
+  [<span class="s">"events:published"</span>],
+  { tags: [<span class="s">"events"</span>], revalidate: 3600 } <span class="c">// 1hr fallback</span>
+);</pre>
+
+    <p>Admin mutations call <code>revalidateTag("events")</code> (or more specific tags). The public site re-renders on the next request. No webhook round-trip, no external service.</p>
+  </section>
+
+  <!-- ================= 10 ================= -->
+  <section id="env" class="be-section">
+    <h2><span class="num">10</span>Environment &amp; secrets</h2>
+    <p>Everything below lives in Vercel project env vars, scoped per environment. Preview deploys inherit most from Production but get their own Neon branch URL auto-injected.</p>
+
+    <div class="env-block">
+<span class="c"># --- Database (Neon) ---</span>
+<span class="k">DATABASE_URL</span>=<span class="v">postgres://…@…neon.tech/sainthelen?sslmode=require</span>
+<span class="k">DATABASE_URL_OWNER</span>=<span class="v">postgres://…</span>  <span class="c"># migrations only — not shipped to the app</span>
+
+<span class="c"># --- Auth.js ---</span>
+<span class="k">AUTH_SECRET</span>=<span class="v">&lt;openssl rand -base64 32&gt;</span>
+<span class="k">AUTH_URL</span>=<span class="v">https://sainthelen.org</span>
+<span class="k">AUTH_TRUST_HOST</span>=<span class="v">true</span>
+
+<span class="c"># --- Email magic links + transactional (Resend) ---</span>
+<span class="k">RESEND_API_KEY</span>=<span class="v">re_…</span>
+<span class="k">EMAIL_FROM</span>=<span class="v">"Saint Helen &lt;no-reply@sainthelen.org&gt;"</span>
+<span class="k">EMAIL_REPLY_TO</span>=<span class="v">parish@sainthelen.org</span>  <span class="c"># where replies go if anyone hits Reply</span>
+
+<span class="c"># --- SMS sign-in (Twilio Verify) ---</span>
+<span class="k">TWILIO_ACCOUNT_SID</span>=<span class="v">AC…</span>
+<span class="k">TWILIO_AUTH_TOKEN</span>=<span class="v">…</span>
+<span class="k">TWILIO_VERIFY_SERVICE_SID</span>=<span class="v">VA…</span>     <span class="c"># created once in the Twilio console</span>
+
+<span class="c"># --- File storage (Vercel Blob) ---</span>
+<span class="k">BLOB_READ_WRITE_TOKEN</span>=<span class="v">vercel_blob_rw_…</span>
+<span class="k">NEXT_PUBLIC_CDN_HOST</span>=<span class="v">cdn.sainthelen.org</span>
+
+<span class="c"># --- Analytics (Fathom) ---</span>
+<span class="k">NEXT_PUBLIC_FATHOM_SITE_ID</span>=<span class="v">XXXXXXXX</span>          <span class="c"># site code from app.usefathom.com</span>
+<span class="k">NEXT_PUBLIC_FATHOM_INCLUDED_DOMAINS</span>=<span class="v">sainthelen.org</span>  <span class="c"># skip events on previews/staging</span>
+
+<span class="c"># --- Backups (off-Vercel snapshot — see §12) ---</span>
+<span class="k">BACKUP_S3_BUCKET</span>=<span class="v">sainthelen-db-backups</span>          <span class="c"># Backblaze B2 / AWS S3 / Cloudflare R2</span>
+<span class="k">BACKUP_S3_REGION</span>=<span class="v">us-west-002</span>
+<span class="k">BACKUP_S3_ENDPOINT</span>=<span class="v">https://s3.us-west-002.backblazeb2.com</span>
+<span class="k">BACKUP_S3_ACCESS_KEY_ID</span>=<span class="v">…</span>
+<span class="k">BACKUP_S3_SECRET_ACCESS_KEY</span>=<span class="v">…</span>
+<span class="k">BACKUP_CRON_SECRET</span>=<span class="v">&lt;openssl rand -hex 32&gt;</span>          <span class="c"># gates the cron handler</span>
+
+<span class="c"># --- USCCB readings proxy ---</span>
+<span class="k">READINGS_UPSTREAM</span>=<span class="v">https://bible.usccb.org/…</span>
+
+<span class="c"># --- Feature flags ---</span>
+<span class="k">ENABLE_GIVE_FAB</span>=<span class="v">true</span>
+<span class="k">ENABLE_LIVESTREAM</span>=<span class="v">true</span>
+<span class="k">ENABLE_MINISTRY_SELF_SERVICE</span>=<span class="v">false</span>             <span class="c"># flip true post-launch (see §07)</span>
+<span class="k">ENABLE_A11Y_WIDGET</span>=<span class="v">true</span>                          <span class="c"># §13</span></pre>
+
+    <p>Touchpoint giving URLs are not env vars — they live in <code>siteSettings</code> as editable fields so non-dev staff can rotate seasonal links (see §11). Anything that's a secret or environment-specific belongs here; anything an admin should be able to change without redeploying belongs in <code>siteSettings</code>.</p>
+  </section>
+
+  <!-- ================= 11 — INTEGRATIONS ================= -->
+  <section id="integrations" class="be-section">
+    <h2><span class="num">11</span>Integrations — Touchpoint, Fathom, Resend, Twilio</h2>
+    <p>Everything external the site talks to. Four integrations, all simple, all replaceable.</p>
+
+    <h3>Touchpoint giving (donations)</h3>
+    <p>The Give page <strong>does not process payments.</strong> Every CTA outbound-links to Touchpoint, the parish's giving platform. URLs are stored in <code>siteSettings</code> and editable from <code>/admin/settings/giving</code> so seasonal links can be rotated without a deploy.</p>
+
+<pre><span class="c">// db/schema.ts — add to siteSettings (singleton row)</span>
+giving: jsonb(<span class="s">"giving"</span>).<span class="f">$type</span>&lt;{
+  primaryUrl: <span class="k">string</span>;             <span class="c">// "Give now" CTA — Touchpoint general fund</span>
+  recurringUrl?: <span class="k">string</span>;         <span class="c">// "Set up recurring" — separate Touchpoint flow</span>
+  seasonal?: {
+    label: <span class="k">string</span>;               <span class="c">// e.g. "Christmas Giving 2026"</span>
+    url: <span class="k">string</span>;                 <span class="c">// Touchpoint campaign URL</span>
+    activeFrom: <span class="k">string</span>;          <span class="c">// ISO date — banner appears on/after</span>
+    activeUntil: <span class="k">string</span>;         <span class="c">// ISO date — banner hides after</span>
+  }[];
+  designations?: { label: <span class="k">string</span>; url: <span class="k">string</span> }[];   <span class="c">// Building Fund, Outreach, etc.</span>
+}&gt;().<span class="f">notNull</span>().<span class="f">default</span>({ primaryUrl: <span class="s">""</span> }),</pre>
+
+    <p>The Give page Server Component reads <code>siteSettings.giving</code>, renders the primary CTA + designation list, and surfaces any active seasonal campaigns whose date window includes today. Admin UI at <code>/admin/settings/giving</code> is a single form: primary URL, recurring URL, a repeatable list of designations, and a repeatable list of seasonal campaigns with date pickers. No deploy needed to add Christmas, Easter, Mother's Day, building fund pushes, or anything else.</p>
+
+    <div class="be-callout">
+      <div class="label">Why outbound, not embedded</div>
+      <p>Embedding Touchpoint's checkout would put us in PCI scope, force us to handle recurring billing edge cases, and require a rebuild every time Touchpoint changes their flow. Outbound link is the right call: ~one click of friction, zero compliance burden, zero ongoing maintenance, and Touchpoint already handles tax receipts. If Touchpoint is ever replaced (different ChMS, different processor), it's a settings edit — no code change.</p>
+    </div>
+
+    <h3>Fathom Analytics</h3>
+    <p>Privacy-friendly page analytics, no cookie banner needed (Fathom doesn't set cookies or persist personal data). Single script in <code>app/layout.tsx</code>, scoped to production only.</p>
+
+<pre><span class="c">// app/layout.tsx</span>
+<span class="k">import</span> Script <span class="k">from</span> <span class="s">"next/script"</span>;
+
+<span class="k">export default function</span> <span class="f">RootLayout</span>({ children }) {
+  <span class="k">const</span> siteId = process.env.NEXT_PUBLIC_FATHOM_SITE_ID;
+  <span class="k">return</span> (
+    &lt;<span class="k">html</span> lang=<span class="s">"en"</span>&gt;
+      &lt;<span class="k">body</span>&gt;
+        {children}
+        {siteId &amp;&amp; (
+          &lt;<span class="f">Script</span>
+            src=<span class="s">"https://cdn.usefathom.com/script.js"</span>
+            data-site={siteId}
+            data-included-domains={process.env.NEXT_PUBLIC_FATHOM_INCLUDED_DOMAINS}
+            defer
+          /&gt;
+        )}
+      &lt;/<span class="k">body</span>&gt;
+    &lt;/<span class="k">html</span>&gt;
+  );
+}</pre>
+
+    <p>Custom events (e.g. "Welcome form submitted," "Mass time clicked," "Bulletin opened") fire via <code>window.fathom?.trackEvent(name)</code> from client components. Stay under ~10 distinct event names to keep the dashboard readable.</p>
+
+    <h3>Resend (email)</h3>
+    <p>Single transactional sender for everything outbound: magic-link sign-in, welcome-form auto-replies, prayer-request confirmations, ministry-edit notifications, password-less account changes ("a phone number was added"). Six template types live in <code>lib/email/templates/*.tsx</code> as React Email components.</p>
+
+    <h4>Required DNS records (sainthelen.org zone)</h4>
+    <p>Resend's dashboard generates these the moment you add the domain. Add them in your DNS host before going live; verification is usually under an hour.</p>
+
+    <table class="roles-table">
+      <thead><tr><th>Type</th><th>Host</th><th>Value (Resend will give exact)</th></tr></thead>
+      <tbody>
+        <tr><td>TXT (SPF)</td><td><code>send.sainthelen.org</code></td><td><code>v=spf1 include:amazonses.com ~all</code></td></tr>
+        <tr><td>MX</td><td><code>send.sainthelen.org</code></td><td><code>feedback-smtp.us-east-1.amazonses.com</code> (priority 10)</td></tr>
+        <tr><td>TXT (DKIM)</td><td><code>resend._domainkey.sainthelen.org</code></td><td>RSA public key, supplied by Resend</td></tr>
+        <tr><td>TXT (DMARC)</td><td><code>_dmarc.sainthelen.org</code></td><td><code>v=DMARC1; p=none; rua=mailto:dmarc@sainthelen.org</code> (start permissive, tighten to <code>p=quarantine</code> after 30 days of clean reports)</td></tr>
+      </tbody>
+    </table>
+
+    <p>Send from a subdomain like <code>send.sainthelen.org</code> rather than apex. Keeps transactional reputation isolated from any future marketing sender, and leaves the apex MX free for normal parish email.</p>
+
+    <h3>Twilio Verify (SMS sign-in)</h3>
+    <p>One-time codes only — we never store phone numbers as a sole identifier; the <code>users.phone</code> field is the link. Verify handles code generation, retry windows, and per-number rate-limits server-side. We add a per-user-per-hour app-level cap on top.</p>
+
+<pre><span class="c">// lib/auth/sms.ts</span>
+<span class="k">import</span> twilio <span class="k">from</span> <span class="s">"twilio"</span>;
+
+<span class="k">const</span> client = <span class="f">twilio</span>(process.env.TWILIO_ACCOUNT_SID!, process.env.TWILIO_AUTH_TOKEN!);
+<span class="k">const</span> verifySid = process.env.TWILIO_VERIFY_SERVICE_SID!;
+
+<span class="k">export async function</span> <span class="f">sendCode</span>(phone: <span class="k">string</span>) {
+  <span class="k">return</span> client.verify.v2.services(verifySid)
+    .verifications.<span class="f">create</span>({ to: phone, channel: <span class="s">"sms"</span> });
+}
+
+<span class="k">export async function</span> <span class="f">checkCode</span>(phone: <span class="k">string</span>, code: <span class="k">string</span>) {
+  <span class="k">const</span> result = <span class="k">await</span> client.verify.v2.services(verifySid)
+    .verificationChecks.<span class="f">create</span>({ to: phone, code });
+  <span class="k">return</span> result.status === <span class="s">"approved"</span>;
+}</pre>
+
+    <p>Cost per sign-in: ~$0.05 USD (Verify fee + SMS) in the US. With 3–8 admins signing in a few times a week, this is well under $5/month. Twilio bills monthly; first month free up to a small quota.</p>
+  </section>
+
+  <!-- ================= 12 — BACKUPS ================= -->
+  <section id="backups" class="be-section">
+    <h2><span class="num">12</span>Backup strategy</h2>
+    <p>Three layers, defense in depth. Each layer protects against a different failure mode. Combined cost: under $2/month.</p>
+
+    <table class="roles-table">
+      <thead><tr><th>Layer</th><th>Where</th><th>Retention</th><th>Recovers from</th></tr></thead>
+      <tbody>
+        <tr><td>1. Neon point-in-time recovery</td><td>Neon (built-in)</td><td>7 days (free) / 30 days (paid)</td><td>Accidental delete, bad migration, ransomware in the last week</td></tr>
+        <tr><td>2. Weekly <code>pg_dump</code> on Vercel Cron</td><td>Vercel Blob</td><td>12 weeks rolling</td><td>Neon outage, account compromise, audit/restore-to-staging</td></tr>
+        <tr><td>3. Monthly off-platform snapshot</td><td>Backblaze B2 (cheap S3-compatible)</td><td>Indefinite (≈$0.005/GB/mo)</td><td>Vercel + Neon both unrecoverable, vendor lock-out, multi-year audit</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Layer 2 — Weekly Vercel Cron</h3>
+<pre><span class="c">// app/api/cron/backup/route.ts</span>
+<span class="k">import</span> { spawn } <span class="k">from</span> <span class="s">"node:child_process"</span>;
+<span class="k">import</span> { put, list, del } <span class="k">from</span> <span class="s">"@vercel/blob"</span>;
+
+<span class="k">export const</span> runtime = <span class="s">"nodejs"</span>;
+<span class="k">export const</span> maxDuration = <span class="s">300</span>;  <span class="c">// 5 min — adjust for DB size</span>
+
+<span class="k">export async function</span> <span class="f">GET</span>(req: Request) {
+  <span class="k">if</span> (req.headers.<span class="f">get</span>(<span class="s">"authorization"</span>) !== <span class="s">`Bearer ${process.env.BACKUP_CRON_SECRET}`</span>) {
+    <span class="k">return new</span> <span class="f">Response</span>(<span class="s">"unauthorized"</span>, { status: 401 });
+  }
+  <span class="k">const</span> stamp = <span class="k">new</span> <span class="f">Date</span>().<span class="f">toISOString</span>().<span class="f">slice</span>(0, 10);
+  <span class="k">const</span> child = <span class="f">spawn</span>(<span class="s">"pg_dump"</span>, [process.env.DATABASE_URL_OWNER!, <span class="s">"--no-owner"</span>, <span class="s">"--clean"</span>], { stdio: [<span class="s">"ignore"</span>, <span class="s">"pipe"</span>, <span class="s">"pipe"</span>] });
+  <span class="k">const</span> blob = <span class="k">await</span> <span class="f">put</span>(<span class="s">`backups/sainthelen-${stamp}.sql`</span>, child.stdout, { access: <span class="s">"public"</span>, contentType: <span class="s">"application/sql"</span> });
+
+  <span class="c">// Prune anything older than 12 weeks</span>
+  <span class="k">const</span> { blobs } = <span class="k">await</span> <span class="f">list</span>({ prefix: <span class="s">"backups/"</span> });
+  <span class="k">const</span> cutoff = <span class="f">Date</span>.<span class="f">now</span>() - 84 * 24 * 60 * 60 * 1000;
+  <span class="k">await</span> <span class="f">Promise</span>.<span class="f">all</span>(blobs.<span class="f">filter</span>(b =&gt; <span class="k">new</span> <span class="f">Date</span>(b.uploadedAt).<span class="f">getTime</span>() &lt; cutoff).<span class="f">map</span>(b =&gt; <span class="f">del</span>(b.url)));
+
+  <span class="k">return</span> Response.<span class="f">json</span>({ ok: <span class="k">true</span>, url: blob.url });
+}</pre>
+
+<pre><span class="c">// vercel.json</span>
+{
+  <span class="s">"crons"</span>: [
+    { <span class="s">"path"</span>: <span class="s">"/api/cron/backup"</span>, <span class="s">"schedule"</span>: <span class="s">"0 7 * * 0"</span> }
+  ]
+}</pre>
+
+    <p>Sundays at 07:00 UTC (after the early Mass rush, before any office hours). Vercel Cron pings the route, the route streams <code>pg_dump</code> output straight into Blob, prunes anything older than 12 weeks. Backup history is then visible in <code>/admin/backups</code> with a one-click "download" or "restore to staging" affordance.</p>
+
+    <h3>Layer 3 — Monthly off-Vercel snapshot</h3>
+    <p>The first cron run of each month also pushes the dump to <strong>Backblaze B2</strong> (S3-compatible, ~$6/TB/mo, free egress to Cloudflare). This is your insurance against "Vercel + Neon are simultaneously unrecoverable" — vanishingly unlikely, but trivially cheap to protect against. Same dump, <code>aws s3 cp</code> with B2 endpoint env vars, retention is forever (the storage cost is negligible at this DB size — pennies per year).</p>
+
+    <h3>Restore drill</h3>
+    <p>Once a quarter, an admin runs the documented restore drill: pick a backup, restore it to a Neon branch, point staging at the branch, verify content. Documented as a checklist in <code>docs/runbooks/restore.md</code>. The first drill happens before launch as part of go-live readiness.</p>
+
+    <div class="be-callout navy">
+      <div class="label">A backup you've never restored is not a backup</div>
+      <p>Layer 1 means little if no one's ever clicked "recover." The pre-launch restore drill turns this from theory into a known-good muscle. Schedule it.</p>
+    </div>
+  </section>
+
+  <!-- ================= 13 — A11Y ================= -->
+  <section id="a11y" class="be-section">
+    <h2><span class="num">13</span>Accessibility — WCAG 2.2 AA + custom widget</h2>
+
+    <div class="be-callout navy">
+      <div class="label">The pledge</div>
+      <p>The site passes WCAG 2.2 Level AA <strong>without the widget</strong>. The widget is a comfort layer for users who want overrides on top of an already-compliant baseline — it is not a substitute for compliance. Snake-oil overlay vendors (you know the names) have been litigated repeatedly precisely because they market themselves <em>as</em> compliance. We're not doing that.</p>
+    </div>
+
+    <h3>Baseline WCAG 2.2 AA work (every page)</h3>
+    <ul>
+      <li>Color contrast ≥ 4.5:1 for body text, ≥ 3:1 for large text and UI controls. Tokens in the design system are pre-checked.</li>
+      <li>Every interactive element is reachable by keyboard, in source order, with a visible focus ring (rust-yellow 2px outline + offset).</li>
+      <li>Skip-to-content link as the first focusable element on every page.</li>
+      <li>Forms: every input has a visible label (no placeholder-as-label), errors are announced via <code>aria-live</code>, inline + summary at top of form.</li>
+      <li>Images have meaningful <code>alt</code>; decorative images use <code>alt=""</code>. Admin UI requires alt text on photo upload before save.</li>
+      <li>Headings follow document outline. One <code>h1</code> per page, no skipped levels.</li>
+      <li><code>prefers-reduced-motion</code> respected by default — animations disable, transitions shorten.</li>
+      <li>Pages remain usable at 200% zoom and 320 px viewport width.</li>
+      <li>Mass-times widget, events list, and ministry cards all expose semantic landmarks (<code>main</code>, <code>nav</code>, <code>article</code>, <code>aside</code>).</li>
+      <li>Automated CI: <code>axe-core</code> runs on the home + 3 interior pages on every PR. Build fails on any new violation.</li>
+    </ul>
+
+    <h3>The widget — what it actually does</h3>
+    <p>Floating button bottom-left (<strong>not</strong> bottom-right — that's reserved for the Give FAB). Opens a small panel with five controls. State persists in <code>localStorage</code> as <code>sh.a11y.v1</code>; applied via <code>data-*</code> attributes on <code>&lt;html&gt;</code> so CSS can hook them.</p>
+
+    <table class="roles-table">
+      <thead><tr><th>Control</th><th>Effect</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td>Text size</td><td>Three steps: small / default / large (90% / 100% / 115%)</td><td>Sets <code>--font-scale</code> CSS variable; type tokens already use it</td></tr>
+        <tr><td>High contrast</td><td>Swaps to higher-separation palette</td><td><code>data-contrast="high"</code> on <code>html</code>; ~20 lines of CSS overrides token values</td></tr>
+        <tr><td>Reduce motion</td><td>Disables non-essential animation regardless of OS setting</td><td><code>data-motion="reduce"</code>; CSS targets <code>html[data-motion="reduce"] *</code></td></tr>
+        <tr><td>Dyslexia-friendly font</td><td>Body text switches to OpenDyslexic</td><td><code>data-font="dyslexic"</code>; OpenDyslexic loaded only when toggled</td></tr>
+        <tr><td>Reset</td><td>Clears all overrides</td><td>Removes the localStorage key and <code>data-*</code> attrs</td></tr>
+      </tbody>
+    </table>
+
+    <h3>What the widget deliberately does <em>not</em> do</h3>
+    <ul>
+      <li>No "screen reader mode" — real screen readers don't need a website's permission.</li>
+      <li>No "epilepsy-safe profile" — the underlying site already has no flashing content; you can't toggle that from the page.</li>
+      <li>No "cognitive disability profile" — a panel can't simplify content; thoughtful copy and layout do that, baked in.</li>
+      <li>No big-cursor toggle, no link-highlight toggle, no spacing slider with 30 steps. Five controls, well-chosen, well-labeled.</li>
+    </ul>
+
+    <p>The widget code lives in <code>components/a11y-widget.tsx</code>. It's gated by the <code>ENABLE_A11Y_WIDGET</code> flag so it can be turned off if the design changes. ARIA: the toggle button is a <code>button</code> with <code>aria-expanded</code>, the panel is <code>role="dialog"</code> with <code>aria-modal="true"</code> and a labeled close, focus is trapped while open, Escape closes.</p>
+
+    <p>Pre-launch: a11y audit by an independent reviewer (NV Access or a local consultant) plus user-testing with at least one keyboard-only user and one screen-reader user. Findings tracked as launch blockers.</p>
+  </section>
+
+  <!-- ================= 14 — STAGING ================= -->
+  <section id="staging" class="be-section">
+    <h2><span class="num">14</span>Staging environment — staging.sainthelen.org</h2>
+    <p>A persistent staging environment for content review and pre-launch UAT, completely isolated from production. Lives until prod DNS flips, then sticks around as the QA target for future changes.</p>
+
+    <h3>Setup</h3>
+    <ol style="padding-left: 22px; color: var(--fg-2); font-size: 15px; line-height: 1.7;">
+      <li><strong>Git:</strong> dedicated <code>staging</code> branch on the repo; protected, only fast-forward merges from <code>main</code>.</li>
+      <li><strong>Vercel:</strong> the same project deploys <code>staging</code> branch to <code>staging.sainthelen.org</code> automatically. Production deploys only from <code>main</code>.</li>
+      <li><strong>Database:</strong> dedicated <strong>Neon branch</strong> named <code>staging</code> — independent data, copy-from-prod once at setup, then evolves separately.</li>
+      <li><strong>Blob:</strong> separate Vercel Blob store; staging uploads never pollute production assets.</li>
+      <li><strong>Email sender:</strong> <code>EMAIL_FROM="Saint Helen STAGING &lt;staging@sainthelen.org&gt;"</code> so any test email is unmistakable.</li>
+      <li><strong>Twilio:</strong> separate Verify service so test sign-ins don't share rate-limits with prod.</li>
+      <li><strong>Fathom:</strong> not loaded — analytics stay clean.</li>
+      <li><strong>Robots:</strong> <code>X-Robots-Tag: noindex</code> via middleware on <code>staging.sainthelen.org</code>; Google never indexes it.</li>
+      <li><strong>Access control:</strong> Vercel deployment-protection password on the staging deployment. Public can't reach it; staff use a shared password kept in 1Password.</li>
+    </ol>
+
+    <h3>Who uses it</h3>
+    <ul>
+      <li><strong>Pre-launch:</strong> Fr. Tom, comms lead, and ministry leaders review the site here before DNS flip. Photo placeholders get replaced. Copy gets edited inline. Mass times get verified.</li>
+      <li><strong>Post-launch:</strong> any non-trivial change (new template, schema change, integration tweak) ships to staging first, gets approved, then promotes to <code>main</code>.</li>
+      <li><strong>Sunday morning safety:</strong> never deploy to prod on Sundays. Staging is where weekend hot-fixes land for Monday review.</li>
+    </ul>
+  </section>
+
+  <!-- ================= 15 — DEFERRED ================= -->
+  <section id="deferred" class="be-section">
+    <h2><span class="num">15</span>Explicitly deferred</h2>
+    <p>Naming what we're <em>not</em> building protects the timeline and prevents accidental over-build by a well-meaning engineer (human or AI). Anything in this section requires a deliberate scoping conversation before work starts.</p>
+
+    <table class="roles-table">
+      <thead><tr><th>Feature</th><th>Status</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Parishioner accounts</td><td class="n">Not building</td><td>Public site stays anonymous. No "sign in to register for an event," no prayer-request history, no sacrament-prep portal. May revisit if/when a Touchpoint ChMS integration is scoped (unlikely).</td></tr>
+        <tr><td>In-house payments</td><td class="n">Not building</td><td>Touchpoint outbound for all giving (§11). Stripe / PCI scope explicitly out.</td></tr>
+        <tr><td>Block editor v2</td><td class="p">Built v1 (fields), deferred v2 (blocks)</td><td>If post-launch ministry leads need more flexibility, scoped as a future ticket. Field-based v1 ships consistent pages by construction.</td></tr>
+        <tr><td>Ministry self-service rollout</td><td class="p">Built, off at launch</td><td>Code in v1 release; <code>ENABLE_MINISTRY_SELF_SERVICE=false</code> until post-launch (§07).</td></tr>
+        <tr><td>Multilingual (Spanish)</td><td class="p">Schema-ready, not translated</td><td>Strings extracted, <code>locale</code> column on content tables, but no Spanish copy on day 1. Ticket: Spanish translation pass + locale switcher.</td></tr>
+        <tr><td>Audit log of admin edits</td><td class="p">Deferred</td><td>Useful but not a launch blocker. Add as <code>auditLog</code> table when ministry self-service is enabled.</td></tr>
+        <tr><td>Scheduled publishing</td><td class="p">Deferred</td><td><code>publishedAt</code> column already on tables that need it; just no scheduler yet. Add as a Vercel Cron when desired.</td></tr>
+        <tr><td>Full-text search</td><td class="p">Deferred</td><td>Postgres FTS on events / ministries / bulletins. Easy add once content volume justifies.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ================= 16 — PROMPT ================= -->
+  <section id="prompt" class="be-section">
+    <h2><span class="num">16</span>Updated Claude Code kickoff prompt</h2>
+    <p>Replaces the prompt in the design handoff. Copy this in after cloning an empty Next.js 15 starter with the design mockup mounted as reference.</p>
+
+    <div class="be-prompt">
+      <div class="who"><span class="dot"></span>Paste into Claude Code</div>
+      <div class="msg">You're building the Saint Helen 3.0 parish website from scratch.
+
+Reference materials are mounted at ./design-ref/ — a static HTML mockup. Before writing any code:
+
+1. Read design-ref/pages/design-notes.html in full. Understand the four 3.0 changes.
+2. Skim design-ref/pages/components.html for the token set and component inventory.
+3. Read design-ref/pages/handoff.html for front-end architecture.
+4. Read design-ref/pages/backend.html IN FULL. This is the source of truth for database schema, API routes, admin UI, auth, integrations, backups, accessibility, and staging. No CMS — custom Next.js backend.
+
+Stack (fixed):
+- Next.js 15 App Router on Vercel
+- Tailwind (port tokens from design-ref/assets/colors_and_type.css into tailwind.config.ts)
+- Neon Postgres + Drizzle ORM
+- Auth.js with TWO sign-in methods: magic-link email (Resend) + SMS code (Twilio Verify). Three roles (admin / editor / ministry_lead). Day-1 admin is mboyle@sainthelen.org.
+- Vercel Blob served from cdn.sainthelen.org for photos and PDFs
+- Fathom Analytics in production only
+- Touchpoint giving via outbound links (URLs in siteSettings, no in-house payments, no Stripe)
+- No external CMS. All editing happens at /admin in the same Next.js app.
+
+Feature flags at launch:
+- ENABLE_MINISTRY_SELF_SERVICE=false (build it, ship it dark)
+- ENABLE_A11Y_WIDGET=true
+- ENABLE_GIVE_FAB=true
+- ENABLE_LIVESTREAM=true
+
+Build in this order, pausing for review between each step:
+
+Step 1 — Design system
+- Port CSS vars to globals.css, generate tailwind.config.ts, render a /design-system route that mirrors design-ref/pages/components.html.
+- Implement the accessibility widget per backend.html §13 (5 controls, NOT a snake-oil overlay).
+
+Step 2 — Database
+- Drop the 7 content tables + auth tables + blobAssets + ministryEdits from backend.html §03 + §07 into db/schema.ts.
+- Set up drizzle-kit, write the initial migration, add a dev seed with fixture data + the day-1 admin user.
+
+Step 3 — Public site (fixtures first, then DB)
+- Scaffold app/(site) with the routes in handoff.html §05.
+- Build the homepage + three interiors (plan-your-visit, mass, events) against fixtures.
+- Wire each page to its Drizzle query inside a Server Component. No API layer for public reads.
+- Give page reads siteSettings.giving and outbound-links to Touchpoint (backend.html §11).
+- Bake in WCAG 2.2 AA from the start (backend.html §13) — not as cleanup at the end.
+
+Step 4 — Admin
+- Scaffold app/(admin) with the list + detail shell from backend.html §06.
+- Events editor first, as the canonical pattern. Other types follow the same template.
+- Sign-in page with two tabs (Email link / Text me a code). Both backed by Auth.js (backend.html §07).
+- Implement the ministry-edit draft/approve workflow but keep ENABLE_MINISTRY_SELF_SERVICE=false.
+- /admin/settings/giving form for Touchpoint URLs and seasonal campaigns.
+- /admin/users for invite, role change, deactivate.
+- /admin/account for self-service (name, phone, preferred auth method, sign-out-everywhere).
+
+Step 5 — Upload + CDN
+- Implement the client-upload flow in backend.html §08.
+- Configure next.config rewrite + DNS note for cdn.sainthelen.org.
+
+Step 6 — Public API routes
+- /api/welcome, /api/prayer-request, /api/matchmaker, /api/readings, /api/revalidate.
+
+Step 7 — Backups + staging
+- Implement the weekly Vercel Cron pg_dump → Blob from backend.html §12, with B2 monthly off-platform copy.
+- Document the staging.sainthelen.org setup per §14. Set up the staging Neon branch and Vercel deployment.
+- Write docs/runbooks/restore.md and run the first restore drill before launch.
+
+Step 8 — Integrations
+- Resend domain verification + DNS records (§11). Six transactional templates as React Email.
+- Twilio Verify service setup. Per-user-per-hour rate cap on top of Twilio's own limits.
+- Fathom script in app/layout.tsx, production-only.
+
+Do NOT build:
+- Parishioner accounts of any kind
+- In-house payments / Stripe / PCI surface
+- Block editor v2 (field-based v1 only — see §07 ministry self-service)
+- Multilingual content (schema-ready only — §15)
+
+After each step, show me the diff and stop. Match the mockup pixel-for-pixel at 1440px first, then responsive down to 360px. Do not skip ahead. Do not invent features that aren't in the docs.</div>
+    </div>
+  </section>
+
+  <!-- ================= 17 — FUTURE TICKETS ================= -->
+  <section id="future" class="be-section">
+    <h2><span class="num">17</span>Future tickets (post-launch)</h2>
+    <p>Things that aren't blockers but are worth pre-naming so they have ticket-shaped homes when the time comes. §15 covers what we're <em>not</em> building; this covers what we'd build <em>next</em>, in rough priority order.</p>
+    <ol style="padding-left: 22px; color: var(--fg-2); font-size: 15px; line-height: 1.8;">
+      <li><strong>Enable ministry self-service</strong> for one or two pilot ministries (§07). Code is already shipped; flip the flag, invite leads, watch the first approval cycle.</li>
+      <li><strong>Audit log</strong> — <code>auditEvents</code> table capturing who published / unpublished what and when. Critical the first time someone asks "who changed the Mass time?"</li>
+      <li><strong>Scheduled publishing</strong> — <code>publishedAt</code> column already exists; add a Vercel Cron that flips <code>status</code> from <code>scheduled</code> → <code>published</code> at the right time.</li>
+      <li><strong>Soft-delete restore UI</strong> — schema already supports <code>archived</code> status; admin UI needs a trash view + un-archive button.</li>
+      <li><strong>Full-text search</strong> — Postgres <code>tsvector</code> column on events + ministries + bulletins; powers a global <code>/search</code> page once content volume justifies.</li>
+      <li><strong>Spanish translation pass</strong> — schema is locale-aware (§15); ticket is the translation work itself + a locale switcher.</li>
+      <li><strong>Block editor v2</strong> — only if field-based v1 (§07) genuinely doesn't meet a real need. Don't build speculatively.</li>
+      <li><strong>Draft preview links</strong> — short-lived signed URLs so admins can share a draft with non-admins for review.</li>
+    </ol>
+
+    <div class="be-callout gold">
+      <div class="label">One rule</div>
+      <p>Every feature above is additive. The schemas in §03 and the API pattern in §05 are what parish staff will live with for the next decade — evolve them cautiously.</p>
+    </div>
+  </section>
+
+  <div class="be-links">
+    <a href="../index.html">← Review hub</a>
+    <a href="design-notes.html">Design notes</a>
+    <a href="components.html">Components inventory</a>
+    <a href="handoff.html">Front-end handoff</a>
+  </div>
+</article>
+
+</body>
+</html>

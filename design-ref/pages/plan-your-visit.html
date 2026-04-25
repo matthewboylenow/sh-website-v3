@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Plan Your Visit — Saint Helen</title>
+<link rel="stylesheet" href="../assets/colors_and_type.css" />
+<link rel="stylesheet" href="../assets/kit.css" />
+<link rel="stylesheet" href="../assets/site.css?v=3" />
+<style>
+  .iv-pyv-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 48px 0 0; }
+  @media (max-width: 860px) { .iv-pyv-steps { grid-template-columns: 1fr; } }
+  .iv-pyv-step { background: white; border: 1px solid var(--sh-rule); border-radius: 18px; padding: 32px; }
+  .iv-pyv-step .n { font-family: var(--font-serif); font-size: 40px; font-weight: 700; color: var(--sh-rust); line-height: 1; margin-bottom: 16px; }
+  .iv-pyv-step h3 { margin: 0 0 8px; font-size: 22px; }
+  .iv-pyv-step p { color: var(--fg-2); font-size: 15px; margin: 0; line-height: 1.55; }
+  .iv-welcome-card {
+    background: var(--sh-navy);
+    color: white;
+    border-radius: 24px;
+    padding: 48px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+  @media (max-width: 860px) { .iv-welcome-card { grid-template-columns: 1fr; padding: 32px 24px; } }
+  .iv-welcome-card h2 { color: white; margin: 0 0 12px; }
+  .iv-welcome-card .eyebrow { color: #F5D47A; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 14px; display: block; }
+  .iv-welcome-card p { color: rgba(255,255,255,0.85); font-size: 16px; margin-bottom: 0; }
+  .iv-welcome-form { background: white; padding: 28px; border-radius: 16px; color: var(--fg-1); }
+  .iv-welcome-form h4 { margin: 0 0 14px; font-size: 18px; }
+</style>
+</head>
+<body data-screen-label="Plan Your Visit">
+<div id="sh-mast"></div>
+
+<section class="iv-hero iv-hero-split">
+  <div class="wrap-wide">
+    <div class="iv-hero-split-inner">
+      <div>
+        <div class="iv-crumb"><a href="../index.html">Home</a><span class="sep">/</span><a href="#">About</a><span class="sep">/</span><span>I'm new</span></div>
+        <span class="eyebrow">We've been saving you a seat</span>
+        <h1>Plan your visit.</h1>
+        <p class="lede">Everything you need to know before Sunday — where to park, what to wear, what to expect, and how to meet us once you're here.</p>
+      </div>
+      <figure class="iv-hero-photo">
+        <span class="ph-tag"><span class="dot"></span>Photo</span>
+        <div class="ph-meta"><span class="chip">Landscape · 5:4</span></div>
+        <div class="ph-mark"><div class="box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-8 8"/></svg>
+          Narthex on Sunday morning
+        </div></div>
+        <figcaption class="ph-caption">
+          <div class="lbl">Photo brief</div>
+          <div class="name">Greeters welcoming a family · warm, natural light</div>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="sh-section" style="background: var(--sh-cream);">
+  <div class="wrap-wide">
+    <div class="sect-head">
+      <span class="eyebrow">In three steps</span>
+      <h2>Your first Sunday</h2>
+      <span class="rule"></span>
+    </div>
+    <div class="iv-pyv-steps">
+      <div class="iv-pyv-step">
+        <div class="n">01</div>
+        <h3>Pick a Mass</h3>
+        <p>Sun 8 AM, 10 AM (family), 12 PM, 6 PM (youth-led). Saturday Vigil at 5. All Masses are welcome to everyone.</p>
+      </div>
+      <div class="iv-pyv-step">
+        <div class="n">02</div>
+        <h3>Come as you are</h3>
+        <p>No dress code. Arrive 10 minutes early and our greeters will show you around. Restrooms, cry room, and family seating are all clearly marked.</p>
+      </div>
+      <div class="iv-pyv-step">
+        <div class="n">03</div>
+        <h3>Stay for coffee</h3>
+        <p>After the 10 AM family Mass, join us in the parish hall for coffee and donuts. No agenda — just a chance to say hello.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sh-section">
+  <div class="wrap-wide">
+    <div class="iv-welcome-card">
+      <div>
+        <span class="eyebrow">Send us a note first</span>
+        <h2>We'd love to meet you before Sunday.</h2>
+        <p>Tell us a bit about yourself and we'll make sure a greeter is watching for you. We'll also follow up with anything you need — parking, kids' programs, sacraments.</p>
+      </div>
+      <div class="iv-welcome-form">
+        <h4>Welcome form</h4>
+        <div class="sh-field-row">
+          <div class="sh-field"><label>First name</label><input type="text" placeholder="First" /></div>
+          <div class="sh-field"><label>Last name</label><input type="text" placeholder="Last" /></div>
+        </div>
+        <div class="sh-field"><label>Email</label><input type="email" placeholder="you@example.com" /></div>
+        <div class="sh-field">
+          <label>What brings you here?</label>
+          <select>
+            <option>Just exploring</option>
+            <option>I'm new to the area</option>
+            <option>Looking for a parish home</option>
+            <option>Coming back to the Church</option>
+            <option>I have kids for Faith Formation</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="this.innerHTML='✓ Sent'; this.style.background='var(--sh-rust-dark)'">Send <span class="arr">→</span></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sh-section" style="background: var(--sh-cream);">
+  <div class="wrap-wide">
+    <div class="sect-head">
+      <span class="eyebrow">The basics</span>
+      <h2>What to expect</h2>
+      <span class="rule"></span>
+    </div>
+    <div class="serve-grid4">
+      <div class="serve-tile"><div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><h4>Mass is 55 minutes</h4><p>Music, Scripture, homily, Communion. You don't need to know when to stand or sit — just follow along.</p></div>
+      <div class="serve-tile"><div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg></div><h4>Free parking</h4><p>Large lot behind the church plus overflow across the street. Accessible spots at the main entrance.</p></div>
+      <div class="serve-tile navy"><div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20c0-4 3-6 6-6s6 2 6 6"/></svg></div><h4>Kids are welcome</h4><p>Cry room off the narthex. Kids Corner (ages 2–5) during the 10 AM Mass. No shushing required.</p></div>
+      <div class="serve-tile"><div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 7-8 12-8 12S4 17 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></div><h4>1600 Rhode Island Ave</h4><p>Westfield, NJ 07090. Ten minutes from the Westfield train station.</p></div>
+    </div>
+  </div>
+</section>
+
+<div id="sh-foot"></div>
+<a class="give-fab" href="give.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1a5.5 5.5 0 1 0-7.8 7.8L12 21.4l8.8-8.9a5.5 5.5 0 0 0 0-7.9z"/></svg> Give</a>
+
+<script src="../assets/shell.js"></script>
+<script>SH.init({ active: 'new', solidNav: true, depth: 1 });</script>
+</body>
+</html>

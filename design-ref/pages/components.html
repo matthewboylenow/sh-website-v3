@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Components — Saint Helen 3.0</title>
+<link rel="stylesheet" href="../assets/colors_and_type.css" />
+<link rel="stylesheet" href="../assets/kit.css" />
+<link rel="stylesheet" href="../assets/site.css" />
+<style>
+  body { background: var(--sh-cream); }
+  .cmp-mast {
+    background: var(--sh-navy); color: white;
+    padding: 18px 0; position: sticky; top: 0; z-index: 20;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .cmp-mast .wrap-wide { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .cmp-mast .brand { display: flex; align-items: center; gap: 10px; color: white; text-decoration: none; font-family: var(--font-serif); font-weight: 700; font-size: 16px; }
+  .cmp-mast .brand img { width: 26px; height: 26px; filter: brightness(0) invert(1); }
+  .cmp-mast .crumb { font-family: var(--font-sans); font-size: 13px; color: rgba(255,255,255,0.7); }
+  .cmp-mast .crumb a { color: rgba(255,255,255,0.7); }
+  .cmp-mast .back { color: rgba(255,255,255,0.9); font-family: var(--font-sans); font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15); }
+  .cmp-mast .back:hover { background: rgba(255,255,255,0.08); color: white; }
+
+  .cmp-hero { padding: 64px 0 40px; background: linear-gradient(180deg, var(--sh-cream) 0%, white 100%); }
+  .cmp-hero h1 { font-size: clamp(40px, 5vw, 60px); margin-bottom: 12px; }
+  .cmp-hero p { font-size: 18px; color: var(--fg-2); max-width: 640px; }
+  .cmp-hero .eyebrow { color: var(--sh-rust); font-family: var(--font-sans); font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; display: inline-block; margin-bottom: 16px; }
+
+  .cmp-toc {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 14px;
+    padding: 20px 24px; margin-top: 32px;
+    display: flex; flex-wrap: wrap; gap: 6px 18px;
+    font-family: var(--font-sans); font-size: 13.5px;
+  }
+  .cmp-toc span { color: var(--fg-3); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; font-size: 11px; margin-right: 8px; }
+  .cmp-toc a { color: var(--sh-navy); padding: 4px 10px; border-radius: 6px; }
+  .cmp-toc a:hover { background: var(--sh-cream); color: var(--sh-rust-dark); }
+
+  .cmp-section { padding: 48px 0; }
+  .cmp-section + .cmp-section { border-top: 1px solid var(--sh-rule); }
+  .cmp-section-head { margin-bottom: 28px; }
+  .cmp-section-head .eyebrow { color: var(--sh-rust); font-family: var(--font-sans); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; display: block; margin-bottom: 6px; }
+  .cmp-section-head h2 { font-size: clamp(28px, 3vw, 38px); margin-bottom: 8px; }
+  .cmp-section-head p { color: var(--fg-2); font-size: 15.5px; max-width: 640px; }
+
+  /* Token blocks */
+  .tok-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+  .tok {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    overflow: hidden;
+  }
+  .tok .swatch { height: 78px; display: block; }
+  .tok .meta { padding: 12px 14px 14px; font-family: var(--font-sans); }
+  .tok .meta .name { font-size: 13px; font-weight: 600; color: var(--sh-navy); margin-bottom: 2px; }
+  .tok .meta code { font-size: 11.5px; color: var(--fg-3); background: var(--sh-cream); padding: 1px 6px; border-radius: 4px; }
+  .tok .meta .hex { font-size: 11.5px; color: var(--fg-3); margin-top: 4px; display: block; font-family: ui-monospace, Menlo, monospace; }
+
+  /* Type specimens */
+  .type-row {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    padding: 22px 26px; margin-bottom: 12px;
+    display: grid; grid-template-columns: 180px 1fr; gap: 24px; align-items: baseline;
+  }
+  .type-row .label { font-family: var(--font-sans); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
+  .type-row .label code { display: block; background: var(--sh-cream); padding: 2px 6px; border-radius: 4px; font-size: 11px; color: var(--sh-navy); margin-top: 6px; letter-spacing: 0; text-transform: none; width: fit-content; }
+  .type-row .sample { color: var(--sh-navy); }
+
+  /* Radius + shadow specimens */
+  .spec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+  .spec {
+    background: white; border: 1px solid var(--sh-rule);
+    padding: 20px; text-align: center;
+    font-family: var(--font-sans); font-size: 12px; color: var(--fg-3);
+  }
+  .spec .demo { height: 60px; background: var(--sh-navy); margin-bottom: 10px; }
+  .spec-shadow { background: var(--sh-cream); border: 0; padding: 28px 20px; }
+  .spec-shadow .demo { background: white; height: 80px; border-radius: 10px; margin-bottom: 12px; }
+  .spec code { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--sh-navy); display: block; margin-top: 2px; }
+
+  /* Spacing scale visualizer */
+  .sp-row { display: grid; grid-template-columns: 120px 1fr 80px; gap: 16px; align-items: center; padding: 8px 0; font-family: var(--font-sans); font-size: 13px; }
+  .sp-row code { color: var(--sh-navy); }
+  .sp-row .bar { height: 12px; background: var(--sh-rust); border-radius: 2px; }
+  .sp-row .px { color: var(--fg-3); text-align: right; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+
+  /* Component blocks — show the component in context */
+  .cmp-block {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 14px;
+    margin-bottom: 20px; overflow: hidden;
+  }
+  .cmp-block .bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 22px; border-bottom: 1px solid var(--sh-rule);
+    background: var(--sh-cream);
+    font-family: var(--font-sans); font-size: 13px;
+  }
+  .cmp-block .bar .name { font-weight: 600; color: var(--sh-navy); }
+  .cmp-block .bar code { background: white; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; color: var(--sh-rust-dark); border: 1px solid var(--sh-rule); }
+  .cmp-block .stage { padding: 28px; }
+  .cmp-block .stage.dark { background: var(--sh-navy); }
+  .cmp-block .notes { padding: 14px 22px; background: var(--sh-cream); border-top: 1px solid var(--sh-rule); font-family: var(--font-sans); font-size: 13px; color: var(--fg-3); line-height: 1.6; }
+
+  .btn-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+  /* Form controls — styled matching site */
+  .sh-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .sh-field label { font-family: var(--font-sans); font-size: 13px; color: var(--sh-navy); font-weight: 500; }
+  .sh-field input, .sh-field select, .sh-field textarea {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 8px;
+    padding: 10px 12px; font-family: var(--font-sans); font-size: 14px; color: var(--fg-1);
+    transition: border 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
+  }
+  .sh-field input:focus, .sh-field select:focus, .sh-field textarea:focus {
+    outline: none; border-color: var(--sh-rust);
+    box-shadow: 0 0 0 3px rgba(205,83,52,0.15);
+  }
+
+  /* Misc inline */
+  .tag-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-family: var(--font-sans); font-size: 11.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .tag-chip.rust { background: var(--sh-rust-pale); color: var(--sh-rust-dark); }
+  .tag-chip.navy { background: var(--sh-navy-pale); color: var(--sh-navy); }
+  .tag-chip.gold { background: #FDF4D6; color: #7A5A0C; }
+
+  .list-card { background: white; border: 1px solid var(--sh-rule); border-radius: 14px; padding: 22px; }
+  .list-card h4 { margin: 0 0 6px; font-size: 18px; }
+  .list-card p { margin: 0; color: var(--fg-2); font-size: 14px; }
+
+  .icon-box {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: grid; place-items: center; color: white;
+  }
+
+  .card-tile {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 12px;
+    padding: 22px; color: inherit; text-decoration: none;
+    display: block; transition: all 220ms var(--ease-out);
+  }
+  .card-tile:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+  .card-tile .eyebrow { color: var(--sh-rust); font-family: var(--font-sans); font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px; display: block; }
+  .card-tile h4 { margin: 0 0 6px; font-size: 18px; }
+  .card-tile p { margin: 0; color: var(--fg-2); font-size: 13.5px; line-height: 1.5; }
+</style>
+</head>
+<body data-screen-label="Components Inventory">
+
+<header class="cmp-mast">
+  <div class="wrap-wide">
+    <a class="brand" href="../index.html">
+      <img src="../assets/logo-submark.png" alt="" />
+      <span>Saint Helen 3.0</span>
+    </a>
+    <div class="crumb"><a href="../index.html">Review</a> / Components</div>
+    <a class="back" href="../index.html">← Back to review</a>
+  </div>
+</header>
+
+<section class="cmp-hero">
+  <div class="wrap-wide">
+    <span class="eyebrow">Design system · Components inventory</span>
+    <h1>The kit, on one page.</h1>
+    <p>Every token, element, and component that powers Saint Helen 3.0 — cataloged for review and for the Claude Code / Codespaces team picking this up in React.</p>
+
+    <nav class="cmp-toc">
+      <span>Jump to</span>
+      <a href="#colors">Colors</a>
+      <a href="#type">Type</a>
+      <a href="#spacing">Spacing</a>
+      <a href="#radii">Radii &amp; shadows</a>
+      <a href="#buttons">Buttons</a>
+      <a href="#form">Form controls</a>
+      <a href="#tags">Tags &amp; chips</a>
+      <a href="#cards">Cards</a>
+      <a href="#blocks">Content blocks</a>
+    </nav>
+  </div>
+</section>
+
+<!-- ================ COLORS ================ -->
+<section id="colors" class="cmp-section">
+  <div class="wrap-wide">
+    <div class="cmp-section-head">
+      <span class="eyebrow">01 · Tokens</span>
+      <h2>Color</h2>
+      <p>Navy anchors the brand; rust carries interaction. Cream backgrounds soften long-scroll surfaces. Gold is an accent — use sparingly.</p>
+    </div>
+
+    <h5 style="margin-bottom: 12px; color: var(--fg-3); font-family: var(--font-sans); font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600;">Primary</h5>
+    <div class="tok-grid" style="margin-bottom: 28px;">
+      <div class="tok"><span class="swatch" style="background: var(--sh-navy);"></span><div class="meta"><div class="name">Navy</div><code>--sh-navy</code><span class="hex">#1F346D</span></div></div>
+      <div class="tok"><span class="swatch" style="background: var(--sh-rust);"></span><div class="meta"><div class="name">Rust</div><code>--sh-rust</code><span class="hex">#CD5334</span></div></div>
+      <div class="tok"><span class="swatch" style="background: var(--sh-cream); box-shadow: inset 0 0 0 1px var(--sh-rule);"></span><div class="meta"><div class="name">Cream</div><code>--sh-cream</code><span class="hex">#FAF9F7</span></div></div>
+      <div class="tok"><span class="swatch" style="background: var(--sh-gold);"></span><div class="meta"><div class="name">Gold</div><code>--sh-gold</code><span class="hex">#D4AF37</span></div></div>
+      <div class="tok"><span class="swatch" style="background: white; box-shadow: inset 0 0 0 1px var(--sh-rule);"></span><div class="meta"><div class="name">White</div><code>--sh-white</code><span class="hex">#FFFFFF</span></div></div>
+    </div>
+
+    <h5 style="margin-bottom: 12px; color: var(--fg-3); font-family: var(--font-sans); font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600;">Extended</h5>
+    <div class="tok-grid" style="margin-bottom: 28px;">
+      <div class="tok"><span class="swatch" style="background: var(--sh-navy-dark);"></span><div class="meta"><div class="name">Navy · dark</div><code>--sh-navy-dark</code><span class="hex">#0F1A35</span></div></div>
+      <div class="tok"><span class="swatch" style="background: var(--sh-navy-light);"></span><div class="meta"><div class="name">Navy · light</div><code>--sh-navy-light</code><span class="hex">#2E4A8F</span></div></div>
+      <div class="tok"><span class="swatch" style="background: var(--sh-navy-pale);"></span><div class="meta"><div class="name">Navy · pale</div><code>--sh-navy-pale</code><span class="hex">#E8EBEF</span></div></div>
+      <div class="tok"><span class="swatch" style="background: var(--sh-rust-dark);"></span><div class="meta"><div class="name">Rust · dark <em style="font-style: normal; color: var(--sh-rust-dark); font-size: 10.5px;">(AA text)</em></div><code>--sh-rust-dark</code><span class="hex">#A73F25</span></div></div>
+      <div class="tok"><span class="swatch" style="background: var(--sh-rust-light);"></span><div class="meta"><div class="name">Rust · light</div><code>--sh-rust-light</code><span class="hex">#E0694A</span></div></div>
+      <div class="tok"><span class="swatch" style="background: var(--sh-rust-pale);"></span><div class="meta"><div class="name">Rust · pale</div><code>--sh-rust-pale</code><span class="hex">#FAE8E4</span></div></div>
+      <div class="tok"><span class="swatch" style="background: var(--sh-cream-alt);"></span><div class="meta"><div class="name">Cream · alt</div><code>--sh-cream-alt</code><span class="hex">#F5F3F0</span></div></div>
+    </div>
+
+    <h5 style="margin-bottom: 12px; color: var(--fg-3); font-family: var(--font-sans); font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600;">Neutrals &amp; rules</h5>
+    <div class="tok-grid">
+      <div class="tok"><span class="swatch" style="background: var(--sh-ink);"></span><div class="meta"><div class="name">Ink</div><code>--fg-1</code><span class="hex">#1A1A1A</span></div></div>
+      <div class="tok"><span class="swatch" style="background: var(--sh-ink-2);"></span><div class="meta"><div class="name">Ink · 2</div><code>--fg-2</code><span class="hex">#3A3A3A</span></div></div>
+      <div class="tok"><span class="swatch" style="background: var(--sh-ink-3);"></span><div class="meta"><div class="name">Ink · 3</div><code>--fg-3</code><span class="hex">#6B6B6B</span></div></div>
+      <div class="tok"><span class="swatch" style="background: var(--sh-ink-4);"></span><div class="meta"><div class="name">Ink · 4</div><code>--sh-ink-4</code><span class="hex">#9A9A9A</span></div></div>
+      <div class="tok"><span class="swatch" style="background: var(--sh-rule);"></span><div class="meta"><div class="name">Rule</div><code>--sh-rule</code><span class="hex">#E5E5E5</span></div></div>
+      <div class="tok"><span class="swatch" style="background: var(--sh-rule-soft);"></span><div class="meta"><div class="name">Rule · soft</div><code>--sh-rule-soft</code><span class="hex">#EFEDEA</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================ TYPE ================ -->
+<section id="type" class="cmp-section">
+  <div class="wrap-wide">
+    <div class="cmp-section-head">
+      <span class="eyebrow">02 · Tokens</span>
+      <h2>Type</h2>
+      <p>Libre Baskerville for headlines and display; Libre Franklin for UI, body, and meta. Tracking is tightened on display sizes; body stays relaxed.</p>
+    </div>
+
+    <div class="type-row">
+      <div class="label">Display<code>--fs-display</code></div>
+      <div class="sample sh-display">Welcome home.</div>
+    </div>
+    <div class="type-row">
+      <div class="label">H1<code>--fs-h1</code></div>
+      <div class="sample"><h1 style="margin:0;">Plan your visit.</h1></div>
+    </div>
+    <div class="type-row">
+      <div class="label">H2<code>--fs-h2</code></div>
+      <div class="sample"><h2 style="margin:0;">What's on this week</h2></div>
+    </div>
+    <div class="type-row">
+      <div class="label">H3<code>--fs-h3</code></div>
+      <div class="sample"><h3 style="margin:0;">Find your place</h3></div>
+    </div>
+    <div class="type-row">
+      <div class="label">H4<code>--fs-h4</code></div>
+      <div class="sample"><h4 style="margin:0;">Second Sunday of Easter</h4></div>
+    </div>
+    <div class="type-row">
+      <div class="label">Eyebrow<code>.sh-eyebrow</code></div>
+      <div class="sample"><span class="sh-eyebrow">We've been saving you a seat</span></div>
+    </div>
+    <div class="type-row">
+      <div class="label">Lede<code>.sh-lede</code></div>
+      <div class="sample"><p class="sh-lede" style="margin:0;">Everything you need to know before Sunday — where to park, what to wear, and how to meet us once you're here.</p></div>
+    </div>
+    <div class="type-row">
+      <div class="label">Body<code>--fs-body</code></div>
+      <div class="sample" style="color: var(--fg-1);"><p style="margin:0;">Saint Helen has been a spiritual home on this corner of Westfield for over ninety years. Whether you're new to the neighborhood or returning after a long time away — we've been saving you a seat.</p></div>
+    </div>
+    <div class="type-row">
+      <div class="label">Small<code>.sh-small</code></div>
+      <div class="sample"><small>Daily Mass · Msgr. Tom · 20 minutes</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================ SPACING ================ -->
+<section id="spacing" class="cmp-section">
+  <div class="wrap-wide">
+    <div class="cmp-section-head">
+      <span class="eyebrow">03 · Tokens</span>
+      <h2>Spacing scale</h2>
+      <p>8-point base. Use <code>--space-9</code> as the default section padding; it multiplies against <code>--density-scale</code> so editors can tighten or loosen rhythm per surface.</p>
+    </div>
+
+    <div style="background: white; border: 1px solid var(--sh-rule); border-radius: 14px; padding: 22px 28px;">
+      <div class="sp-row"><code>--space-1</code><div class="bar" style="width: 4px;"></div><span class="px">4 px</span></div>
+      <div class="sp-row"><code>--space-2</code><div class="bar" style="width: 8px;"></div><span class="px">8 px</span></div>
+      <div class="sp-row"><code>--space-3</code><div class="bar" style="width: 12px;"></div><span class="px">12 px</span></div>
+      <div class="sp-row"><code>--space-4</code><div class="bar" style="width: 16px;"></div><span class="px">16 px</span></div>
+      <div class="sp-row"><code>--space-5</code><div class="bar" style="width: 24px;"></div><span class="px">24 px</span></div>
+      <div class="sp-row"><code>--space-6</code><div class="bar" style="width: 32px;"></div><span class="px">32 px</span></div>
+      <div class="sp-row"><code>--space-7</code><div class="bar" style="width: 48px;"></div><span class="px">48 px</span></div>
+      <div class="sp-row"><code>--space-8</code><div class="bar" style="width: 64px;"></div><span class="px">64 px</span></div>
+      <div class="sp-row"><code>--space-9</code><div class="bar" style="width: 80px;"></div><span class="px">80 px</span></div>
+      <div class="sp-row"><code>--space-10</code><div class="bar" style="width: 112px;"></div><span class="px">112 px</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================ RADII + SHADOWS ================ -->
+<section id="radii" class="cmp-section">
+  <div class="wrap-wide">
+    <div class="cmp-section-head">
+      <span class="eyebrow">04 · Tokens</span>
+      <h2>Radii &amp; shadows</h2>
+      <p>Cards live at 12 px; panels and heroes at 16–22 px. Shadows stay quiet at rest and deepen one step on hover.</p>
+    </div>
+
+    <h5 style="margin-bottom: 12px; color: var(--fg-3); font-family: var(--font-sans); font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600;">Radii</h5>
+    <div class="spec-grid" style="margin-bottom: 28px;">
+      <div class="spec"><div class="demo" style="border-radius: 4px;"></div>xs <code>4 px</code></div>
+      <div class="spec"><div class="demo" style="border-radius: 8px;"></div>sm · buttons <code>8 px</code></div>
+      <div class="spec"><div class="demo" style="border-radius: 12px;"></div>md · cards <code>12 px</code></div>
+      <div class="spec"><div class="demo" style="border-radius: 16px;"></div>lg · panels <code>16 px</code></div>
+      <div class="spec"><div class="demo" style="border-radius: 24px;"></div>xl <code>24 px</code></div>
+      <div class="spec"><div class="demo" style="border-radius: 999px;"></div>pill <code>999 px</code></div>
+    </div>
+
+    <h5 style="margin-bottom: 12px; color: var(--fg-3); font-family: var(--font-sans); font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600;">Shadows</h5>
+    <div class="spec-grid">
+      <div class="spec spec-shadow"><div class="demo" style="box-shadow: var(--shadow-xs);"></div>xs <code>--shadow-xs</code></div>
+      <div class="spec spec-shadow"><div class="demo" style="box-shadow: var(--shadow-sm);"></div>sm <code>--shadow-sm</code></div>
+      <div class="spec spec-shadow"><div class="demo" style="box-shadow: var(--shadow-md);"></div>md <code>--shadow-md</code></div>
+      <div class="spec spec-shadow"><div class="demo" style="box-shadow: var(--shadow-lg);"></div>lg <code>--shadow-lg</code></div>
+      <div class="spec spec-shadow"><div class="demo" style="box-shadow: var(--shadow-hover);"></div>hover <code>--shadow-hover</code></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================ BUTTONS ================ -->
+<section id="buttons" class="cmp-section">
+  <div class="wrap-wide">
+    <div class="cmp-section-head">
+      <span class="eyebrow">05 · Components</span>
+      <h2>Buttons</h2>
+      <p>Rust for primary CTAs (Give, Plan your visit), navy for secondary-primary, ghost for overlay surfaces. Every button is a pill.</p>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Primary — Rust</span><code>.btn .btn-rust</code></div>
+      <div class="stage">
+        <div class="btn-row">
+          <button class="btn btn-rust">Plan your visit <span class="arr">→</span></button>
+          <button class="btn btn-rust btn-sm">Add to calendar <span class="arr">→</span></button>
+          <button class="btn btn-rust" disabled style="opacity:0.5; cursor:not-allowed;">Disabled</button>
+        </div>
+      </div>
+      <div class="notes">Use for the highest-intent action on a surface. Do not place two rust buttons adjacent — pair with a navy or ghost secondary instead.</div>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Primary — Navy</span><code>.btn .btn-primary</code></div>
+      <div class="stage">
+        <div class="btn-row">
+          <button class="btn btn-primary">Send <span class="arr">→</span></button>
+          <button class="btn btn-primary btn-sm">Watch replay</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Secondary — Navy outline</span><code>.btn .btn-secondary</code></div>
+      <div class="stage">
+        <div class="btn-row">
+          <button class="btn btn-secondary">Full schedule</button>
+          <button class="btn btn-secondary btn-sm">View all →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Ghost — over imagery</span><code>.btn .btn-ghost-light</code></div>
+      <div class="stage dark">
+        <div class="btn-row">
+          <button class="btn btn-ghost-light">Livestream <span class="arr">→</span></button>
+          <button class="btn btn-ghost-light btn-sm">Readings</button>
+        </div>
+      </div>
+      <div class="notes">Ghost buttons assume a dark or photographic background. Do not use on white.</div>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Gold accent</span><code>.btn .btn-gold</code></div>
+      <div class="stage">
+        <div class="btn-row">
+          <button class="btn" style="background: var(--sh-gold); color: var(--sh-navy-dark); box-shadow: 0 8px 22px rgba(212,175,55,0.3);">Add to calendar <span class="arr">→</span></button>
+        </div>
+      </div>
+      <div class="notes">Reserved for seasonal / celebratory moments — Harvest Fest, Christmas banners, feast-day events.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================ FORM ================ -->
+<section id="form" class="cmp-section">
+  <div class="wrap-wide">
+    <div class="cmp-section-head">
+      <span class="eyebrow">06 · Components</span>
+      <h2>Form controls</h2>
+      <p>Focus ring uses rust at 15% alpha on a 3 px offset — visible against cream and white. Labels are Franklin at 13 px; navy.</p>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Input, select, textarea</span><code>.sh-field</code></div>
+      <div class="stage">
+        <div style="max-width: 480px;">
+          <div class="sh-field"><label>First name</label><input type="text" placeholder="Mary" /></div>
+          <div class="sh-field"><label>Email</label><input type="email" placeholder="you@example.com" value="m.lane@example.com" /></div>
+          <div class="sh-field"><label>What brings you here?</label>
+            <select>
+              <option>Just exploring</option>
+              <option>I'm new to the area</option>
+              <option>Looking for a parish home</option>
+            </select>
+          </div>
+          <div class="sh-field"><label>Anything we should know?</label><textarea rows="3" placeholder="Optional — allergies, accessibility needs, kids' ages."></textarea></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================ TAGS ================ -->
+<section id="tags" class="cmp-section">
+  <div class="wrap-wide">
+    <div class="cmp-section-head">
+      <span class="eyebrow">07 · Components</span>
+      <h2>Tags &amp; chips</h2>
+      <p>Use rust for audience/category filters, navy for status and schedule, gold for featured or all-parish moments.</p>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Category chips</span><code>.tag-chip</code></div>
+      <div class="stage">
+        <div class="btn-row">
+          <span class="tag-chip rust">Worship</span>
+          <span class="tag-chip rust">Families</span>
+          <span class="tag-chip rust">Youth</span>
+          <span class="tag-chip navy">Live now</span>
+          <span class="tag-chip navy">Replay</span>
+          <span class="tag-chip gold">Featured</span>
+          <span class="tag-chip gold">All-parish</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================ CARDS ================ -->
+<section id="cards" class="cmp-section">
+  <div class="wrap-wide">
+    <div class="cmp-section-head">
+      <span class="eyebrow">08 · Components</span>
+      <h2>Cards</h2>
+      <p>Cards share one skeleton: white fill, 1 px rule border, 12 px radius, 22 px padding. Lift translates -3 px on hover and deepens the shadow one step.</p>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Linked card (serve tile, event list item, ministry entry)</span><code>.card-tile</code></div>
+      <div class="stage">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+          <a class="card-tile" href="#"><span class="eyebrow">Families</span><h4>Faith Formation</h4><p>Sunday school for K–8, sacrament prep, and teen nights on Wednesdays.</p></a>
+          <a class="card-tile" href="#"><span class="eyebrow">Service</span><h4>St. Vincent de Paul</h4><p>Meet the neighbors who need us most — grocery runs, rent help, home visits.</p></a>
+          <a class="card-tile" href="#"><span class="eyebrow">Fellowship</span><h4>Women's Circle</h4><p>Thursdays at 10 AM in the parish hall. Coffee, scripture, and real talk.</p></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Icon card — with colored icon box</span><code>.serve-tile</code></div>
+      <div class="stage">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+          <div class="card-tile">
+            <div class="icon-box" style="background: var(--sh-rust); margin-bottom: 14px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+            <h4>Mass times</h4><p>Sat vigil + four Sunday Masses, daily Mass weekdays at 9 AM.</p>
+          </div>
+          <div class="card-tile">
+            <div class="icon-box" style="background: var(--sh-navy); margin-bottom: 14px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20c0-4 3-6 6-6s6 2 6 6"/></svg></div>
+            <h4>Meet the pastor</h4><p>Monsignor Tom on what makes this parish different.</p>
+          </div>
+          <div class="card-tile">
+            <div class="icon-box" style="background: var(--sh-gold); color: var(--sh-navy-dark); margin-bottom: 14px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-7"/><path d="M14 17h6"/><circle cx="7" cy="7" r="3"/><circle cx="17" cy="17" r="3"/></svg></div>
+            <h4>Ministry matchmaker</h4><p>Three questions, five matches. Take the quiz.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Date + content card (event, Mass time, bulletin)</span><code>.ev-featured</code></div>
+      <div class="stage">
+        <div style="background: white; border: 1px solid var(--sh-rule); border-radius: 14px; padding: 24px; display: grid; grid-template-columns: 96px 1fr auto; gap: 24px; align-items: center;">
+          <div style="background: var(--sh-navy); color: white; border-radius: 10px; padding: 14px 10px; text-align: center;">
+            <div style="font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.8;">May</div>
+            <div style="font-family: var(--font-serif); font-size: 32px; font-weight: 700; line-height: 1;">3</div>
+            <div style="font-family: var(--font-sans); font-size: 10.5px; opacity: 0.7; margin-top: 4px;">Sunday</div>
+          </div>
+          <div>
+            <span class="tag-chip gold" style="margin-bottom: 8px;">Featured · All-parish</span>
+            <h4 style="margin: 6px 0 4px;">Harvest Fest 2026</h4>
+            <p style="margin: 0; color: var(--fg-2); font-size: 14px;">Live music on the lawn, food trucks, bounce houses. Free — no registration.</p>
+          </div>
+          <button class="btn btn-secondary btn-sm">Details →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================ CONTENT BLOCKS ================ -->
+<section id="blocks" class="cmp-section">
+  <div class="wrap-wide">
+    <div class="cmp-section-head">
+      <span class="eyebrow">09 · Components</span>
+      <h2>Content blocks</h2>
+      <p>Page-level compositions. Each block is a standalone CMS unit — they can be reordered on any page without breaking rhythm.</p>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Section header (centered)</span><code>.sect-head</code></div>
+      <div class="stage">
+        <div class="sect-head" style="margin: 0 auto;">
+          <span class="eyebrow">This week</span>
+          <h2 style="margin-bottom: 6px;">What's on at Saint Helen</h2>
+          <span class="rule"></span>
+          <p style="color: var(--fg-2); font-size: 15.5px;">Filterable by audience and category — or just browse.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Breadcrumb</span><code>.iv-crumb</code></div>
+      <div class="stage">
+        <div class="iv-crumb" style="margin: 0;">
+          <a href="#">Home</a><span class="sep">/</span><a href="#">Worship</a><span class="sep">/</span><span>Mass schedule</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Hero photo placeholder</span><code>.iv-hero-photo</code></div>
+      <div class="stage">
+        <div style="max-width: 420px;">
+          <figure class="iv-hero-photo" style="margin: 0;">
+            <span class="ph-tag"><span class="dot"></span>Photo</span>
+            <div class="ph-meta"><span class="chip">Landscape · 5:4</span></div>
+            <div class="ph-mark"><div class="box">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-8 8"/></svg>
+              Narthex on Sunday morning
+            </div></div>
+            <figcaption class="ph-caption">
+              <div class="lbl">Photo brief</div>
+              <div class="name">Greeters welcoming a family · warm light</div>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="notes">Each placeholder carries a photo brief — the art direction the photographer should shoot. Variants: default (navy), <code>.ph-warm</code> (candlelight), <code>.ph-day</code> (daylight).</div>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Welcome card (split form)</span><code>.iv-welcome-card</code></div>
+      <div class="stage">
+        <div style="background: white; border: 1px solid var(--sh-rule); border-radius: 16px; padding: 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;">
+          <div>
+            <span class="sh-eyebrow">Send us a note</span>
+            <h3 style="margin: 10px 0 8px;">We'd love to meet you before Sunday.</h3>
+            <p style="color: var(--fg-2); font-size: 14.5px; margin: 0;">Tell us a bit about yourself and a greeter will be watching for you.</p>
+          </div>
+          <div>
+            <div class="sh-field"><label>Name</label><input type="text" placeholder="First last" /></div>
+            <div class="sh-field"><label>Email</label><input type="email" placeholder="you@example.com" /></div>
+            <button class="btn btn-primary" style="width:100%; justify-content:center;">Send <span class="arr">→</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Filter rail (events, ministries)</span><code>.ev-filters</code></div>
+      <div class="stage">
+        <div style="max-width: 280px; background: white; border: 1px solid var(--sh-rule); border-radius: 14px; padding: 22px;">
+          <h5 style="font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); margin: 0 0 12px;">Audience</h5>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; background: var(--sh-rust-pale); color: var(--sh-rust-dark); font-family: var(--font-sans); font-size: 13.5px; font-weight: 500; cursor: pointer;">All audiences <span style="font-size: 11px; opacity: 0.7;">42</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; color: var(--fg-2); font-family: var(--font-sans); font-size: 13.5px; cursor: pointer;">Families <span style="font-size: 11px; color: var(--fg-3);">14</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; color: var(--fg-2); font-family: var(--font-sans); font-size: 13.5px; cursor: pointer;">Youth &amp; Young Adults <span style="font-size: 11px; color: var(--fg-3);">8</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; color: var(--fg-2); font-family: var(--font-sans); font-size: 13.5px; cursor: pointer;">Adults <span style="font-size: 11px; color: var(--fg-3);">18</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmp-block">
+      <div class="bar"><span class="name">Pastor welcome (video + copy)</span><code>.welcome</code></div>
+      <div class="stage">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center;">
+          <div style="aspect-ratio: 16/10; border-radius: 14px; background: linear-gradient(135deg, #1F346D 0%, #2E4A8F 55%, #A73F25 100%); position: relative; box-shadow: var(--shadow-lg);">
+            <div style="position: absolute; inset: 0; display: grid; place-items: center;">
+              <div style="width: 64px; height: 64px; border-radius: 999px; background: rgba(255,255,255,0.95); display: grid; place-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--sh-navy)"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+              </div>
+            </div>
+            <div style="position: absolute; bottom: 14px; right: 16px; color: rgba(255,255,255,0.7); font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">Video placeholder</div>
+          </div>
+          <div>
+            <span class="sh-eyebrow">A message from our pastor</span>
+            <h3 style="margin: 10px 0 12px;">"The door is always open."</h3>
+            <p style="color: var(--fg-2); margin: 0 0 10px;">Whether you're curious, skeptical, returning, or rooted — this parish is for you. Come as you are.</p>
+            <p style="font-family: var(--font-serif); font-style: italic; color: var(--fg-3); font-size: 14px; margin: 0;">— Msgr. Tom Reilly, Pastor</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer style="padding: 60px 0 80px; text-align: center; border-top: 1px solid var(--sh-rule); background: white;">
+  <div class="wrap-wide">
+    <p style="color: var(--fg-3); font-size: 13px; margin: 0;">Saint Helen 3.0 · Components inventory · <a href="../index.html" style="color: var(--sh-rust-dark);">Back to review</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

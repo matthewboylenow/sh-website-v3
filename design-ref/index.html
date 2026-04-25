@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Saint Helen 3.0 — Review Index</title>
+<link rel="stylesheet" href="assets/colors_and_type.css" />
+<link rel="stylesheet" href="assets/kit.css" />
+<link rel="stylesheet" href="assets/site.css" />
+<style>
+  body { background: var(--sh-cream); }
+  .idx-hero { padding: 96px 0 56px; text-align: center; }
+  .idx-hero h1 { font-size: clamp(46px, 6vw, 72px); margin-bottom: 14px; }
+  .idx-hero p { font-size: 19px; color: var(--fg-2); max-width: 640px; margin: 0 auto; }
+  .idx-hero .eyebrow { color: var(--sh-rust); font-family: var(--font-sans); font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; display: inline-block; margin-bottom: 18px; }
+  .idx-hero .brand { display: inline-flex; align-items: center; gap: 12px; margin-bottom: 24px; color: var(--sh-navy); font-family: var(--font-serif); font-weight: 700; font-size: 18px; }
+  .idx-hero .brand img { width: 36px; height: 36px; }
+
+  .idx-section-label { font-family: var(--font-sans); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; margin-bottom: 18px; display: flex; align-items: center; gap: 12px; }
+  .idx-section-label::after { content: ''; flex: 1; height: 1px; background: var(--sh-rule); }
+  .idx-section-label .pill { background: var(--sh-navy); color: white; padding: 3px 10px; border-radius: 999px; font-size: 10px; letter-spacing: 0.1em; }
+
+  /* HERO card — the one direction */
+  .idx-hero-card {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 20px;
+    overflow: hidden; display: grid; grid-template-columns: 1.3fr 1fr;
+    text-decoration: none; color: inherit; margin-bottom: 64px;
+    transition: all 300ms var(--ease-out);
+  }
+  @media (max-width: 900px) { .idx-hero-card { grid-template-columns: 1fr; } }
+  .idx-hero-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); color: inherit; }
+  .idx-hero-card .thumb {
+    min-height: 340px;
+    background:
+      linear-gradient(180deg, rgba(17,31,60,0.65) 0%, rgba(17,31,60,0.35) 50%, rgba(17,31,60,0.85) 100%),
+      linear-gradient(135deg, #2a4065 0%, var(--sh-navy) 50%, #1a2640 100%);
+    position: relative;
+    display: flex; align-items: flex-end; padding: 28px;
+    color: white;
+  }
+  .idx-hero-card .thumb::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(245, 212, 122, 0.15), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(194, 74, 45, 0.25), transparent 50%);
+  }
+  .idx-hero-card .thumb-tag {
+    position: absolute; top: 20px; left: 20px;
+    background: rgba(255,255,255,0.95); color: var(--sh-navy);
+    padding: 7px 14px; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    border-radius: 999px;
+  }
+  .idx-hero-card .thumb-content { position: relative; z-index: 1; }
+  .idx-hero-card .thumb-content .eyebrow-w { color: #F5D47A; font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 8px; display: block; }
+  .idx-hero-card .thumb-content h2 { color: white; font-size: clamp(28px, 3vw, 40px); margin: 0; letter-spacing: -0.01em; }
+  .idx-hero-card .body { padding: 36px 40px; display: flex; flex-direction: column; justify-content: center; }
+  .idx-hero-card .body .eyebrow { color: var(--sh-rust); font-family: var(--font-sans); font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 12px; display: block; }
+  .idx-hero-card .body h3 { font-size: 26px; margin: 0 0 10px; }
+  .idx-hero-card .body p { color: var(--fg-2); font-size: 15px; line-height: 1.6; margin: 0 0 20px; }
+  .idx-hero-card .meta { display: flex; gap: 18px; font-size: 13px; color: var(--fg-3); margin-bottom: 18px; }
+  .idx-hero-card .meta span::before { content: '·'; margin-right: 6px; color: var(--sh-rule); }
+  .idx-hero-card .meta span:first-child::before { display: none; }
+  .idx-hero-card .arrow { color: var(--sh-rust); font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
+
+  .idx-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 56px; }
+  @media (max-width: 860px) { .idx-grid { grid-template-columns: 1fr; } }
+
+  .idx-card {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 16px;
+    padding: 24px; text-decoration: none; color: inherit; display: block;
+    transition: all 220ms var(--ease-out);
+    position: relative;
+  }
+  .idx-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); color: inherit; border-color: transparent; }
+  .idx-card .eyebrow { color: var(--sh-rust); font-family: var(--font-sans); font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 8px; display: block; }
+  .idx-card h3 { margin: 0 0 6px; font-size: 18px; }
+  .idx-card p { margin: 0; color: var(--fg-2); font-size: 13.5px; line-height: 1.55; }
+  .idx-card .arrow { margin-top: 12px; color: var(--sh-rust); font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+  .idx-card .arrow span { display: inline-block; transition: transform 200ms ease; }
+  .idx-card:hover .arrow span { transform: translateX(4px); }
+
+  .idx-notes {
+    background: white; border: 1px solid var(--sh-rule); border-radius: 16px;
+    padding: 28px 32px; margin-top: 32px;
+  }
+  .idx-notes h4 { font-size: 17px; margin-bottom: 12px; }
+  .idx-notes ul { margin: 0; padding-left: 18px; color: var(--fg-2); font-size: 14.5px; line-height: 1.7; }
+  .idx-notes li { margin-bottom: 6px; }
+  .idx-notes strong { color: var(--sh-navy); font-weight: 600; }
+  .idx-notes code { background: var(--sh-cream); padding: 1px 6px; border-radius: 4px; font-size: 13px; color: var(--sh-rust-dark); }
+
+  .progress-strip { display: flex; gap: 6px; margin-bottom: 24px; }
+  .progress-strip .step { flex: 1; height: 3px; border-radius: 2px; background: var(--sh-rule); }
+  .progress-strip .step.done { background: var(--sh-rust); }
+</style>
+</head>
+<body data-screen-label="00 Index">
+
+<div class="site-index">
+  <div class="idx-hero">
+    <div class="brand">
+      <img src="assets/logo-submark.png" alt="" />
+      <span>Saint Helen</span>
+    </div>
+    <div class="eyebrow">Version 3.0 · Design Review</div>
+    <h1>A website for the next decade.</h1>
+    <p>One homepage direction and three interior templates — enough to review the system in context. More pages when you're ready.</p>
+  </div>
+
+  <div class="idx-section-label"><span class="pill">Start here</span> Homepage</div>
+  <a class="idx-hero-card" href="home.html">
+    <div class="thumb">
+      <span class="thumb-tag">Homepage</span>
+      <div class="thumb-content">
+        <span class="eyebrow-w">Direction · Welcome Home</span>
+        <h2>Warm, personal, newcomer-led.</h2>
+      </div>
+    </div>
+    <div class="body">
+      <span class="eyebrow">The final direction</span>
+      <h3>Welcome Home</h3>
+      <p>Hero opens with a restrained welcome over parish photography. "I'm New" is the spine — Mass times, pastor welcome, and the Ministry Matchmaker appear before the weekly events stream. A placeholder-friendly system designed to be filled with real photography and copy.</p>
+      <div class="meta"><span>10 sections</span><span>Placeholder-friendly</span><span>Mobile + desktop</span></div>
+      <span class="arrow">Open the homepage →</span>
+    </div>
+  </a>
+
+  <div class="idx-section-label">Interior templates</div>
+  <div class="idx-grid">
+    <a class="idx-card" href="pages/plan-your-visit.html">
+      <span class="eyebrow">I'm new</span>
+      <h3>Plan Your Visit</h3>
+      <p>Welcome form, what to expect, Mass schedule, parking &amp; directions.</p>
+      <span class="arrow">Open <span>→</span></span>
+    </a>
+    <a class="idx-card" href="pages/mass.html">
+      <span class="eyebrow">Worship</span>
+      <h3>Mass &amp; Livestream</h3>
+      <p>Pick a day, see every Mass. Livestream, readings, intentions.</p>
+      <span class="arrow">Open <span>→</span></span>
+    </a>
+    <a class="idx-card" href="pages/events.html">
+      <span class="eyebrow">What's on</span>
+      <h3>Events Calendar</h3>
+      <p>Filterable list of everything happening across the parish.</p>
+      <span class="arrow">Open <span>→</span></span>
+    </a>
+
+  </div>
+
+  <div class="idx-section-label">For reviewers &amp; the dev team</div>
+  <div class="idx-grid">
+    <a class="idx-card" href="pages/design-notes.html">
+      <span class="eyebrow">Read first</span>
+      <h3>Design notes</h3>
+      <p>What changed in 3.0 and why — principles, the four focus areas, open questions.</p>
+      <span class="arrow">Open <span>→</span></span>
+    </a>
+    <a class="idx-card" href="pages/components.html">
+      <span class="eyebrow">System</span>
+      <h3>Components inventory</h3>
+      <p>Every token and component on one page — colors, type, spacing, buttons, cards.</p>
+      <span class="arrow">Open <span>→</span></span>
+    </a>
+    <a class="idx-card" href="pages/handoff.html">
+      <span class="eyebrow">For engineers</span>
+      <h3>Dev handoff</h3>
+      <p>Next.js 15 + Tailwind target, component mapping, and a paste-ready Claude Code prompt.</p>
+      <span class="arrow">Open <span>→</span></span>
+    </a>
+    <a class="idx-card" href="pages/backend.html">
+      <span class="eyebrow">For engineers</span>
+      <h3>Backend architecture</h3>
+      <p>Neon + Drizzle schema, custom <code>/admin</code> wireframes, dual auth (email + SMS), Touchpoint giving, Fathom, Resend, backups, accessibility, and staging.</p>
+      <span class="arrow">Open <span>→</span></span>
+    </a>
+  </div>
+
+  <div class="idx-notes">
+    <h4>Small 3.0 adjustments I've future-proofed</h4>
+    <ul>
+      <li><strong>Rust contrast:</strong> inline text links use <code>--sh-rust-dark</code> (#A73F25) by default — it clears AA on white where the base rust (4.2:1) just misses. Base rust still used for buttons and icons where contrast isn't tested against body text.</li>
+      <li><strong>Density token:</strong> new <code>--density-scale</code> multiplies section padding. Lets editors tune rhythm per surface without touching components.</li>
+      <li><strong>Mobile Give FAB:</strong> floating give button appears on long pages below 760px — honors the "Stronger Give presence" tone note without cluttering desktop.</li>
+      <li><strong>Placeholder-friendly:</strong> every hero, photo card, and video tile renders a clear "photo/video placeholder" state so the site works before real assets land — and degrades gracefully if any piece is missing.</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>
