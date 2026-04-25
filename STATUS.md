@@ -14,7 +14,7 @@ Last updated: **2026-04-25**
 | 1 | Design system | 🟡 In progress (basic version live; a11y widget + full components.html parity pending) |
 | 2 | Database (Drizzle schema + seed) | ✅ Done (schema applied to Neon, dev seed run) |
 | 3 | Public site — homepage + 3 interiors | ✅ Done (4 routes wired to DB, filters URL-synced, build green) |
-| 4 | Admin shell, auth, ministry edits, matchmaker editor | 🟡 Wave A done (auth + shell + events editor); Waves B/C queued |
+| 4 | Admin shell, auth, ministry edits, matchmaker editor | 🟡 Waves A + B done (auth + 7 content editors); Wave C queued |
 | 5 | Upload + CDN (Vercel Blob → cdn.sainthelen.org) | ⬜ Queued — needs DNS |
 | 6 | Public API routes | ⬜ Queued |
 | 7 | Backups + staging | ⬜ Queued |
@@ -135,15 +135,19 @@ All four routes from the spec render real data from Neon. Build prerenders `/`, 
   - Role gate: `admin` and `editor` can write; `ministry_lead` is forbidden at action level.
 - **`AUTH_SECRET`** generated locally and in `.env.local` (gitignored). Matthew will set the same on Vercel for production. Fresh value: `openssl rand -base64 32`.
 
-### Step 4 · Wave B (queued)
+### Step 4 · Wave B done
 
-Other content editors, all cloning the events pattern:
-- `/admin/mass-times` — recurring + override rows
-- `/admin/ministries` — full ministry record
-- `/admin/staff` — pastor / clergy / lay staff
-- `/admin/bulletins` — weeks + PDF (upload bit waits for Step 5)
-- `/admin/seasonal-banners` — date-windowed homepage banner
-- `/admin/settings` (general) + `/admin/settings/giving` (Touchpoint URLs)
+All other content editors are live, each cloning the events pattern. Build green, every route 200 with auth, seeded data visible in every list view. The shared form-field atom lives in `components/admin/AdminField.tsx`.
+
+- **`/admin/staff`** — list (All / Active / Inactive tabs) + new/edit form. Slug, name, role, email, bio (markdown), order priority, isActive. Photo upload deferred to Step 5. Admin-only mutations (per `backend.html §07` roles).
+- **`/admin/seasonal-banners`** — list shows Live / Scheduled / Past / Inactive state computed from the date window + isActive flag. Editor: title, subtitle, ctaLabel, ctaUrl, startsAt, endsAt, isActive. Photo upload Step 5.
+- **`/admin/ministries`** — full editor with status tabs, lead-staff dropdown sourced from `staff` rows, category enum, audiences/matchmakerTags as comma-separated arrays, accepting-new toggle, ordering priority, publish/unpublish actions.
+- **`/admin/mass-times`** — weekly recurring rows and one-off override rows in one editor. A "Row type" radio toggles which fields show: weekly = day-of-week select; override = date + override-kind. Time, kind, label, presider (from staff), liveStreamUrl, notes, isActive. List has Weekly / One-off tabs.
+- **`/admin/bulletins`** — read-only list with a "Bulletin uploads ship in Step 5" callout. Schema requires a real PDF in Vercel Blob (NOT NULL FK to `blob_assets`); editor unblocked once Step 5 lands.
+- **`/admin/settings`** — singleton form: contactEmail, contactPhone, address (street/city/state/zip jsonb), social links (facebook/youtube/instagram), welcomeFormRecipients (comma-separated), footerCopy, densityScale. Admin-only.
+- **`/admin/settings/giving`** — singleton form for the Touchpoint URLs jsonb: primaryUrl + recurringUrl + repeatable designations + repeatable seasonal campaigns with date windows. Add/remove rows in client state; submitted to a Server Action that decodes the bracket-indexed FormData entries (`designations[0].label`, etc.).
+- **Validators** in `lib/validators/{events,staff,ministries,mass-times,seasonal-banners,site-settings}.ts` — single source of truth for create/update shapes. Step 6's public API will consume the same Zod schemas.
+- All Server Actions call `revalidateTag(<content-type>)` so public-site Server Components flip on the next request.
 
 ### Step 4 · Wave C (queued)
 
