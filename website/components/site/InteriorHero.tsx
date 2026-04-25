@@ -24,7 +24,7 @@ export function InteriorHero({
   photoTone?: "navy" | "cream" | "warm";
 }) {
   return (
-    <section className="relative bg-cream pt-12 pb-14 sm:pt-16 sm:pb-20">
+    <section className="relative bg-cream pt-28 pb-14 sm:pt-32 sm:pb-20">
       <Container width="wide">
         <div className="grid gap-10 md:grid-cols-[1.2fr_1fr] md:items-center">
           <div>

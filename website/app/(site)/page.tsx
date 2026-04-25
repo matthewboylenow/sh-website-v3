@@ -46,13 +46,11 @@ export default async function HomePage() {
         posterUrl={process.env.NEXT_PUBLIC_HERO_VIDEO_POSTER}
       >
         <Container width="wide">
-          <div className="flex min-h-[640px] flex-col justify-center pt-28 pb-20 sm:min-h-[720px]">
+          <div className="sh-on-dark flex min-h-[640px] flex-col justify-center pt-32 pb-20 sm:min-h-[720px] sm:pt-40">
             <div className="max-w-[40ch]">
-              <span className="sh-eyebrow text-gold">
-                We&rsquo;re glad you&rsquo;re here
-              </span>
-              <h1 className="sh-display mt-4 text-white">Welcome home.</h1>
-              <p className="sh-lede mt-6 max-w-[48ch] text-white/85">
+              <span className="sh-eyebrow">We&rsquo;re glad you&rsquo;re here</span>
+              <h1 className="sh-display mt-4">Welcome home.</h1>
+              <p className="sh-lede mt-6 max-w-[48ch]">
                 Whether it&rsquo;s your first time or your hundredth, there&rsquo;s a
                 seat saved for you at Saint Helen. Mass times, what to expect on
                 Sunday, and the people who make this parish feel like home.
@@ -74,7 +72,7 @@ export default async function HomePage() {
 
               {heroMassPeek.length > 0 && (
                 <div className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/80">
-                  <span className="sh-eyebrow text-gold">This Sunday</span>
+                  <span className="sh-eyebrow">This Sunday</span>
                   {heroMassPeek.map((m) => (
                     <span
                       key={m.id}

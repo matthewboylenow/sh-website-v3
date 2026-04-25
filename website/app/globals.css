@@ -256,6 +256,22 @@ small { font-size: var(--fs-small); color: var(--fg-3); }
   line-height: var(--lh-snug);
   color: var(--fg-2);
 }
+
+/* On-dark variants — for full-bleed dark heroes / banners. The descendant
+   selectors override the base color without forcing every consumer to
+   stack utilities (which lose to the base classes' specificity). */
+.sh-on-dark .sh-display { color: #fff; }
+.sh-on-dark .sh-lede    { color: rgba(255, 255, 255, 0.85); }
+.sh-on-dark .sh-eyebrow { color: var(--sh-gold); }
+.sh-on-dark h1, .sh-on-dark h2, .sh-on-dark h3, .sh-on-dark h4 { color: #fff; }
+.sh-on-dark p { color: rgba(255, 255, 255, 0.85); }
+
+/* Header slide-down — used when the masthead transitions from absolute
+   over the hero to fixed + frosted on scroll. */
+@keyframes slide-down {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(0); }
+}
 .sh-rule {
   display: inline-block;
   width: 56px;

@@ -36,7 +36,7 @@ export default async function InquiryActionPage({
   if (!verified.ok) {
     return (
       <Container width="narrow">
-        <div className="my-16 rounded-lg border border-rule bg-white p-8 text-center">
+        <div className="mb-16 mt-32 rounded-lg border border-rule bg-white p-8 text-center">
           <h1 className="font-serif text-2xl font-bold text-navy">Link expired</h1>
           <p className="mt-2 text-sm text-ink-2">
             {verified.reason === "expired"
@@ -66,7 +66,7 @@ export default async function InquiryActionPage({
   if (!row) {
     return (
       <Container width="narrow">
-        <div className="my-16 rounded-lg border border-rule bg-white p-8 text-center">
+        <div className="mb-16 mt-32 rounded-lg border border-rule bg-white p-8 text-center">
           <h1 className="font-serif text-2xl font-bold text-navy">
             Inquiry not found
           </h1>
@@ -84,7 +84,7 @@ export default async function InquiryActionPage({
 
   return (
     <Container width="narrow">
-      <div className="my-16 rounded-lg border border-rule bg-white p-8">
+      <div className="mb-16 mt-32 rounded-lg border border-rule bg-white p-8">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-rust-dark">
           {row.ministry.name}
         </p>

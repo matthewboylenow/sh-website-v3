@@ -38,7 +38,7 @@ export default async function MinistryDetailPage({
   return (
     <>
       {/* ---- Hero ------------------------------------------------- */}
-      <section className="bg-cream pt-12 pb-16 sm:pt-16 sm:pb-20">
+      <section className="bg-cream pt-28 pb-16 sm:pt-32 sm:pb-20">
         <Container width="wide">
           <div className="grid gap-10 md:grid-cols-[1.2fr_1fr] md:items-center">
             <div>
