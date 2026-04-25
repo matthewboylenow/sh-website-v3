@@ -4,6 +4,7 @@ import { InteriorHero } from "@/components/site/InteriorHero";
 import { Matchmaker } from "@/components/ministries/Matchmaker";
 import { MinistryCard } from "@/components/site/MinistryCard";
 import { SectionHead } from "@/components/site/SectionHead";
+import { resolveKeys } from "@/lib/blob";
 import {
   getMinistryCategoriesInUse,
   getPublishedMinistries,
@@ -35,6 +36,8 @@ export default async function MinistriesPage({
   const filtered = filter
     ? all.filter((m) => m.category === filter)
     : all;
+
+  const photoUrls = await resolveKeys(filtered.map((m) => m.photoBlobKey));
 
   return (
     <>
@@ -110,7 +113,12 @@ export default async function MinistriesPage({
           ) : (
             <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((m) => (
-                <MinistryCard key={m.slug} ministry={m} tone="on-cream" />
+                <MinistryCard
+                  key={m.slug}
+                  ministry={m}
+                  tone="on-cream"
+                  imageUrl={m.photoBlobKey ? photoUrls.get(m.photoBlobKey) : null}
+                />
               ))}
             </div>
           )}

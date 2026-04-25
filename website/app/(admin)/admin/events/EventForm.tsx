@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { PhotoUploader } from "@/components/admin/PhotoUploader";
 import {
   createEventAction,
   setEventStatusAction,
@@ -19,6 +20,7 @@ type EventFormValues = {
   audiences: string[] | null;
   categories: string[] | null;
   registerUrl: string | null;
+  photoBlobKey: string | null;
   isFeatured: boolean;
   status: "draft" | "published" | "archived";
 };
@@ -36,10 +38,13 @@ export function EventForm({
   mode,
   eventId,
   defaultValues,
+  photoPreviewUrl,
 }: {
   mode: "create" | "edit";
   eventId?: string;
   defaultValues: Partial<EventFormValues>;
+  /** Already-resolved image URL for the existing photoBlobKey. */
+  photoPreviewUrl?: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -258,11 +263,14 @@ export function EventForm({
           <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
             Hero photo
           </h3>
-          <p className="mt-3 text-xs text-ink-3">
-            Photo upload lands in <strong>Step 5</strong> with the Vercel Blob
-            client-upload flow. Until then, the public site shows the
-            placeholder treatment.
-          </p>
+          <div className="mt-3">
+            <PhotoUploader
+              name="photoBlobKey"
+              initialKey={defaultValues.photoBlobKey ?? null}
+              initialPreviewUrl={photoPreviewUrl}
+              pathPrefix={`events/${eventId ?? "new"}`}
+            />
+          </div>
         </div>
 
         <div className="space-y-2">

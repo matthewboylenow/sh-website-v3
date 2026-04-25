@@ -12,14 +12,19 @@ import { PhotoPlaceholder } from "./PhotoPlaceholder";
  * Event card — .event in the mockup. Presentational: expects an
  * already-typed event row from Drizzle. Dates may come in as either
  * Date or string (the unstable_cache layer serializes through JSON).
+ *
+ * Pass `imageUrl` to render the bound photo; omit for the placeholder
+ * treatment.
  */
 export function EventCard({
   event,
+  imageUrl,
 }: {
   event: Pick<
     EventRow,
     "slug" | "title" | "startsAt" | "photoBlobKey" | "audiences" | "categories"
   >;
+  imageUrl?: string | null;
 }) {
   const d = toDate(event.startsAt);
   return (
@@ -28,10 +33,13 @@ export function EventCard({
       className="group block overflow-hidden rounded-lg border border-rule bg-white transition-all hover:-translate-y-1 hover:shadow-hover"
     >
       <PhotoPlaceholder
+        imageUrl={imageUrl}
+        imageAlt={event.title}
         label="Event photo"
         brief={event.title}
         tone="navy"
         aspect="16/10"
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
         className="rounded-none border-0"
       />
       <div className="p-5">

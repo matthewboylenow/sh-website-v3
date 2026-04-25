@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
 import { events } from "@/db/schema";
+import { assetUrl } from "@/lib/blob";
 import { EventForm } from "../EventForm";
 
 export const metadata = { title: "Edit event · Admin" };
@@ -19,6 +20,8 @@ export default async function EditEventPage({
 
   const [row] = await db.select().from(events).where(eq(events.id, id)).limit(1);
   if (!row) notFound();
+
+  const photoPreviewUrl = await assetUrl(row.photoBlobKey);
 
   return (
     <div>
@@ -46,7 +49,12 @@ export default async function EditEventPage({
         </p>
       )}
       <div className="mt-8">
-        <EventForm mode="edit" eventId={row.id} defaultValues={row} />
+        <EventForm
+          mode="edit"
+          eventId={row.id}
+          defaultValues={row}
+          photoPreviewUrl={photoPreviewUrl}
+        />
       </div>
     </div>
   );

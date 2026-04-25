@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/site/Container";
 import { PhotoPlaceholder } from "@/components/site/PhotoPlaceholder";
+import { assetUrl } from "@/lib/blob";
 import { getMinistryBySlug } from "@/lib/queries/ministries.query";
 
 export const revalidate = 3600;
@@ -31,6 +32,7 @@ export default async function MinistryDetailPage({
 
   const { ministry: m, leadStaff } = data;
   const audiences = m.audiences ?? [];
+  const photoUrl = await assetUrl(m.photoBlobKey);
 
   return (
     <>
@@ -102,10 +104,13 @@ export default async function MinistryDetailPage({
             </div>
 
             <PhotoPlaceholder
+              imageUrl={photoUrl}
+              imageAlt={`${m.name} at Saint Helen`}
               label="Ministry photo"
               brief={`${m.name} in action — real members, candid moments.`}
               tone="warm"
               aspect="5/4"
+              priority
             />
           </div>
         </Container>

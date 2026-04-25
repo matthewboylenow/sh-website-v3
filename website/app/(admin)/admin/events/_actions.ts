@@ -57,6 +57,7 @@ function parseEventForm(formData: FormData) {
     audiences: getList("audiences"),
     categories: getList("categories"),
     registerUrl: get("registerUrl") || null,
+    photoBlobKey: get("photoBlobKey") || null,
     isFeatured: formData.get("isFeatured") === "on",
     status: (get("status") || "draft") as "draft" | "published" | "archived",
   };
@@ -80,6 +81,7 @@ export async function createEventAction(formData: FormData): Promise<ActionResul
       .values({
         ...parsed.data,
         registerUrl: parsed.data.registerUrl || null,
+        photoBlobKey: parsed.data.photoBlobKey || null,
         createdBy: guard.session.user.id,
       })
       .returning({ id: events.id, slug: events.slug });
@@ -118,6 +120,7 @@ export async function updateEventAction(
       .set({
         ...parsed.data,
         registerUrl: parsed.data.registerUrl || null,
+        photoBlobKey: parsed.data.photoBlobKey || null,
         updatedAt: new Date(),
       })
       .where(eq(events.id, id))

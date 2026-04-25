@@ -22,6 +22,7 @@ const baseFields = {
   audiences: z.array(z.string()).default([]),
   categories: z.array(z.string()).default([]),
   registerUrl: z.string().url().optional().nullable().or(z.literal("")),
+  photoBlobKey: z.string().max(500).optional().nullable(),
   isFeatured: z.boolean().default(false),
   status: z.enum(["draft", "published", "archived"]).default("draft"),
 };

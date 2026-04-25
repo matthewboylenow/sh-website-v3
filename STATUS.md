@@ -15,7 +15,7 @@ Last updated: **2026-04-25**
 | 2 | Database (Drizzle schema + seed) | ✅ Done (schema applied to Neon, dev seed run) |
 | 3 | Public site — homepage + 3 interiors | ✅ Done (4 routes wired to DB, filters URL-synced, build green) |
 | 4 | Admin shell, auth, ministry edits, matchmaker editor | ✅ Done (Waves A–D — all editors live + matchmaker + /ministries) |
-| 5 | Upload + CDN (Vercel Blob → cdn.sainthelen.org) | ⬜ Queued — needs DNS |
+| 5 | Upload + CDN (Vercel Blob) | 🟡 Wave A done (upload flow + Events editor + public photos); Wave B queues other editors |
 | 6 | Public API routes | ⬜ Queued |
 | 7 | Backups + staging | ⬜ Queued |
 | 8 | External integrations (Resend / Twilio / Fathom / Subsplash) | ⬜ Queued |
@@ -177,8 +177,30 @@ The Ministry Matchmaker quiz, the public `/ministries` listing, and the
 ### Things still queued for the public /ministries page (post-launch polish)
 
 - Real markdown rendering for the description (currently pre-wrapped plain text).
-- Photos — placeholders ship now; real imagery lands when uploads do (Step 5).
 - Full-text search across ministries — deferred per `backend.html §17`.
+
+---
+
+## ✅ Shipped — Step 5 · Wave A: upload + CDN foundation
+
+The Vercel Blob client-upload flow is wired end-to-end and Events is the canonical editor consuming it. Real photos render through `next/image` on the public site wherever a `photoBlobKey` is set; everything else gracefully falls back to the placeholder treatment. Other editors (ministries, staff, seasonal-banners, bulletins) get the same `<PhotoUploader>` swap in Wave B.
+
+- **Decision: Path B — apex with `/cdn/` rewrite (or none for v1).** No subdomain, no DNS work to launch. We render Blob assets directly from `*.public.blob.vercel-storage.com` (whitelisted in `images.remotePatterns`). To brand asset URLs as `sainthelen.org/cdn/...`, set `BLOB_STORE_HOST` env var and the rewrite kicks in — `lib/blob.ts → resolveAssetUrl` switches automatically.
+- **`POST /api/admin/upload`** uses `handleUpload` from `@vercel/blob/client` to mint a client-upload token. Auth-gated — any signed-in user. Allowlists `image/jpeg|png|webp|avif` (or `application/pdf` when the pathname ends `.pdf`). `addRandomSuffix: true` so concurrent uploads don't collide. Cache-control 30 days at the Blob origin.
+- **`POST /api/admin/upload/complete`** records the `blob_assets` row from the client's reported metadata + dimensions (read client-side via `createImageBitmap` — no need to refetch bytes server-side). Uses the Blob `pathname` as the stable key. Returns `{ key }`.
+- **`PhotoUploader` client island** (`components/admin/PhotoUploader.tsx`) — drop zone, preview, progress, alt text. Renders the existing photo when editing a row that already has one. Hidden form input carries the resulting key into the parent form's submit.
+- **Events editor wired.** `EventForm` accepts a `photoPreviewUrl` prop (already-resolved by the [id]/page Server Component via `assetUrl()`). The "Photo upload ships in Step 5" callout is replaced with the real `PhotoUploader`. Server Action persists `photoBlobKey` alongside the rest of the row.
+- **`PhotoPlaceholder` evolved.** New optional `imageUrl` + `imageAlt` props. When set, it renders `next/image` at the slot's aspect ratio with proper `sizes` for responsive serving. Otherwise it's the same placeholder treatment with the photo brief.
+- **Public side rendering real photos** wherever `photoBlobKey` is set: homepage spotlight ministries + featured events, `/ministries` grid, `/ministries/[slug]` hero. Batch-resolved keys → URLs in one DB roundtrip via `resolveKeys()`.
+- **Schema + validators**: `EventCreateSchema` / `EventUpdateSchema` accept `photoBlobKey`. `lib/validators/blob.ts` provides `UploadCompleteSchema` + allowlists.
+- Build gates green — typecheck, lint, build (35 routes total). Smoke: upload endpoints 401 unauth, public pages still 200, events admin 307→sign-in.
+
+### Step 5 · Wave B (queued)
+
+- Wire `PhotoUploader` into Ministries, Staff, Seasonal Banners editors. Each is a small change — the pattern is settled.
+- Bulletins editor: PDF upload (no thumbnail v1 — PDF→image generation deferred), enable the "Upload bulletin" button currently stubbed out, ship the modal viewer reading from the PDF blob URL.
+- `/admin/media` library — list `blob_assets` rows with previews, search, delete-with-confirm. Lets editors reuse photos and clean up orphans.
+- (Optional polish) `BLOB_STORE_HOST` env var + rewrite — flip asset URLs to `sainthelen.org/cdn/...` when you want the brand on shared image URLs.
 
 ### Step 5 · Upload + CDN
 - Client-upload flow per `backend.html §08`.

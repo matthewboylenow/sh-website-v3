@@ -5,10 +5,13 @@ import { PhotoPlaceholder } from "./PhotoPlaceholder";
 /**
  * Ministry card — .ministry-card in the mockup. Used on the homepage
  * "Find your place" section and on /ministries.
+ *
+ * Pass `imageUrl` to render the bound photo; omit for the placeholder.
  */
 export function MinistryCard({
   ministry,
   tone = "on-cream",
+  imageUrl,
 }: {
   ministry: Pick<
     Ministry,
@@ -16,6 +19,7 @@ export function MinistryCard({
   >;
   /** Context — "on-navy" for the homepage spotlight, "on-cream" for list pages. */
   tone?: "on-navy" | "on-cream";
+  imageUrl?: string | null;
 }) {
   const containerCls =
     tone === "on-navy"
@@ -31,10 +35,13 @@ export function MinistryCard({
       className={`group block overflow-hidden rounded-lg border transition-all ${containerCls}`}
     >
       <PhotoPlaceholder
+        imageUrl={imageUrl}
+        imageAlt={ministry.name}
         label="Ministry photo"
         brief={`${ministry.name} · real-members photography`}
         tone={tone === "on-navy" ? "warm" : "navy"}
         aspect="16/10"
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
         className="rounded-none border-0"
       />
       <div className="p-6">

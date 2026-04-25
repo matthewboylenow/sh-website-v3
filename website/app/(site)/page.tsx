@@ -6,6 +6,7 @@ import { MinistryCard } from "@/components/site/MinistryCard";
 import { PhotoPlaceholder } from "@/components/site/PhotoPlaceholder";
 import { SectionHead } from "@/components/site/SectionHead";
 import { ServeTile } from "@/components/site/ServeTile";
+import { resolveKeys } from "@/lib/blob";
 import { getFeaturedEvents } from "@/lib/queries/events.query";
 import { getWeeklyMassTimes } from "@/lib/queries/mass-times.query";
 import { getSpotlightMinistries } from "@/lib/queries/ministries.query";
@@ -23,6 +24,14 @@ export default async function HomePage() {
       getWeeklyMassTimes(),
       getSiteSettings(),
     ]);
+
+  // Batch-resolve photo keys → public URLs so cards render real
+  // images in one extra DB roundtrip rather than N+1.
+  const photoUrls = await resolveKeys([
+    ...spotlightMinistries.map((m) => m.photoBlobKey),
+    ...featuredEvents.map((e) => e.photoBlobKey),
+    banner?.photoBlobKey,
+  ]);
 
   const sundayMasses = weeklyMassTimes.filter((m) => m.dayOfWeek === 0);
   const vigilMasses = weeklyMassTimes.filter((m) => m.dayOfWeek === 6 && m.kind === "vigil");
@@ -251,7 +260,12 @@ export default async function HomePage() {
           {spotlightMinistries.length > 0 ? (
             <div className="mt-12 grid gap-6 md:grid-cols-2">
               {spotlightMinistries.map((m) => (
-                <MinistryCard key={m.slug} ministry={m} tone="on-navy" />
+                <MinistryCard
+                  key={m.slug}
+                  ministry={m}
+                  tone="on-navy"
+                  imageUrl={m.photoBlobKey ? photoUrls.get(m.photoBlobKey) : null}
+                />
               ))}
             </div>
           ) : (
@@ -290,7 +304,11 @@ export default async function HomePage() {
           {featuredEvents.length > 0 ? (
             <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {featuredEvents.map((e) => (
-                <EventCard key={e.id} event={e} />
+                <EventCard
+                  key={e.id}
+                  event={e}
+                  imageUrl={e.photoBlobKey ? photoUrls.get(e.photoBlobKey) : null}
+                />
               ))}
             </div>
           ) : (
