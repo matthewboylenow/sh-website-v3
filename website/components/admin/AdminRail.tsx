@@ -16,6 +16,7 @@ const CONTENT = [
 const SETTINGS = [
   { href: "/admin/settings", label: "Site settings", role: "admin" as const },
   { href: "/admin/settings/giving", label: "Giving links", role: "admin" as const },
+  { href: "/admin/matchmaker", label: "Matchmaker", role: "admin" as const },
   { href: "/admin/users", label: "Users & roles", role: "admin" as const },
   { href: "/admin/approvals", label: "Approvals" },
   { href: "/admin/media", label: "Media" },

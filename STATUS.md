@@ -14,7 +14,7 @@ Last updated: **2026-04-25**
 | 1 | Design system | 🟡 In progress (basic version live; a11y widget + full components.html parity pending) |
 | 2 | Database (Drizzle schema + seed) | ✅ Done (schema applied to Neon, dev seed run) |
 | 3 | Public site — homepage + 3 interiors | ✅ Done (4 routes wired to DB, filters URL-synced, build green) |
-| 4 | Admin shell, auth, ministry edits, matchmaker editor | 🟡 Waves A + B + C done; matchmaker editor queued for its own wave alongside /ministries |
+| 4 | Admin shell, auth, ministry edits, matchmaker editor | ✅ Done (Waves A–D — all editors live + matchmaker + /ministries) |
 | 5 | Upload + CDN (Vercel Blob → cdn.sainthelen.org) | ⬜ Queued — needs DNS |
 | 6 | Public API routes | ⬜ Queued |
 | 7 | Backups + staging | ⬜ Queued |
@@ -159,9 +159,26 @@ All other content editors are live, each cloning the events pattern. Build green
 - Schema refinement: `MinistryEditProposed` type loosened to allow `string | null` for nullable fields so empty submissions round-trip cleanly.
 - **Deactivate** as a first-class concept is post-launch — for now an admin can change someone's role to limit access. Hard delete via Drizzle Studio.
 
-### Step 4 · Wave D (queued — pairs with /ministries page)
+### Step 4 · Wave D done — Matchmaker + public /ministries
 
-- **Matchmaker form-based editor** — questions, answer rows, per-answer ministry tag weights. Best built alongside the public `/ministries` page (which the homepage already links to but doesn't yet exist). Schema add: either a `matchmakerQuestions` + `matchmakerAnswers` pair of tables, or a jsonb on `siteSettings`. The public `/ministries` page consumes the manifest, so wiring both at once keeps the contract honest.
+The Ministry Matchmaker quiz, the public `/ministries` listing, and the
+`/ministries/[slug]` detail page are all live. **Step 4 is closed.**
+
+- **Schema:** added `matchmaker` jsonb to `site_settings` (migration `0001_flashy_darkstar.sql`). New TS types `MatchmakerManifest`, `MatchmakerQuestion`, `MatchmakerAnswer`. Default manifest seeded — 3 questions × 4 answers, tags tuned to the 8 dev-seeded ministries' `matchmakerTags` so the quiz returns meaningful results out of the box.
+- **`POST /api/matchmaker`** — Server-side scoring. Reads the manifest + all published ministries, intersects each ministry's `matchmakerTags` with the user's tag bag (collected from chosen answers + manifest fallback tags), returns top 5 sorted by score then `orderingPriority`. If nothing scored above zero, returns the first 5 by priority + `matched: false` so the UX never bottoms out. Smoke-tested: `young+music+some` → Parish Choir + Youth Ministry top; `family+service+lots` → St. Vincent + Knights + Mothers' Group top.
+- **Matchmaker client island** at `components/ministries/Matchmaker.tsx` — trigger button + modal wizard. Esc closes; body scroll locks while open; results render as ministry cards linking to `/ministries/[slug]`. Reusable on homepage and `/ministries`. Disabled state when manifest is empty.
+- **`/ministries`** — interior hero, big navy "Open the matchmaker" CTA section, category filter chips (URL-synced via searchParams, computed from tags actually present in published ministries), grid of all published ministries.
+- **`/ministries/[slug]`** — detail page. Hero with breadcrumbs, category eyebrow, audiences chips, Get-involved mailto: CTA. Body + sidebar layout: description (plain pre-wrapped text for v1; full markdown rendering pairs with bulletin viewer in Step 5 follow-ups), meeting cadence, lead staff card via `leftJoin`, contact email, accepting-new state.
+- **`/admin/matchmaker`** — admin-only editor. Repeatable questions with id + prompt + answers; each answer has id + label + sublabel + tags. Surfaces the union of `matchmakerTags` actually used by published ministries so admins pick tags that actually score. Validators in `lib/validators/matchmaker.ts` enforce id format and uniqueness. Server Action upserts the singleton + revalidates `site-settings`.
+- **Homepage** — replaced the placeholder "Ministry matchmaker" link with the real Matchmaker trigger; clicking opens the modal in-place.
+- **Admin rail** — added "Matchmaker" under Settings (admin-only).
+- Build gates green: typecheck, lint, build (33 routes total).
+
+### Things still queued for the public /ministries page (post-launch polish)
+
+- Real markdown rendering for the description (currently pre-wrapped plain text).
+- Photos — placeholders ship now; real imagery lands when uploads do (Step 5).
+- Full-text search across ministries — deferred per `backend.html §17`.
 
 ### Step 5 · Upload + CDN
 - Client-upload flow per `backend.html §08`.

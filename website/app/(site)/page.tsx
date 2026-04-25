@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Container } from "@/components/site/Container";
 import { EventCard } from "@/components/site/EventCard";
+import { Matchmaker } from "@/components/ministries/Matchmaker";
 import { MinistryCard } from "@/components/site/MinistryCard";
 import { PhotoPlaceholder } from "@/components/site/PhotoPlaceholder";
 import { SectionHead } from "@/components/site/SectionHead";
@@ -9,16 +10,18 @@ import { getFeaturedEvents } from "@/lib/queries/events.query";
 import { getWeeklyMassTimes } from "@/lib/queries/mass-times.query";
 import { getSpotlightMinistries } from "@/lib/queries/ministries.query";
 import { getActiveSeasonalBanner } from "@/lib/queries/seasonal-banners.query";
+import { getSiteSettings } from "@/lib/queries/site-settings.query";
 
 export const revalidate = 3600;
 
 export default async function HomePage() {
-  const [banner, spotlightMinistries, featuredEvents, weeklyMassTimes] =
+  const [banner, spotlightMinistries, featuredEvents, weeklyMassTimes, settings] =
     await Promise.all([
       getActiveSeasonalBanner(),
       getSpotlightMinistries(2),
       getFeaturedEvents(4),
       getWeeklyMassTimes(),
+      getSiteSettings(),
     ]);
 
   const sundayMasses = weeklyMassTimes.filter((m) => m.dayOfWeek === 0);
@@ -257,13 +260,11 @@ export default async function HomePage() {
             </p>
           )}
           <div className="mt-10 flex flex-wrap justify-center gap-3">
-            {/* Matchmaker modal lands in Step 4 (needs admin-managed manifest). */}
-            <Link
-              href="/ministries"
-              className="inline-flex items-center gap-2 rounded-pill bg-rust px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rust-dark"
-            >
-              Ministry matchmaker <span aria-hidden="true">→</span>
-            </Link>
+            <Matchmaker
+              manifest={settings?.matchmaker ?? { questions: [] }}
+              triggerLabel="Ministry matchmaker"
+              triggerVariant="rust"
+            />
             <Link
               href="/ministries"
               className="inline-flex items-center rounded-pill border border-white/30 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"

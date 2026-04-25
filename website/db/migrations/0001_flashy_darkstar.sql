@@ -1,0 +1,1 @@
+ALTER TABLE "site_settings" ADD COLUMN "matchmaker" jsonb DEFAULT '{"questions":[]}'::jsonb NOT NULL;

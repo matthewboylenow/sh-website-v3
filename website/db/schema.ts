@@ -314,6 +314,36 @@ export type SocialLinks = {
   instagram?: string;
 };
 
+/** Ministry Matchmaker manifest — edited from /admin/matchmaker. */
+export type MatchmakerAnswer = {
+  /** Stable id used in the scoring API. */
+  id: string;
+  /** Primary text on the option button. */
+  label: string;
+  /** Smaller helper text under the label (optional). */
+  sublabel?: string;
+  /**
+   * Tags scoring intersects with each ministry's matchmakerTags array.
+   * Each match contributes 1 to the ministry's score.
+   */
+  tags: string[];
+};
+
+export type MatchmakerQuestion = {
+  id: string;
+  prompt: string;
+  answers: MatchmakerAnswer[];
+};
+
+export type MatchmakerManifest = {
+  questions: MatchmakerQuestion[];
+  /**
+   * Tags applied automatically to every quiz submission. Useful as a
+   * floor — e.g. always nudge toward newcomer-friendly ministries.
+   */
+  fallbackTags?: string[];
+};
+
 export const siteSettings = pgTable(
   "site_settings",
   {
@@ -330,6 +360,10 @@ export const siteSettings = pgTable(
       .$type<GivingSettings>()
       .notNull()
       .default({ primaryUrl: "" }),
+    matchmaker: jsonb("matchmaker")
+      .$type<MatchmakerManifest>()
+      .notNull()
+      .default({ questions: [] }),
     footerCopy: text("footer_copy"),
     densityScale: numeric("density_scale", { precision: 3, scale: 2 })
       .default("1.00")
