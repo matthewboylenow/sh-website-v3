@@ -344,11 +344,11 @@ export const siteSettings = pgTable(
 /* ------------------------------------------------------------------ */
 
 export type MinistryEditProposed = {
-  tagline?: string;
-  description?: string;
-  meetingCadence?: string;
-  photoBlobKey?: string;
-  contactEmail?: string;
+  tagline?: string | null;
+  description?: string | null;
+  meetingCadence?: string | null;
+  photoBlobKey?: string | null;
+  contactEmail?: string | null;
   faq?: { q: string; a: string }[];
   isAcceptingNew?: boolean;
 };

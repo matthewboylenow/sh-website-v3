@@ -14,7 +14,7 @@ Last updated: **2026-04-25**
 | 1 | Design system | 🟡 In progress (basic version live; a11y widget + full components.html parity pending) |
 | 2 | Database (Drizzle schema + seed) | ✅ Done (schema applied to Neon, dev seed run) |
 | 3 | Public site — homepage + 3 interiors | ✅ Done (4 routes wired to DB, filters URL-synced, build green) |
-| 4 | Admin shell, auth, ministry edits, matchmaker editor | 🟡 Waves A + B done (auth + 7 content editors); Wave C queued |
+| 4 | Admin shell, auth, ministry edits, matchmaker editor | 🟡 Waves A + B + C done; matchmaker editor queued for its own wave alongside /ministries |
 | 5 | Upload + CDN (Vercel Blob → cdn.sainthelen.org) | ⬜ Queued — needs DNS |
 | 6 | Public API routes | ⬜ Queued |
 | 7 | Backups + staging | ⬜ Queued |
@@ -149,13 +149,19 @@ All other content editors are live, each cloning the events pattern. Build green
 - **Validators** in `lib/validators/{events,staff,ministries,mass-times,seasonal-banners,site-settings}.ts` — single source of truth for create/update shapes. Step 6's public API will consume the same Zod schemas.
 - All Server Actions call `revalidateTag(<content-type>)` so public-site Server Components flip on the next request.
 
-### Step 4 · Wave C (queued)
+### Step 4 · Wave C done
 
-- `/admin/users` — invite / role / deactivate
-- `/admin/account` — self-service (name, phone, preferred auth, sign-out-everywhere)
-- **Ministry-edits draft → approve workflow** built behind `ENABLE_MINISTRY_SELF_SERVICE=false`
-- **Matchmaker editor (form-based v1)** — questions / answer rows / per-answer ministry tag weights. Drag-drop visual tree deferred per resolved decisions.
-- `/admin/approvals` queue UI for pending ministry edits
+- **`/admin/users`** — admin-only. List with email / phone / role / verified state / created. Invite form (collapsible) supports email + name + phone + role + ministry. Inline `RoleSelector` for changing role and ministry scope per row; can't demote yourself. Validators in `lib/validators/users.ts` enforce ministry-lead → ministryId pairing.
+- **`/admin/account`** — self-service for any signed-in user. Update name, phone (E.164), preferred auth method. Read-only display of email + role. "Sign out of this device" works. **"Sign me out everywhere"** is deferred (post-launch ticket — needs a `session_version` column on users to invalidate JWTs en masse).
+- **`/admin/approvals`** — admin-only queue. Pending / All filter. Each pending edit shows a side-by-side diff (current vs. proposed) per changed field, an Approve button (applies the proposed jsonb to the ministry + revalidateTag), and a Reject button with a note textarea (sent back to the lead). Approval is transactional.
+- **`/admin/edit-my-ministry`** — ministry-lead-only flow, hard-gated by `ENABLE_MINISTRY_SELF_SERVICE` (false at launch → returns 404). Single edit form scoped to `users.ministryId` with the controlled blocks from `backend.html §07`: tagline / description / cadence / contact email / accepting-new toggle / up to 5 FAQ Q&A pairs. Submitting creates a `ministry_edits` row with `status: pending`; doesn't touch the live ministry.
+- **Validators** added: `lib/validators/{account,users,ministry-edits}.ts`.
+- Schema refinement: `MinistryEditProposed` type loosened to allow `string | null` for nullable fields so empty submissions round-trip cleanly.
+- **Deactivate** as a first-class concept is post-launch — for now an admin can change someone's role to limit access. Hard delete via Drizzle Studio.
+
+### Step 4 · Wave D (queued — pairs with /ministries page)
+
+- **Matchmaker form-based editor** — questions, answer rows, per-answer ministry tag weights. Best built alongside the public `/ministries` page (which the homepage already links to but doesn't yet exist). Schema add: either a `matchmakerQuestions` + `matchmakerAnswers` pair of tables, or a jsonb on `siteSettings`. The public `/ministries` page consumes the manifest, so wiring both at once keeps the contract honest.
 
 ### Step 5 · Upload + CDN
 - Client-upload flow per `backend.html §08`.
