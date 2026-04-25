@@ -16,11 +16,14 @@
     "db:check": "tsx --env-file=.env.local db/check.ts"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@neondatabase/serverless": "^1.1.0",
     "drizzle-orm": "^0.45.2",
     "next": "15.5.15",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "react-hook-form": "^7.73.1",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

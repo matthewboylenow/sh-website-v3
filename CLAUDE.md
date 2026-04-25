@@ -40,7 +40,7 @@ The mockup pages (`home.html`, `pages/*.html`, `assets/*`) are the visual refere
 - **Livestream provider:** Subsplash. User will supply the embed widget.
 - **Matchmaker manifest:** lives in the custom admin (no headless CMS). v1 is a **form-based editor** (questions → answer rows → per-answer ministry tag weights). Drag-and-drop visual logic-tree editor was discussed and deferred — revisit only if a form-based editor proves insufficient.
 - **Spanish multilingual:** deferred indefinitely. Don't add locale columns to initial migrations.
-- **Bulletin modal vs. full page:** *not yet decided.* Surface the trade-off when this comes up. Default recommendation = full canonical pages with optional homepage quick-view modal.
+- **Bulletin:** modal only (no individual bulletin page routes). Deep-link via URL hash on `/bulletin`. Rationale: parishioners consume current-week bulletins, not search for archived ones.
 
 ## Routes (top level)
 

@@ -1,5 +1,7 @@
-import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { GiveFab } from "@/components/site/GiveFab";
+import { Header } from "@/components/site/Header";
+import { ENABLE_GIVE_FAB } from "@/lib/flags";
 
 export default function SiteLayout({
   children,
@@ -11,6 +13,7 @@ export default function SiteLayout({
       <Header />
       <main id="main">{children}</main>
       <Footer />
+      {ENABLE_GIVE_FAB && <GiveFab />}
     </>
   );
 }
