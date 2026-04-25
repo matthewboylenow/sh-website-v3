@@ -160,7 +160,7 @@ function FeaturedCard({
 }) {
   const d = toDate(event.startsAt);
   return (
-    <div className="mb-10 grid gap-8 rounded-xl bg-navy p-8 text-white md:grid-cols-[260px_1fr] md:items-center md:p-10">
+    <div className="sh-on-dark mb-10 grid gap-8 rounded-xl bg-navy p-8 text-white md:grid-cols-[260px_1fr] md:items-center md:p-10">
       <div className="rounded-lg border border-white/15 bg-gradient-to-br from-gold/20 to-rust-dark/25 p-8 text-center">
         <div className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">
           {formatMonthShort(d)}

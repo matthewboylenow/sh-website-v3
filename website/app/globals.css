@@ -179,195 +179,189 @@
 }
 
 /* ==========================================================================
-   Base elements — semantic defaults from design-ref
+   Base elements — semantic defaults from design-ref.
+
+   IMPORTANT: every selector that styles a bare HTML element (h1, p, a, …)
+   lives in @layer base. Every reusable class (.sh-display, .sh-prose, …)
+   lives in @layer components. Tailwind 4 puts its utilities in @layer
+   utilities, which sits ABOVE base AND components in cascade priority,
+   so `class="text-white"` ALWAYS wins over our defaults. Without these
+   layer wrappers, unlayered CSS lands in the implicit anonymous layer
+   that *beats* utilities — that was the root cause of "h2 invisible
+   on dark backgrounds".
    ========================================================================== */
 
-html { -webkit-text-size-adjust: 100%; }
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
 
-body {
-  font-family: var(--font-sans);
-  font-size: calc(var(--fs-body) * var(--font-scale));
-  line-height: var(--lh-body);
-  color: var(--fg-1);
-  background: var(--bg-page);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  body {
+    font-family: var(--font-sans);
+    font-size: calc(var(--fs-body) * var(--font-scale));
+    line-height: var(--lh-body);
+    color: var(--fg-1);
+    background: var(--bg-page);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-serif);
+    color: var(--fg-brand);
+    line-height: var(--lh-heading);
+    letter-spacing: var(--track-heading);
+    font-weight: 700;
+    margin: 0 0 0.6em;
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: var(--fs-h1);
+    line-height: var(--lh-tight);
+    letter-spacing: var(--track-tight);
+  }
+  h2 { font-size: var(--fs-h2); }
+  h3 { font-size: var(--fs-h3); }
+  h4 { font-size: var(--fs-h4); }
+  h5 { font-size: var(--fs-h5); }
+
+  p { margin: 0 0 1em; text-wrap: pretty; }
+
+  a {
+    color: var(--sh-rust-dark);
+    text-decoration: none;
+    transition: color var(--dur-fast) var(--ease-standard);
+  }
+  a:hover { color: var(--sh-rust); }
+
+  small { font-size: var(--fs-small); color: var(--fg-3); }
+
+  ::selection { background: var(--sh-rust); color: var(--sh-white); }
+
+  :focus-visible {
+    outline: 2px solid var(--sh-rust);
+    outline-offset: 3px;
+    border-radius: var(--radius-xs);
+  }
 }
 
-h1, h2, h3, h4, h5 {
-  font-family: var(--font-serif);
-  color: var(--fg-brand);
-  line-height: var(--lh-heading);
-  letter-spacing: var(--track-heading);
-  font-weight: 700;
-  margin: 0 0 0.6em;
-  text-wrap: balance;
+@layer components {
+  /* Display / eyebrow / lede helpers — used in the homepage stub + design system */
+  .sh-display {
+    font-family: var(--font-serif);
+    font-size: var(--fs-display);
+    line-height: var(--lh-tight);
+    letter-spacing: var(--track-tight);
+    font-weight: 700;
+    color: var(--fg-brand);
+  }
+  .sh-eyebrow {
+    font-family: var(--font-sans);
+    font-size: var(--fs-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--track-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-accent);
+  }
+  .sh-lede {
+    font-size: var(--fs-body-lg);
+    line-height: var(--lh-snug);
+    color: var(--fg-2);
+  }
+
+  /* On-dark scope — wrap any dark-background section in `<div class="sh-on-dark">`
+     to flip headings, body copy, and the typography helpers to white-on-dark
+     defaults. Tailwind utilities still override per-element when needed. */
+  .sh-on-dark .sh-display { color: #fff; }
+  .sh-on-dark .sh-lede    { color: rgba(255, 255, 255, 0.85); }
+  .sh-on-dark .sh-eyebrow { color: var(--sh-gold); }
+  .sh-on-dark h1,
+  .sh-on-dark h2,
+  .sh-on-dark h3,
+  .sh-on-dark h4,
+  .sh-on-dark h5 { color: #fff; }
+  .sh-on-dark p { color: rgba(255, 255, 255, 0.85); }
+
+  .sh-rule {
+    display: inline-block;
+    width: 56px;
+    height: 3px;
+    background: var(--sh-rust);
+    border-radius: 2px;
+    margin: 0 0 var(--space-4);
+  }
+
+  /* Form input baseline — used heavily in the admin */
+  .form-input {
+    width: 100%;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--sh-rule);
+    background: white;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: var(--fg-1);
+    font-family: var(--font-sans);
+    transition: border-color var(--dur-fast) var(--ease-standard),
+                box-shadow var(--dur-fast) var(--ease-standard);
+  }
+  .form-input:focus {
+    outline: none;
+    border-color: var(--sh-navy);
+    box-shadow: 0 0 0 2px rgba(205, 83, 52, 0.4);
+  }
+  .form-input::placeholder { color: var(--sh-ink-4); }
+  textarea.form-input {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    resize: vertical;
+  }
+
+  /* Rich-text rendered content (TipTap → RichTextRenderer) */
+  .sh-prose {
+    color: var(--fg-2);
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+  }
+  .sh-prose p { margin: 0 0 1em; }
+  .sh-prose p:last-child { margin-bottom: 0; }
+  .sh-prose h2 { font-size: var(--fs-h3); margin: 1.4em 0 0.4em; color: var(--sh-navy); }
+  .sh-prose h3 { font-size: var(--fs-h4); margin: 1.2em 0 0.4em; color: var(--sh-navy); }
+  .sh-prose h4 { font-size: var(--fs-h5); margin: 1em 0 0.3em; color: var(--sh-navy); }
+  .sh-prose strong { font-weight: 700; color: var(--fg-1); }
+  .sh-prose em     { font-style: italic; }
+  .sh-prose u      { text-decoration: underline; }
+  .sh-prose s      { text-decoration: line-through; }
+  .sh-prose code {
+    background: var(--sh-cream);
+    border: 1px solid var(--sh-rule);
+    padding: 1px 6px;
+    border-radius: var(--radius-xs);
+    font-size: 0.9em;
+    color: var(--sh-rust-dark);
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+  .sh-prose blockquote {
+    border-left: 3px solid var(--sh-rust);
+    padding: 4px 0 4px 18px;
+    margin: 1.2em 0;
+    font-style: italic;
+  }
+  .sh-prose ul, .sh-prose ol { margin: 0 0 1em; padding-left: 1.4em; }
+  .sh-prose ul { list-style: disc; }
+  .sh-prose ol { list-style: decimal; }
+  .sh-prose li { margin-bottom: 0.3em; }
+  .sh-prose a {
+    color: var(--sh-rust-dark);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .sh-prose a:hover { color: var(--sh-rust); }
+  .sh-prose hr { border: 0; border-top: 1px solid var(--sh-rule); margin: 2em 0; }
+  .sh-prose img { max-width: 100%; height: auto; border-radius: var(--radius-md); margin: 1em 0; }
 }
 
-h1 {
-  font-size: var(--fs-h1);
-  line-height: var(--lh-tight);
-  letter-spacing: var(--track-tight);
-}
-h2 { font-size: var(--fs-h2); }
-h3 { font-size: var(--fs-h3); }
-h4 { font-size: var(--fs-h4); }
-h5 { font-size: var(--fs-h5); }
-
-p { margin: 0 0 1em; text-wrap: pretty; }
-
-a {
-  color: var(--sh-rust-dark);
-  text-decoration: none;
-  transition: color var(--dur-fast) var(--ease-standard);
-}
-a:hover { color: var(--sh-rust); }
-
-small { font-size: var(--fs-small); color: var(--fg-3); }
-
-::selection { background: var(--sh-rust); color: var(--sh-white); }
-
-/* Focus ring — visible on cream and white */
-:focus-visible {
-  outline: 2px solid var(--sh-rust);
-  outline-offset: 3px;
-  border-radius: var(--radius-xs);
-}
-
-/* Display / eyebrow / lede helpers — used in the homepage stub + design system */
-.sh-display {
-  font-family: var(--font-serif);
-  font-size: var(--fs-display);
-  line-height: var(--lh-tight);
-  letter-spacing: var(--track-tight);
-  font-weight: 700;
-  color: var(--fg-brand);
-}
-.sh-eyebrow {
-  font-family: var(--font-sans);
-  font-size: var(--fs-eyebrow);
-  font-weight: 600;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--fg-accent);
-}
-.sh-lede {
-  font-size: var(--fs-body-lg);
-  line-height: var(--lh-snug);
-  color: var(--fg-2);
-}
-
-/* On-dark variants — for full-bleed dark heroes / banners. The descendant
-   selectors override the base color without forcing every consumer to
-   stack utilities (which lose to the base classes' specificity). */
-.sh-on-dark .sh-display { color: #fff; }
-.sh-on-dark .sh-lede    { color: rgba(255, 255, 255, 0.85); }
-.sh-on-dark .sh-eyebrow { color: var(--sh-gold); }
-.sh-on-dark h1, .sh-on-dark h2, .sh-on-dark h3, .sh-on-dark h4 { color: #fff; }
-.sh-on-dark p { color: rgba(255, 255, 255, 0.85); }
-
-/* Header slide-down — used when the masthead transitions from absolute
-   over the hero to fixed + frosted on scroll. */
+/* @keyframes outside layers (selectorless) — used by the masthead. */
 @keyframes slide-down {
   from { transform: translateY(-100%); }
   to   { transform: translateY(0); }
-}
-.sh-rule {
-  display: inline-block;
-  width: 56px;
-  height: 3px;
-  background: var(--sh-rust);
-  border-radius: 2px;
-  margin: 0 0 var(--space-4);
-}
-
-/* Form input baseline — used heavily in the admin */
-.form-input {
-  width: 100%;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--sh-rule);
-  background: white;
-  padding: 8px 12px;
-  font-size: 14px;
-  color: var(--fg-1);
-  font-family: var(--font-sans);
-  transition: border-color var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard);
-}
-.form-input:focus {
-  outline: none;
-  border-color: var(--sh-navy);
-  box-shadow: 0 0 0 2px rgba(205, 83, 52, 0.4);
-}
-.form-input::placeholder {
-  color: var(--sh-ink-4);
-}
-textarea.form-input {
-  font-family: ui-monospace, Menlo, Consolas, monospace;
-  resize: vertical;
-}
-
-/* Rich-text rendered content (TipTap → RichTextRenderer) */
-.sh-prose {
-  color: var(--fg-2);
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
-}
-.sh-prose p { margin: 0 0 1em; }
-.sh-prose p:last-child { margin-bottom: 0; }
-.sh-prose h2 {
-  font-size: var(--fs-h3);
-  margin: 1.4em 0 0.4em;
-  color: var(--sh-navy);
-}
-.sh-prose h3 {
-  font-size: var(--fs-h4);
-  margin: 1.2em 0 0.4em;
-  color: var(--sh-navy);
-}
-.sh-prose h4 {
-  font-size: var(--fs-h5);
-  margin: 1em 0 0.3em;
-  color: var(--sh-navy);
-}
-.sh-prose strong { font-weight: 700; color: var(--fg-1); }
-.sh-prose em     { font-style: italic; }
-.sh-prose u      { text-decoration: underline; }
-.sh-prose s      { text-decoration: line-through; }
-.sh-prose code {
-  background: var(--sh-cream);
-  border: 1px solid var(--sh-rule);
-  padding: 1px 6px;
-  border-radius: var(--radius-xs);
-  font-size: 0.9em;
-  color: var(--sh-rust-dark);
-  font-family: ui-monospace, Menlo, Consolas, monospace;
-}
-.sh-prose blockquote {
-  border-left: 3px solid var(--sh-rust);
-  padding: 4px 0 4px 18px;
-  margin: 1.2em 0;
-  font-style: italic;
-}
-.sh-prose ul, .sh-prose ol { margin: 0 0 1em; padding-left: 1.4em; }
-.sh-prose ul { list-style: disc; }
-.sh-prose ol { list-style: decimal; }
-.sh-prose li { margin-bottom: 0.3em; }
-.sh-prose a {
-  color: var(--sh-rust-dark);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.sh-prose a:hover { color: var(--sh-rust); }
-.sh-prose hr {
-  border: 0;
-  border-top: 1px solid var(--sh-rule);
-  margin: 2em 0;
-}
-.sh-prose img {
-  max-width: 100%;
-  height: auto;
-  border-radius: var(--radius-md);
-  margin: 1em 0;
 }
 
 /* Reduced-motion respect */

@@ -93,7 +93,7 @@ export default async function MassPage() {
             <DayPicker week={week} />
 
             {/* Readings card — fetched + scraped from USCCB, cached daily. */}
-            <div className="rounded-lg bg-navy p-8 text-white">
+            <div className="sh-on-dark rounded-lg bg-navy p-8 text-white">
               <span className="sh-eyebrow text-gold">Today&rsquo;s readings</span>
               <h3 className="mt-2 text-white">Daily readings</h3>
               {readings.readings && readings.readings.length > 0 ? (

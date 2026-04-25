@@ -78,7 +78,7 @@ export default async function ImNewPage() {
       {/* ---- Welcome form card ------------------------------------ */}
       <section className="py-24">
         <Container width="wide">
-          <div className="grid gap-10 overflow-hidden rounded-xl bg-navy p-8 text-white md:grid-cols-[1.1fr_1fr] md:items-center md:p-12">
+          <div className="sh-on-dark grid gap-10 overflow-hidden rounded-xl bg-navy p-8 text-white md:grid-cols-[1.1fr_1fr] md:items-center md:p-12">
             <div>
               <span className="sh-eyebrow text-gold">Send us a note first</span>
               <h2 className="mt-3 text-white">

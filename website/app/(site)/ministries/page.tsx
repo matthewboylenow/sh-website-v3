@@ -52,7 +52,7 @@ export default async function MinistriesPage({
       />
 
       {/* ---- Matchmaker CTA --------------------------------------- */}
-      <section className="bg-navy py-16 text-white">
+      <section className="sh-on-dark bg-navy py-16 text-white">
         <Container width="default" className="text-center">
           <span className="sh-eyebrow text-gold">60-second quiz</span>
           <h2 className="mt-2 text-white">Not sure where to start?</h2>

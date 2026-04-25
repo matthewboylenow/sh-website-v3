@@ -246,7 +246,7 @@ export default async function HomePage() {
       </section>
 
       {/* ---- Find your place — Ministries spotlight --------------- */}
-      <section className="bg-navy py-24 text-white">
+      <section className="sh-on-dark bg-navy py-24 text-white">
         <Container width="wide">
           <SectionHead
             eyebrow="Ministries spotlight"
@@ -356,7 +356,7 @@ export default async function HomePage() {
       </section>
 
       {/* ---- Support ---------------------------------------------- */}
-      <section className="bg-navy-dark py-24 text-center text-white">
+      <section className="sh-on-dark bg-navy-dark py-24 text-center text-white">
         <Container width="default">
           <span className="sh-eyebrow text-gold">Stewardship</span>
           <h2 className="mt-4 text-white">Support our mission</h2>
