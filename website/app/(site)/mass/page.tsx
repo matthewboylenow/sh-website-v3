@@ -3,6 +3,7 @@ import { InteriorHero } from "@/components/site/InteriorHero";
 import { SectionHead } from "@/components/site/SectionHead";
 import { DayPicker, type WeekDay } from "@/components/mass/DayPicker";
 import { getWeeklyMassTimes } from "@/lib/queries/mass-times.query";
+import { fetchReadings } from "@/lib/readings";
 
 export const metadata = {
   title: "Mass & Livestream",
@@ -57,7 +58,10 @@ function buildWeek(
 }
 
 export default async function MassPage() {
-  const weekly = await getWeeklyMassTimes();
+  const [weekly, readings] = await Promise.all([
+    getWeeklyMassTimes(),
+    fetchReadings(),
+  ]);
   const week = buildWeek(weekly);
 
   const vigil = weekly.filter((m) => m.kind === "vigil");
@@ -88,23 +92,43 @@ export default async function MassPage() {
           <div className="mt-10 grid gap-12 lg:grid-cols-[1.3fr_1fr]">
             <DayPicker week={week} />
 
-            {/* Readings card — real USCCB proxy lands in Step 6 */}
+            {/* Readings card — fetched + scraped from USCCB, cached daily. */}
             <div className="rounded-lg bg-navy p-8 text-white">
               <span className="sh-eyebrow text-gold">Today&rsquo;s readings</span>
               <h3 className="mt-2 text-white">Daily readings</h3>
-              <p className="mt-4 text-white/80">
-                Live readings from the USCCB Lectionary will appear here once
-                the <code className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-xs">/api/readings</code>{" "}
-                Edge proxy is wired in Step 6. For now this is a placeholder so
-                the page shape is correct.
-              </p>
+              {readings.readings && readings.readings.length > 0 ? (
+                <ul className="mt-4 space-y-4">
+                  {readings.readings.map((r) => (
+                    <li key={r.label} className="border-t border-white/15 pt-3 first:border-t-0 first:pt-0">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/60">
+                        {r.label}
+                      </p>
+                      {r.citation && (
+                        <p className="mt-1 font-serif text-lg font-bold">
+                          {r.citation}
+                        </p>
+                      )}
+                      {r.preview && (
+                        <p className="mt-2 text-sm leading-relaxed text-white/80">
+                          {r.preview}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-4 text-white/80">
+                  We couldn&rsquo;t pull today&rsquo;s readings from USCCB —
+                  jump over to read them in full.
+                </p>
+              )}
               <a
-                href="https://bible.usccb.org/readings"
+                href={readings.source}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-6 inline-flex items-center gap-2 rounded-pill bg-rust px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rust-dark"
               >
-                Read at USCCB.org <span aria-hidden="true">→</span>
+                Full readings on USCCB <span aria-hidden="true">→</span>
               </a>
             </div>
           </div>

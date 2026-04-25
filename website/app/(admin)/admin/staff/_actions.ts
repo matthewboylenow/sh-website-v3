@@ -37,6 +37,7 @@ function parseStaffForm(formData: FormData) {
     role: get("role"),
     bio: get("bio") || null,
     email: get("email") || null,
+    photoBlobKey: get("photoBlobKey") || null,
     orderingPriority: get("orderingPriority") || "0",
     isActive: formData.get("isActive") === "on",
   };
@@ -60,6 +61,7 @@ export async function createStaffAction(formData: FormData): Promise<ActionResul
       .values({
         ...parsed.data,
         email: parsed.data.email || null,
+        photoBlobKey: parsed.data.photoBlobKey || null,
       })
       .returning({ id: staff.id, slug: staff.slug });
 
@@ -89,7 +91,12 @@ export async function updateStaffAction(
   try {
     const [row] = await db
       .update(staff)
-      .set({ ...parsed.data, email: parsed.data.email || null, updatedAt: new Date() })
+      .set({
+        ...parsed.data,
+        email: parsed.data.email || null,
+        photoBlobKey: parsed.data.photoBlobKey || null,
+        updatedAt: new Date(),
+      })
       .where(eq(staff.id, id))
       .returning({ id: staff.id, slug: staff.slug });
     revalidateTag("staff");

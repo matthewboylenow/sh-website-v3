@@ -12,6 +12,7 @@ const baseFields = {
   role: z.string().min(1, "Role is required").max(120),
   bio: z.string().max(5000).optional().nullable(),
   email: z.email().optional().nullable().or(z.literal("")),
+  photoBlobKey: z.string().max(500).optional().nullable(),
   orderingPriority: z.coerce.number().int().min(0).max(9999).default(0),
   isActive: z.boolean().default(true),
 };

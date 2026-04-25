@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
 import { staff } from "@/db/schema";
+import { assetUrl } from "@/lib/blob";
 import { StaffForm } from "../StaffForm";
 
 export const metadata = { title: "Edit staff · Admin" };
@@ -19,6 +20,7 @@ export default async function EditStaffPage({
 
   const [row] = await db.select().from(staff).where(eq(staff.id, id)).limit(1);
   if (!row) notFound();
+  const photoPreviewUrl = await assetUrl(row.photoBlobKey);
 
   return (
     <div>
@@ -34,7 +36,12 @@ export default async function EditStaffPage({
         </p>
       )}
       <div className="mt-8">
-        <StaffForm mode="edit" staffId={row.id} defaultValues={row} />
+        <StaffForm
+          mode="edit"
+          staffId={row.id}
+          defaultValues={row}
+          photoPreviewUrl={photoPreviewUrl}
+        />
       </div>
     </div>
   );

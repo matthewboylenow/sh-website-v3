@@ -2,6 +2,56 @@ import { Resend } from "resend";
 
 const FROM_DEFAULT = "Saint Helen <no-reply@send.sainthelen.org>";
 
+let cachedClient: Resend | null = null;
+function getResend(): Resend | null {
+  if (!process.env.RESEND_API_KEY) return null;
+  if (!cachedClient) cachedClient = new Resend(process.env.RESEND_API_KEY);
+  return cachedClient;
+}
+
+/**
+ * Generic transactional sender. Used by the welcome form and any
+ * other relay we add (prayer requests, ministry-edit notifications).
+ * Falls back to console.log when RESEND_API_KEY is missing — same
+ * dev-mode pattern as sendMagicLink.
+ */
+export async function sendTransactional(args: {
+  to: string | string[];
+  subject: string;
+  html: string;
+  text: string;
+  replyTo?: string;
+  tags?: { name: string; value: string }[];
+}): Promise<void> {
+  const resend = getResend();
+  const from = process.env.EMAIL_FROM ?? FROM_DEFAULT;
+  if (!resend) {
+    console.log(
+      `\n${"=".repeat(70)}\n` +
+        `📧  DEV TRANSACTIONAL EMAIL — RESEND_API_KEY not set\n` +
+        `${"=".repeat(70)}\n` +
+        `to:      ${Array.isArray(args.to) ? args.to.join(", ") : args.to}\n` +
+        `subject: ${args.subject}\n` +
+        `${"=".repeat(70)}\n` +
+        `${args.text}\n` +
+        `${"=".repeat(70)}\n`,
+    );
+    return;
+  }
+  const result = await resend.emails.send({
+    from,
+    to: args.to,
+    subject: args.subject,
+    html: args.html,
+    text: args.text,
+    replyTo: args.replyTo ?? process.env.EMAIL_REPLY_TO,
+    tags: args.tags,
+  });
+  if (result.error) {
+    throw new Error(`Resend error: ${result.error.message}`);
+  }
+}
+
 /**
  * Send a magic-link email. Production path uses Resend
  * (RESEND_API_KEY + EMAIL_FROM env vars). When the key is missing —

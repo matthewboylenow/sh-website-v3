@@ -47,11 +47,26 @@ export function WelcomeForm() {
     defaultValues: { reason: "exploring" },
   });
 
+  const [serverError, setServerError] = useState<string | null>(null);
+
   const onSubmit = async (values: WelcomeFormValues) => {
-    console.log("[WelcomeForm] submit:", values);
-    await new Promise((r) => setTimeout(r, 400));
-    setSubmitted(true);
-    reset();
+    setServerError(null);
+    try {
+      const res = await fetch("/api/welcome", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        setServerError(body.error ?? "Couldn't send your welcome — try again.");
+        return;
+      }
+      setSubmitted(true);
+      reset();
+    } catch {
+      setServerError("Network error — try again.");
+    }
   };
 
   if (submitted) {
@@ -81,6 +96,11 @@ export function WelcomeForm() {
       onSubmit={handleSubmit(onSubmit)}
       aria-label="Welcome form"
     >
+      {serverError && (
+        <div className="rounded-md border-l-4 border-rust bg-rust-pale px-3 py-2 text-xs text-rust-dark">
+          {serverError}
+        </div>
+      )}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           label="First name"
@@ -133,8 +153,7 @@ export function WelcomeForm() {
         <span aria-hidden="true">→</span>
       </button>
       <p className="text-xs text-ink-3">
-        Form submission is not wired yet — this logs to the console until the
-        welcome relay ships in Step 6.
+        We&rsquo;ll send a personal note within a day or two.
       </p>
     </form>
   );

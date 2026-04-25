@@ -5,6 +5,7 @@ const baseFields = {
   subtitle: z.string().max(500).optional().nullable(),
   ctaLabel: z.string().max(80).optional().nullable(),
   ctaUrl: z.string().url().optional().nullable().or(z.literal("")),
+  photoBlobKey: z.string().max(500).optional().nullable(),
   startsAt: z.coerce.date(),
   endsAt: z.coerce.date(),
   isActive: z.boolean().default(true),

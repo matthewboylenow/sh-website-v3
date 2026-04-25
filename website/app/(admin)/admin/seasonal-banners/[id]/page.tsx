@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
 import { seasonalBanners } from "@/db/schema";
+import { assetUrl } from "@/lib/blob";
 import { SeasonalBannerForm } from "../SeasonalBannerForm";
 
 export const metadata = { title: "Edit banner · Admin" };
@@ -23,6 +24,7 @@ export default async function EditBannerPage({
     .where(eq(seasonalBanners.id, id))
     .limit(1);
   if (!row) notFound();
+  const photoPreviewUrl = await assetUrl(row.photoBlobKey);
 
   return (
     <div>
@@ -40,7 +42,12 @@ export default async function EditBannerPage({
         </p>
       )}
       <div className="mt-8">
-        <SeasonalBannerForm mode="edit" bannerId={row.id} defaultValues={row} />
+        <SeasonalBannerForm
+          mode="edit"
+          bannerId={row.id}
+          defaultValues={row}
+          photoPreviewUrl={photoPreviewUrl}
+        />
       </div>
     </div>
   );

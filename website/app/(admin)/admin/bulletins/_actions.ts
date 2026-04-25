@@ -5,11 +5,11 @@ import { revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { seasonalBanners } from "@/db/schema";
+import { bulletins } from "@/db/schema";
 import {
-  SeasonalBannerCreateSchema,
-  SeasonalBannerUpdateSchema,
-} from "@/lib/validators/seasonal-banners";
+  BulletinCreateSchema,
+  BulletinUpdateSchema,
+} from "@/lib/validators/bulletins";
 
 type ActionResult =
   | { ok: true; id: string }
@@ -30,22 +30,22 @@ function parseForm(formData: FormData) {
     return typeof v === "string" ? v.trim() : "";
   };
   return {
-    title: get("title"),
-    subtitle: get("subtitle") || null,
-    ctaLabel: get("ctaLabel") || null,
-    ctaUrl: get("ctaUrl") || null,
-    photoBlobKey: get("photoBlobKey") || null,
-    startsAt: get("startsAt"),
-    endsAt: get("endsAt"),
-    isActive: formData.get("isActive") === "on",
+    weekOf: get("weekOf"),
+    title: get("title") || null,
+    pdfBlobKey: get("pdfBlobKey"),
+    thumbBlobKey: get("thumbBlobKey") || null,
+    pageCount: get("pageCount") || null,
+    publishedAt: get("publishedAt") || null,
   };
 }
 
-export async function createBannerAction(formData: FormData): Promise<ActionResult> {
+export async function createBulletinAction(
+  formData: FormData,
+): Promise<ActionResult> {
   const guard = await requireWriter();
   if (!guard.ok) return guard;
 
-  const parsed = SeasonalBannerCreateSchema.safeParse(parseForm(formData));
+  const parsed = BulletinCreateSchema.safeParse(parseForm(formData));
   if (!parsed.success) {
     return {
       ok: false,
@@ -55,29 +55,40 @@ export async function createBannerAction(formData: FormData): Promise<ActionResu
 
   try {
     const [row] = await db
-      .insert(seasonalBanners)
+      .insert(bulletins)
       .values({
-        ...parsed.data,
-        ctaUrl: parsed.data.ctaUrl || null,
-        photoBlobKey: parsed.data.photoBlobKey || null,
+        weekOf: parsed.data.weekOf,
+        title: parsed.data.title,
+        pdfBlobKey: parsed.data.pdfBlobKey,
+        thumbBlobKey: parsed.data.thumbBlobKey,
+        pageCount: parsed.data.pageCount,
+        // Auto-publish on create — bulletins go live immediately.
+        publishedAt: parsed.data.publishedAt ?? new Date(),
       })
-      .returning({ id: seasonalBanners.id });
-    revalidateTag("seasonal-banners");
+      .returning({ id: bulletins.id });
+    revalidateTag("bulletins");
     if (!row) return { ok: false, error: "Insert returned no row" };
     return { ok: true, id: row.id };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "Database error" };
+    const msg = err instanceof Error ? err.message : "Database error";
+    if (msg.includes("bulletins_week_of_uq")) {
+      return {
+        ok: false,
+        error: "A bulletin already exists for that week. Edit it instead.",
+      };
+    }
+    return { ok: false, error: msg };
   }
 }
 
-export async function updateBannerAction(
+export async function updateBulletinAction(
   id: string,
   formData: FormData,
 ): Promise<ActionResult> {
   const guard = await requireWriter();
   if (!guard.ok) return guard;
 
-  const parsed = SeasonalBannerUpdateSchema.safeParse(parseForm(formData));
+  const parsed = BulletinUpdateSchema.safeParse(parseForm(formData));
   if (!parsed.success) {
     return {
       ok: false,
@@ -87,27 +98,22 @@ export async function updateBannerAction(
 
   try {
     const [row] = await db
-      .update(seasonalBanners)
-      .set({
-        ...parsed.data,
-        ctaUrl: parsed.data.ctaUrl || null,
-        photoBlobKey: parsed.data.photoBlobKey || null,
-        updatedAt: new Date(),
-      })
-      .where(eq(seasonalBanners.id, id))
-      .returning({ id: seasonalBanners.id });
-    revalidateTag("seasonal-banners");
-    if (!row) return { ok: false, error: "Banner not found" };
+      .update(bulletins)
+      .set(parsed.data)
+      .where(eq(bulletins.id, id))
+      .returning({ id: bulletins.id });
+    revalidateTag("bulletins");
+    if (!row) return { ok: false, error: "Bulletin not found" };
     return { ok: true, id: row.id };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Database error" };
   }
 }
 
-export async function deleteBannerAndRedirect(id: string) {
+export async function deleteBulletinAndRedirect(id: string) {
   const guard = await requireWriter();
   if (!guard.ok) return;
-  await db.delete(seasonalBanners).where(eq(seasonalBanners.id, id));
-  revalidateTag("seasonal-banners");
-  redirect("/admin/seasonal-banners");
+  await db.delete(bulletins).where(eq(bulletins.id, id));
+  revalidateTag("bulletins");
+  redirect("/admin/bulletins");
 }

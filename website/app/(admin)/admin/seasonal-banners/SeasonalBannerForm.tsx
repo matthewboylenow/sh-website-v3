@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
+import { PhotoUploader } from "@/components/admin/PhotoUploader";
 import { createBannerAction, updateBannerAction } from "./_actions";
 
 type Values = {
@@ -10,6 +11,7 @@ type Values = {
   subtitle: string | null;
   ctaLabel: string | null;
   ctaUrl: string | null;
+  photoBlobKey: string | null;
   startsAt: Date | string;
   endsAt: Date | string;
   isActive: boolean;
@@ -26,10 +28,12 @@ export function SeasonalBannerForm({
   mode,
   bannerId,
   defaultValues,
+  photoPreviewUrl,
 }: {
   mode: "create" | "edit";
   bannerId?: string;
   defaultValues: Partial<Values>;
+  photoPreviewUrl?: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -162,9 +166,14 @@ export function SeasonalBannerForm({
           <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
             Photo
           </h3>
-          <p className="mt-3 text-xs text-ink-3">
-            Upload lands in <strong>Step 5</strong>.
-          </p>
+          <div className="mt-3">
+            <PhotoUploader
+              name="photoBlobKey"
+              initialKey={defaultValues.photoBlobKey ?? null}
+              initialPreviewUrl={photoPreviewUrl}
+              pathPrefix={`seasonal-banners/${bannerId ?? "new"}`}
+            />
+          </div>
         </div>
 
         <button

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
+import { PhotoUploader } from "@/components/admin/PhotoUploader";
 import { MINISTRY_CATEGORIES } from "@/lib/validators/ministries";
 import {
   createMinistryAction,
@@ -20,6 +21,7 @@ type Values = {
   matchmakerTags: string[] | null;
   meetingCadence: string | null;
   leadStaffId: string | null;
+  photoBlobKey: string | null;
   contactEmail: string | null;
   isAcceptingNew: boolean;
   orderingPriority: number;
@@ -31,11 +33,13 @@ export function MinistryForm({
   ministryId,
   defaultValues,
   staffOptions,
+  photoPreviewUrl,
 }: {
   mode: "create" | "edit";
   ministryId?: string;
   defaultValues: Partial<Values>;
   staffOptions: { id: string; name: string }[];
+  photoPreviewUrl?: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -276,6 +280,20 @@ export function MinistryForm({
             />
             Accepting new members
           </label>
+        </div>
+
+        <div className="rounded-lg border border-rule bg-white p-5">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
+            Photo
+          </h3>
+          <div className="mt-3">
+            <PhotoUploader
+              name="photoBlobKey"
+              initialKey={defaultValues.photoBlobKey ?? null}
+              initialPreviewUrl={photoPreviewUrl}
+              pathPrefix={`ministries/${ministryId ?? "new"}`}
+            />
+          </div>
         </div>
 
         <div className="space-y-2">

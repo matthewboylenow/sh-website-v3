@@ -15,8 +15,8 @@ Last updated: **2026-04-25**
 | 2 | Database (Drizzle schema + seed) | ✅ Done (schema applied to Neon, dev seed run) |
 | 3 | Public site — homepage + 3 interiors | ✅ Done (4 routes wired to DB, filters URL-synced, build green) |
 | 4 | Admin shell, auth, ministry edits, matchmaker editor | ✅ Done (Waves A–D — all editors live + matchmaker + /ministries) |
-| 5 | Upload + CDN (Vercel Blob) | 🟡 Wave A done (upload flow + Events editor + public photos); Wave B queues other editors |
-| 6 | Public API routes | ⬜ Queued |
+| 5 | Upload + CDN (Vercel Blob) | ✅ Done — uploads in events/ministries/staff/seasonal-banners + bulletins (PDF) + public viewer |
+| 6 | Public API routes | 🟡 Done for launch — welcome / readings / mass-times wired; prayer-request and revalidate deferred |
 | 7 | Backups + staging | ⬜ Queued |
 | 8 | External integrations (Resend / Twilio / Fathom / Subsplash) | ⬜ Queued |
 
@@ -195,12 +195,36 @@ The Vercel Blob client-upload flow is wired end-to-end and Events is the canonic
 - **Schema + validators**: `EventCreateSchema` / `EventUpdateSchema` accept `photoBlobKey`. `lib/validators/blob.ts` provides `UploadCompleteSchema` + allowlists.
 - Build gates green — typecheck, lint, build (35 routes total). Smoke: upload endpoints 401 unauth, public pages still 200, events admin 307→sign-in.
 
-### Step 5 · Wave B (queued)
+### Step 5 · Wave B done — uploads everywhere + bulletins
 
-- Wire `PhotoUploader` into Ministries, Staff, Seasonal Banners editors. Each is a small change — the pattern is settled.
-- Bulletins editor: PDF upload (no thumbnail v1 — PDF→image generation deferred), enable the "Upload bulletin" button currently stubbed out, ship the modal viewer reading from the PDF blob URL.
-- `/admin/media` library — list `blob_assets` rows with previews, search, delete-with-confirm. Lets editors reuse photos and clean up orphans.
-- (Optional polish) `BLOB_STORE_HOST` env var + rewrite — flip asset URLs to `sainthelen.org/cdn/...` when you want the brand on shared image URLs.
+- **PhotoUploader wired in all editors:** events ✅ (Wave A), ministries ✅, staff ✅, seasonal banners ✅. Each has the same pattern — Server Action persists `photoBlobKey`, edit page resolves the preview URL via `assetUrl()` and passes it through to the form.
+- **Bulletins editor live.** `/admin/bulletins/new` and `/admin/bulletins/[id]` use `BulletinForm` with PhotoUploader (PDF accept). The uploader detects `application/pdf` and shows a filename chip instead of an image preview (no alt text needed for PDFs). Bulletins auto-publish on create. Duplicate-week-of inserts are blocked by the unique constraint with a friendly error.
+- **Public `/bulletin` archive** with a modal viewer. Server Component fetches the published bulletin list + resolves PDF URLs in batch. Client island (`BulletinList.tsx`) handles the modal: iframe of the PDF, "Open in new tab" + "Download" buttons in the header, Esc to close, deep-link via URL hash (`/bulletin#2026-04-27` opens that bulletin directly).
+
+### Step 5 — deliberately deferred (not blockers)
+
+- **`/admin/media` library** — list/search/delete `blob_assets` rows. Drizzle Studio works for now if cleanup is needed.
+- **`BLOB_STORE_HOST` rewrite to `sainthelen.org/cdn/...`** — flip the env var anytime to brand asset URLs. Currently they serve from `*.public.blob.vercel-storage.com`.
+- **PDF thumbnails** — spec mentions sharp generating thumbs; deferred since browser-native PDF rendering in the modal works fine for v1.
+
+---
+
+## ✅ Shipped — Step 6 · Public API routes
+
+The public-facing endpoints from `backend.html §05` that drive forms and external embeds.
+
+- **`POST /api/welcome`** — wires the Plan-Your-Visit form on `/im-new` to a real Resend send. Reads `siteSettings.welcomeFormRecipients` for the to: list. Reply-To set to the visitor's email so a parish staffer can hit Reply directly. Rate-limited per IP (5 / hour, in-memory). Falls back to console log when `RESEND_API_KEY` is missing — same dev-mode pattern as magic links. The welcome form's `onSubmit` no longer logs; it actually sends.
+- **`GET /api/readings`** — Edge runtime USCCB proxy with daily cache. Returns `{ date, source, readings }` where `readings` is a best-effort regex scrape of the four lectionary sections (First Reading / Psalm / Reading 2 / Gospel) with citation + preview text. If USCCB's markup doesn't match (current state), `readings` is null and consumers fall back to the outbound link.
+- **`GET /api/mass-times`** — Public JSON of the weekly schedule. The same data `/mass` renders, just shaped for external consumers (any future widget, embed, or integration). Cached 5 min at the edge.
+- **Shared `lib/readings.ts`** so `/mass` page calls the scrape directly server-side without a self-HTTP roundtrip.
+- **`lib/email.ts → sendTransactional`** — generic Resend sender for any future transactional email. Same console-log dev fallback.
+- **`/mass` readings card** now renders the inline citations when scrape succeeds; falls back gracefully otherwise. Outbound link is now to the actual day's USCCB URL, not the homepage.
+
+### Step 6 — deliberately deferred
+
+- **`POST /api/prayer-request`** — same shape as welcome, different recipients. Defer until `/prayer-request` page exists (no consumer yet).
+- **`POST /api/revalidate`** — admin-triggered tag revalidation. Deferred because Server Actions already call `revalidateTag` in-process; the manual trigger is mainly useful when you want to bust cache without an admin write.
+- **Polish: USCCB scraper accuracy** — current regex returns null on the live page. The fallback works, but inline citations would be nicer. A polish ticket; needs a fresh look at USCCB's HTML to update the selectors.
 
 ### Step 5 · Upload + CDN
 - Client-upload flow per `backend.html §08`.

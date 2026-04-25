@@ -48,6 +48,7 @@ function parseForm(formData: FormData) {
     matchmakerTags: getList("matchmakerTags"),
     meetingCadence: get("meetingCadence") || null,
     leadStaffId: get("leadStaffId") || null,
+    photoBlobKey: get("photoBlobKey") || null,
     contactEmail: get("contactEmail") || null,
     isAcceptingNew: formData.get("isAcceptingNew") === "on",
     orderingPriority: get("orderingPriority") || "0",
@@ -73,6 +74,7 @@ export async function createMinistryAction(formData: FormData): Promise<ActionRe
       .values({
         ...parsed.data,
         leadStaffId: parsed.data.leadStaffId || null,
+        photoBlobKey: parsed.data.photoBlobKey || null,
         contactEmail: parsed.data.contactEmail || null,
       })
       .returning({ id: ministries.id, slug: ministries.slug });
@@ -105,6 +107,7 @@ export async function updateMinistryAction(
       .set({
         ...parsed.data,
         leadStaffId: parsed.data.leadStaffId || null,
+        photoBlobKey: parsed.data.photoBlobKey || null,
         contactEmail: parsed.data.contactEmail || null,
         updatedAt: new Date(),
       })

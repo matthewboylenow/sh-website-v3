@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
+import { PhotoUploader } from "@/components/admin/PhotoUploader";
 import {
   createStaffAction,
   updateStaffAction,
@@ -14,6 +15,7 @@ type StaffFormValues = {
   role: string;
   bio: string | null;
   email: string | null;
+  photoBlobKey: string | null;
   orderingPriority: number;
   isActive: boolean;
 };
@@ -22,10 +24,12 @@ export function StaffForm({
   mode,
   staffId,
   defaultValues,
+  photoPreviewUrl,
 }: {
   mode: "create" | "edit";
   staffId?: string;
   defaultValues: Partial<StaffFormValues>;
+  photoPreviewUrl?: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -166,10 +170,14 @@ export function StaffForm({
           <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
             Headshot
           </h3>
-          <p className="mt-3 text-xs text-ink-3">
-            Photo upload lands in <strong>Step 5</strong> with the Vercel Blob
-            client-upload flow.
-          </p>
+          <div className="mt-3">
+            <PhotoUploader
+              name="photoBlobKey"
+              initialKey={defaultValues.photoBlobKey ?? null}
+              initialPreviewUrl={photoPreviewUrl}
+              pathPrefix={`staff/${staffId ?? "new"}`}
+            />
+          </div>
         </div>
 
         <button

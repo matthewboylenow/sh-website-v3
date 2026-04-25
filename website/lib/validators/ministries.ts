@@ -25,6 +25,7 @@ const baseFields = {
   matchmakerTags: z.array(z.string()).default([]),
   meetingCadence: z.string().max(80).optional().nullable(),
   leadStaffId: z.uuid().optional().nullable().or(z.literal("")),
+  photoBlobKey: z.string().max(500).optional().nullable(),
   contactEmail: z.email().optional().nullable().or(z.literal("")),
   isAcceptingNew: z.boolean().default(true),
   orderingPriority: z.coerce.number().int().min(0).max(9999).default(0),

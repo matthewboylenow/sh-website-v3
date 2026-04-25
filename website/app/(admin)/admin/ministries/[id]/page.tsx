@@ -3,6 +3,7 @@ import { asc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
 import { ministries, staff } from "@/db/schema";
+import { assetUrl } from "@/lib/blob";
 import { MinistryForm } from "../MinistryForm";
 
 export const metadata = { title: "Edit ministry · Admin" };
@@ -20,10 +21,13 @@ export default async function EditMinistryPage({
   const [row] = await db.select().from(ministries).where(eq(ministries.id, id)).limit(1);
   if (!row) notFound();
 
-  const staffOptions = await db
-    .select({ id: staff.id, name: staff.name })
-    .from(staff)
-    .orderBy(asc(staff.orderingPriority), asc(staff.name));
+  const [staffOptions, photoPreviewUrl] = await Promise.all([
+    db
+      .select({ id: staff.id, name: staff.name })
+      .from(staff)
+      .orderBy(asc(staff.orderingPriority), asc(staff.name)),
+    assetUrl(row.photoBlobKey),
+  ]);
 
   return (
     <div>
@@ -54,6 +58,7 @@ export default async function EditMinistryPage({
           ministryId={row.id}
           staffOptions={staffOptions}
           defaultValues={row}
+          photoPreviewUrl={photoPreviewUrl}
         />
       </div>
     </div>
