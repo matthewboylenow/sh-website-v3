@@ -8,6 +8,7 @@ import type {
   CardGridCard,
   EmbedPayload,
   LinkItem,
+  MinistryLeafBlock,
   MinistrySectionPayload,
   SectionHeader,
 } from "@/db/schema";
@@ -788,7 +789,16 @@ function BlockEditor({
       );
 
     case "columns":
-      return <ColumnsEditor payload={payload} onUpdate={onUpdate} />;
+      return (
+        <ColumnsEditor
+          payload={payload}
+          onUpdate={onUpdate}
+          ministryId={ministryId}
+          imgUrls={imgUrls}
+          registerImage={registerImage}
+          staffOptions={staffOptions}
+        />
+      );
   }
 }
 
@@ -980,23 +990,237 @@ function EmbedEditor({
 function ColumnsEditor({
   payload,
   onUpdate,
+  ministryId,
+  imgUrls,
+  registerImage,
+  staffOptions,
 }: {
   payload: Extract<MinistrySectionPayload, { kind: "columns" }>;
   onUpdate: (replacer: (p: MinistrySectionPayload) => MinistrySectionPayload) => void;
+  ministryId: string;
+  imgUrls: Record<string, string>;
+  registerImage: (key: string, url: string) => void;
+  staffOptions: StaffOption[];
 }) {
-  // Wave 13.A ships this stub; the recursive nested-block UI lands in 13.D.
+  const setColumnCount = (count: 2 | 3) => {
+    const next = [...payload.columns];
+    while (next.length < count) next.push({ blocks: [] });
+    while (next.length > count) next.pop();
+    onUpdate(() => ({ ...payload, columns: next }));
+  };
+
+  const updateColumnAt = (i: number, replacer: (blocks: MinistryLeafBlock[]) => MinistryLeafBlock[]) =>
+    onUpdate(() => ({
+      ...payload,
+      columns: payload.columns.map((c, idx) =>
+        idx === i ? { blocks: replacer(c.blocks) } : c,
+      ),
+    }));
+
   return (
     <div className="space-y-3">
       <HeaderEditor
         header={payload.header}
         onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
       />
-      <p className="rounded-md border border-dashed border-rule bg-cream/40 p-3 text-xs text-ink-3">
-        Columns editor lands in Wave 13.D — for now, this placeholder renders an empty
-        2-column layout with no nested blocks. Add nested blocks via the next sub-wave.
-      </p>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+            Column count
+          </label>
+          <select
+            value={payload.columns.length === 3 ? 3 : 2}
+            onChange={(e) => setColumnCount(Number(e.target.value) === 3 ? 3 : 2)}
+            className="form-input w-32"
+          >
+            <option value={2}>2 columns</option>
+            <option value={3}>3 columns</option>
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+            Ratio
+          </label>
+          <select
+            value={payload.ratio ?? "equal"}
+            onChange={(e) =>
+              onUpdate(() => ({
+                ...payload,
+                ratio: e.target.value as "equal" | "60-40" | "40-60",
+              }))
+            }
+            disabled={payload.columns.length !== 2}
+            className="form-input w-44"
+          >
+            <option value="equal">Equal</option>
+            <option value="60-40">60 / 40</option>
+            <option value="40-60">40 / 60</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {payload.columns.map((col, ci) => (
+          <ColumnLane
+            key={ci}
+            columnIndex={ci}
+            blocks={col.blocks}
+            ministryId={ministryId}
+            imgUrls={imgUrls}
+            registerImage={registerImage}
+            staffOptions={staffOptions}
+            onUpdate={(replacer) => updateColumnAt(ci, replacer)}
+          />
+        ))}
+      </div>
     </div>
   );
+}
+
+function ColumnLane({
+  columnIndex,
+  blocks,
+  ministryId,
+  imgUrls,
+  registerImage,
+  staffOptions,
+  onUpdate,
+}: {
+  columnIndex: number;
+  blocks: MinistryLeafBlock[];
+  ministryId: string;
+  imgUrls: Record<string, string>;
+  registerImage: (key: string, url: string) => void;
+  staffOptions: StaffOption[];
+  onUpdate: (replacer: (blocks: MinistryLeafBlock[]) => MinistryLeafBlock[]) => void;
+}) {
+  const updateAt = (i: number, replacer: (b: MinistryLeafBlock) => MinistryLeafBlock) =>
+    onUpdate((cur) => cur.map((b, idx) => (idx === i ? replacer(b) : b)));
+  const removeAt = (i: number) => onUpdate((cur) => cur.filter((_, idx) => idx !== i));
+  const moveAt = (i: number, dir: -1 | 1) =>
+    onUpdate((cur) => {
+      const next = [...cur];
+      const t = i + dir;
+      if (t < 0 || t >= next.length) return cur;
+      const a = next[i];
+      const b = next[t];
+      if (!a || !b) return cur;
+      next[i] = b;
+      next[t] = a;
+      return next;
+    });
+  const add = (kind: MinistryLeafBlock["kind"]) =>
+    onUpdate((cur) => [...cur, blankLeafBlock(kind)]);
+
+  return (
+    <div className="rounded-md border border-rule bg-cream/40 p-3">
+      <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+        Column {columnIndex + 1}
+      </p>
+      <ul className="space-y-2">
+        {blocks.map((b, i) => (
+          <li key={i} className="rounded-md border border-rule bg-white p-2">
+            <div className="mb-1 flex items-center gap-1">
+              <span className="rounded-md bg-navy-pale px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-navy">
+                {prettyKind(b.kind)}
+              </span>
+              <button
+                type="button"
+                onClick={() => moveAt(i, -1)}
+                disabled={i === 0}
+                className="rounded-md border border-rule bg-white px-1.5 py-0.5 text-[10px] hover:border-navy disabled:opacity-30"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                onClick={() => moveAt(i, 1)}
+                disabled={i === blocks.length - 1}
+                className="rounded-md border border-rule bg-white px-1.5 py-0.5 text-[10px] hover:border-navy disabled:opacity-30"
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                onClick={() => removeAt(i)}
+                className="ml-auto rounded-md border border-rule bg-white px-1.5 py-0.5 text-[10px] text-rust-dark hover:border-rust"
+              >
+                ✕
+              </button>
+            </div>
+            {/* Reuse the leaf editor by upcasting to the section payload type. */}
+            <BlockEditor
+              payload={b as unknown as MinistrySectionPayload}
+              onUpdate={(replacer) => updateAt(i, (cur) => replacer(cur as unknown as MinistrySectionPayload) as MinistryLeafBlock)}
+              ministryId={ministryId}
+              imgUrls={imgUrls}
+              registerImage={registerImage}
+              staffOptions={staffOptions}
+            />
+          </li>
+        ))}
+      </ul>
+      <div className="mt-2 flex flex-wrap gap-1">
+        {LEAF_KINDS.map(([k, label]) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => add(k)}
+            className="rounded-pill border border-rule bg-white px-2 py-0.5 text-[10px] font-semibold text-navy hover:border-navy"
+          >
+            + {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const LEAF_KINDS: [MinistryLeafBlock["kind"], string][] = [
+  ["heading", "Heading"],
+  ["rich_text", "Text"],
+  ["image", "Image"],
+  ["image_text", "Image+Text"],
+  ["image_gallery", "Gallery"],
+  ["link_list", "Links"],
+  ["button_group", "Buttons"],
+  ["video", "Video"],
+  ["embed", "Embed"],
+  ["card_grid", "Cards"],
+  ["staff_card", "Staff"],
+  ["callout_banner", "Callout"],
+];
+
+function blankLeafBlock(kind: MinistryLeafBlock["kind"]): MinistryLeafBlock {
+  switch (kind) {
+    case "heading":
+      return { kind: "heading", header: { heading: "" } };
+    case "rich_text":
+      return { kind: "rich_text", html: "" };
+    case "image":
+      return { kind: "image", blobKey: "" };
+    case "image_text":
+      return { kind: "image_text", blobKey: "", html: "" };
+    case "image_gallery":
+      return { kind: "image_gallery", images: [{ blobKey: "" }] };
+    case "link_list":
+      return { kind: "link_list", items: [{ label: "", href: "" }] };
+    case "button_group":
+      return {
+        kind: "button_group",
+        items: [{ label: "", href: "", variant: "primary" }],
+      };
+    case "video":
+      return { kind: "video", url: "", type: "mp4" };
+    case "embed":
+      return { kind: "embed", embed: { provider: "iframe", url: "" } };
+    case "card_grid":
+      return { kind: "card_grid", cards: [{ title: "" }] };
+    case "staff_card":
+      return { kind: "staff_card", staffId: "" };
+    case "callout_banner":
+      return { kind: "callout_banner", title: "" };
+  }
 }
 
 function AddBlockMenu({
