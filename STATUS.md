@@ -2,7 +2,7 @@
 
 > **Read this first, every session.** This is the running log of what's shipped, what's in flight, what's queued, and what's broken. It pairs with `CLAUDE.md` (rules) and `/design-ref/` (specs). Update it after every meaningful step.
 
-Last updated: **2026-04-26**
+Last updated: **2026-04-27**
 
 ---
 
@@ -34,6 +34,8 @@ Last updated: **2026-04-26**
 | 13.J | Announcements (slide-in + modal popup) | ✅ Done |
 | 14 | Homepage CMS — hero settings + sections + 3 specialized blocks | ✅ Done (14.A–14.H — covers podcast, bento, overlay cards) |
 | 14.G | Media library picker on every upload surface | ✅ Done |
+| 14.I | Bento icons + display headings + pastor_welcome block | ✅ Done |
+| 14.J | Favicon CMS + last-edited-by + content-editor playbook + logo-upload fix | ✅ Done |
 
 Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).
 
@@ -389,6 +391,22 @@ Hero stays structurally hardcoded (full-bleed video, fixed-top placement) but it
 
 Build green throughout. ~70+ routes. Migrations applied through 0015.
 
+## ✅ Shipped — Wave 14.I — Bento icons + display headings + pastor block
+
+- **Bento tile icons (208 curated lucide-react icons).** New `lib/icon-catalog.ts` indexes 208 hand-picked icons across faith, sacraments, community, family, formation, music, events, places, giving, hospitality, communication, nature, symbols. Searchable `IconPickerButton` (`components/admin/IconPicker.tsx`) modal — search by name/label/tag plus a group dropdown. `BentoTileCard` precedence: icon → image → placeholder arrow. Uniform card_grid cards keep their image-only flow. Stable IDs are the lucide PascalCase export name; unknown names render nothing (catalog can be pruned without breaking saved cards).
+- **Display headings restored.** `SectionHeader` gained optional `eyebrow` + `align` (no migration — payload jsonb). `HeaderEl` in the public renderer + admin preview emit eyebrow + clamped serif title + rust rule + lede stack — restoring the original SectionHead treatment lost when Wave 14 migrated the homepage to CMS sections. Existing rows render unchanged because both new fields are optional.
+- **`pastor_welcome` block kind (migration 0016).** Replaces the generic `image_text` stub. Optional video URL (mp4/HLS/YouTube/Vimeo, auto-detected) + pastor photo (used as poster when video set) + rich-text body + signature name + signature role + media-side toggle. The existing seeded row was promoted in place by an idempotent migration (only rewrites the unedited row).
+
+## ✅ Shipped — Wave 14.J — Favicon + last-edited-by + playbook + logo-upload fix
+
+- **Logo upload bug fixed.** `AdminField` wraps its child in `<label>` for accessibility, but `<label>` plus a hidden `<input type="file">` inside a media uploader (`PhotoUploader`) made the file picker silently swallow clicks. Settings now uses a sibling `MediaField` (plain `<div>`) for media inputs. Other forms already used `<div>` wrappers — this only affected the settings logo + the new favicon/apple-touch-icon fields.
+- **Favicon + Apple touch icon CMS (migration 0017).** New columns on `site_settings`: `faviconBlobKey`, `appleTouchIconBlobKey`. Admin UI added under Branding. Root layout uses `generateMetadata()` to read the singleton + emit `<link rel="icon">` and `<link rel="apple-touch-icon">` from Blob URLs. Falls back gracefully when not set (browser uses `/favicon.ico` from `app/`). Apple icon falls back to favicon when not set.
+- **Last-edited-by tracking (migration 0017).** Nullable `lastEditedBy uuid REFERENCES users(id)` + `lastEditedAt timestamp` on every content table: `staff`, `ministries`, `formation_pages`, `page_sections`, `inquiries`, `announcements`, `posts`, `events`, `mass_times`, `bulletins`, `seasonal_banners`, `site_settings`. New helper `lib/audit.ts → editorFields()` returns `{ lastEditedBy, lastEditedAt }` from the current session — spread into every server action's `.set()` / `.values()`. Wired across all 11 admin action files (events / ministries / posts / staff / bulletins / seasonal-banners / mass-times / formation / announcements / settings / page-sections). Surfaced on the events admin list as "by Name" under Updated; other content lists follow the same join pattern.
+- **`CONTENT_EDITOR_GUIDE.md`.** Non-dev playbook at the repo root. Covers sign-in, dashboard tour, common tasks (add event, edit homepage, upload bulletin, customize nav, etc.), photo workflow, every block kind, publishing checklist, troubleshooting. Aimed at parish staff, not engineers.
+- **Give-section CTA color fix.** `callout_banner` block's CTA anchor inherited the base anchor color (rust) on navy/warm tones because `.sh-on-dark` flips headings + p but not anchors. CTA now sets `text-white hover:text-white` explicitly on dark tones; `bg-navy text-white` on the gold tone for contrast.
+
+Build green. Migrations applied through 0017. ~75 routes.
+
 ## 🛑 Paused — end-to-end testing in progress
 
 ## 🛑 Paused — end-to-end testing in progress
@@ -477,3 +495,69 @@ Ordered by what unblocks the most:
 4. **Step 7 — Backups + staging branch.** Deferred indefinitely per Matthew; revisit before DNS flip.
 5. **Mobile real-device testing.** Hamburger menu + touch interactions on real iPad / iPhone (DevTools mobile mode is OK for layout, not for touch).
 6. **Eventually: side-by-side preview pane, drag-drop reordering, block presets** — see `project_future_upgrades.md` memory note.
+
+---
+
+## 📋 Roadmap — features still on the table
+
+Captured here so the next session has a single source. Order is rough,
+each is a separate Wave when picked up.
+
+### Page creator (CMS pages with the block editor)
+
+The block system is already polymorphic (`parent_kind: ministry | formation | homepage`) — adding `parent_kind="page"` is the smallest possible extension.
+
+- New `pages` table: `id, slug, title, summary, status, seo fields, createdAt, updatedAt, lastEditedBy/At`.
+- Admin: `/admin/pages` list + `/admin/pages/[id]` editor + `/admin/pages/[id]/sections` reusing `<SectionEditor>` verbatim.
+- Public: `/p/[slug]` route (flat). Avoids collision with reserved top-level routes; nested paths can come later if needed.
+- Estimate: ~1 day.
+
+### SEO foundation (RankMath equivalent)
+
+No off-the-shelf Next.js plugin matches RankMath; build from primitives.
+
+- **Per-row SEO fields** on every public content type (events, ministries, formation_pages, posts, pages): `metaTitle`, `metaDescription`, `ogImageBlobKey`, `noindex`, `canonicalUrl`. Single migration adds them all.
+- **`generateMetadata()`** in each `[slug]/page.tsx` reads those fields with sensible fallbacks (post.title → metaTitle, htmlToPlainText(body).slice(160) → metaDescription).
+- **`app/sitemap.ts`** pulls all published rows from DB. **`app/robots.ts`** for robots.txt.
+- **JSON-LD per content type:** Article (posts), Organization (already on root), BreadcrumbList, FAQPage where applicable. Event already done.
+- **Admin SEO panel** per row: meta-title length meter (~60), description meter (~160), Google-result preview card, OG-image preview, sitemap-inclusion toggle. This is the "RankMath feel."
+- **NOT realistic:** RankMath's content scoring (keyword density, readability score) — needs NLP heuristics, post-launch only.
+- Estimate: ~3 days for foundations + admin panel.
+
+### Auto-save + unsaved-changes guard
+
+Long admin forms (events, ministries, page-sections) lose work on accidental tab close. Add `beforeunload` warning + opt-in 30-second auto-save to a `drafts` jsonb column on each row.
+
+### Drag-and-drop reorder for page_sections
+
+Listed in `project_future_upgrades.md`. Replace up/down arrow buttons with `@dnd-kit/sortable`. Section editor already passes ordered indices to the saver — purely UI swap.
+
+### Image alt-text linter
+
+Warn at admin-level when alt is empty before publish. a11y win, two-hour change.
+
+### Scheduled publishing
+
+`backend.html §17` deferred. Add `publishesAt` timestamp + a Vercel Cron handler that flips drafts to published when due. Useful for parish announcements.
+
+### Audit log + soft-delete restore UI
+
+Both deferred per `backend.html §17`. lastEditedBy is the partial answer. Full audit log = a `mutation_log` table writing every change. Soft-delete restore = surfacing archived rows with a "Restore" button.
+
+### Bulk admin actions
+
+Bulk archive / publish / delete on list pages. Quality-of-life polish.
+
+### Custom 404 + 500 pages
+
+Currently bare Next.js defaults. Add parish branding.
+
+### Side-by-side public preview pane
+
+For long pages, an iframe of the rendered public page next to the editor would close the loop on "preview before publish." Listed in `project_future_upgrades.md`.
+
+### Docs gaps
+
+- `/website/README.md` — quick local-setup doc for new devs.
+- `CHANGELOG.md` — STATUS.md mixes shipped/in-progress; a public-facing changelog helps launch comms.
+- Deployment runbook — what to do if a Neon migration fails, how to roll back a Vercel deploy, where logs live.

@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { editorFields } from "@/lib/audit";
 import { ministries } from "@/db/schema";
 import {
   MINISTRY_CATEGORIES,
@@ -120,7 +121,7 @@ export async function updateMinistryAction(
         leadStaffId: parsed.data.leadStaffId || null,
         photoBlobKey: parsed.data.photoBlobKey || null,
         contactEmail: parsed.data.contactEmail || null,
-        updatedAt: new Date(),
+        updatedAt: new Date(), ...(await editorFields()),
       })
       .where(eq(ministries.id, id))
       .returning({ id: ministries.id, slug: ministries.slug });

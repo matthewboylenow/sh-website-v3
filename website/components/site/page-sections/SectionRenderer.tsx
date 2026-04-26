@@ -441,7 +441,12 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
                     href={p.ctaHref}
                     target={isExternal(p.ctaHref) ? "_blank" : undefined}
                     rel={isExternal(p.ctaHref) ? "noopener noreferrer" : undefined}
-                    className="mt-5 inline-flex items-center gap-2 rounded-pill bg-white/15 px-5 py-2.5 text-sm font-semibold backdrop-blur transition-colors hover:bg-white/25"
+                    className={
+                      "mt-5 inline-flex items-center gap-2 rounded-pill px-5 py-2.5 text-sm font-semibold backdrop-blur transition-colors " +
+                      (onDark
+                        ? "bg-white/15 text-white hover:bg-white/25 hover:text-white"
+                        : "bg-navy text-white hover:bg-navy-dark hover:text-white")
+                    }
                   >
                     {p.ctaLabel}
                     <span aria-hidden="true">→</span>

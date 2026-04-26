@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { editorFields } from "@/lib/audit";
 import { staff } from "@/db/schema";
 import {
   StaffCreateSchema,
@@ -95,7 +96,7 @@ export async function updateStaffAction(
         ...parsed.data,
         email: parsed.data.email || null,
         photoBlobKey: parsed.data.photoBlobKey || null,
-        updatedAt: new Date(),
+        updatedAt: new Date(), ...(await editorFields()),
       })
       .where(eq(staff.id, id))
       .returning({ id: staff.id, slug: staff.slug });

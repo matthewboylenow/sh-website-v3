@@ -14,9 +14,13 @@ import { updateSiteSettingsGeneralAction } from "./_actions";
 export function SettingsForm({
   initial,
   logoPreviewUrl,
+  faviconPreviewUrl,
+  appleTouchIconPreviewUrl,
 }: {
   initial: SiteSettings;
   logoPreviewUrl?: string | null;
+  faviconPreviewUrl?: string | null;
+  appleTouchIconPreviewUrl?: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -62,8 +66,7 @@ export function SettingsForm({
       )}
 
       <Section title="Branding">
-        <AdminField
-          name="logoBlobKey"
+        <MediaField
           label="Logo"
           hint="PNG or SVG with a transparent background works best — the masthead pill is dark navy. Max-height in the header is 36 px (auto-scaled)."
           errors={errors.logoBlobKey}
@@ -75,7 +78,7 @@ export function SettingsForm({
             initialAlt={initial.logoAlt ?? ""}
             pathPrefix="site/branding"
           />
-        </AdminField>
+        </MediaField>
         <AdminField
           name="logoAlt"
           label="Logo alt text"
@@ -91,6 +94,32 @@ export function SettingsForm({
             className="form-input"
           />
         </AdminField>
+        <MediaField
+          label="Favicon"
+          hint="32×32 or 64×64 PNG. Used as the browser-tab icon. Square is best."
+          errors={errors.faviconBlobKey}
+        >
+          <PhotoUploader
+            name="faviconBlobKey"
+            initialKey={initial.faviconBlobKey ?? null}
+            initialPreviewUrl={faviconPreviewUrl}
+            pathPrefix="site/branding"
+            accept="image/png,image/x-icon,image/svg+xml"
+          />
+        </MediaField>
+        <MediaField
+          label="Apple touch icon"
+          hint="180×180 PNG. Used when someone adds the site to their iOS home screen. Optional — falls back to the favicon."
+          errors={errors.appleTouchIconBlobKey}
+        >
+          <PhotoUploader
+            name="appleTouchIconBlobKey"
+            initialKey={initial.appleTouchIconBlobKey ?? null}
+            initialPreviewUrl={appleTouchIconPreviewUrl}
+            pathPrefix="site/branding"
+            accept="image/png"
+          />
+        </MediaField>
       </Section>
 
       <Section title="Contact">
@@ -279,5 +308,38 @@ function Section({
       <h2 className="font-serif text-lg font-bold text-navy">{title}</h2>
       <div className="mt-4 space-y-5">{children}</div>
     </section>
+  );
+}
+
+/**
+ * Like AdminField but uses <div> instead of <label> as the wrapper.
+ * PhotoUploader contains a hidden file input — wrapping it in a label
+ * with mismatched htmlFor makes browsers swallow the click that's
+ * supposed to open the OS file picker. Use this for any media input.
+ */
+function MediaField({
+  label,
+  hint,
+  errors,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  errors?: string[];
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="block">
+      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-3">
+        {label}
+      </span>
+      <div className="mt-1">{children}</div>
+      {hint && !errors?.length && (
+        <p className="mt-1 text-xs text-ink-3">{hint}</p>
+      )}
+      {errors?.length ? (
+        <p className="mt-1 text-xs text-rust-dark">{errors.join(" · ")}</p>
+      ) : null}
+    </div>
   );
 }

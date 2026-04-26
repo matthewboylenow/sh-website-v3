@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { siteSettings } from "@/db/schema";
+import { editorFields } from "@/lib/audit";
 import {
   SiteSettingsGeneralSchema,
   SiteSettingsGivingSchema,
@@ -49,6 +50,8 @@ function parseGeneralForm(formData: FormData) {
     welcomeFormRecipients: recipients,
     logoBlobKey: get("logoBlobKey") || null,
     logoAlt: get("logoAlt") || null,
+    faviconBlobKey: get("faviconBlobKey") || null,
+    appleTouchIconBlobKey: get("appleTouchIconBlobKey") || null,
     footerCopy: get("footerCopy") || null,
     bottomBarHtml: get("bottomBarHtml") || null,
     densityScale: get("densityScale") || "1.00",
@@ -84,10 +87,13 @@ export async function updateSiteSettingsGeneralAction(
         welcomeFormRecipients: parsed.data.welcomeFormRecipients,
         logoBlobKey: parsed.data.logoBlobKey,
         logoAlt: parsed.data.logoAlt,
+        faviconBlobKey: parsed.data.faviconBlobKey,
+        appleTouchIconBlobKey: parsed.data.appleTouchIconBlobKey,
         footerCopy: parsed.data.footerCopy,
         bottomBarHtml: parsed.data.bottomBarHtml,
         densityScale: parsed.data.densityScale,
         updatedAt: new Date(),
+        ...(await editorFields()),
       })
       .where(eq(siteSettings.id, 1));
     revalidateTag("site-settings");
@@ -166,6 +172,7 @@ export async function updateSiteSettingsGivingAction(
           seasonal: parsed.data.seasonal,
         },
         updatedAt: new Date(),
+        ...(await editorFields()),
       })
       .where(eq(siteSettings.id, 1));
     revalidateTag("site-settings");

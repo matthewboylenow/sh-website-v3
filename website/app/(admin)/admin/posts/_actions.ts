@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { editorFields } from "@/lib/audit";
 import { posts } from "@/db/schema";
 import { PostCreateSchema, PostUpdateSchema } from "@/lib/validators/posts";
 
@@ -119,7 +120,7 @@ export async function updatePostAction(
         photoBlobKey: parsed.data.photoBlobKey || null,
         authorName: parsed.data.authorName || null,
         publishedAt,
-        updatedAt: new Date(),
+        updatedAt: new Date(), ...(await editorFields()),
       })
       .where(eq(posts.id, id))
       .returning({ id: posts.id, slug: posts.slug });

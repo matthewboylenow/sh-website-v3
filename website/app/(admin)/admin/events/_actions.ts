@@ -10,6 +10,7 @@ import {
   EventCreateSchema,
   EventUpdateSchema,
 } from "@/lib/validators/events";
+import { editorFields } from "@/lib/audit";
 
 /**
  * Server Actions for the events admin. All mutations end with
@@ -113,6 +114,7 @@ export async function createEventAction(formData: FormData): Promise<ActionResul
         recurrence: parsed.data.recurrence ?? null,
         exceptionDates: parsed.data.exceptionDates ?? [],
         createdBy: guard.session.user.id,
+        ...(await editorFields()),
       })
       .returning({ id: events.id, slug: events.slug });
 
@@ -155,6 +157,7 @@ export async function updateEventAction(
         recurrence: parsed.data.recurrence ?? null,
         exceptionDates: parsed.data.exceptionDates ?? [],
         updatedAt: new Date(),
+        ...(await editorFields()),
       })
       .where(eq(events.id, id))
       .returning({ id: events.id, slug: events.slug });
@@ -181,7 +184,7 @@ export async function setEventStatusAction(
 
   const [row] = await db
     .update(events)
-    .set({ status, updatedAt: new Date() })
+    .set({ status, updatedAt: new Date(), ...(await editorFields()) })
     .where(eq(events.id, id))
     .returning({ id: events.id, slug: events.slug });
   revalidateTag("events");
@@ -197,7 +200,7 @@ export async function deleteEventAndRedirect(id: string) {
   if (!guard.ok) return;
   await db
     .update(events)
-    .set({ status: "archived", updatedAt: new Date() })
+    .set({ status: "archived", updatedAt: new Date(), ...(await editorFields()) })
     .where(eq(events.id, id));
   revalidateTag("events");
   redirect("/admin/events");

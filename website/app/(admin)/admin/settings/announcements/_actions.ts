@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { editorFields } from "@/lib/audit";
 import {
   ANNOUNCEMENT_ACCENTS,
   ANNOUNCEMENT_KINDS,
@@ -138,7 +139,7 @@ export async function updateAnnouncementAction(
             ? String(parsed.data.showDelaySeconds)
             : undefined,
         imageBlobKey: parsed.data.imageBlobKey || null,
-        updatedAt: new Date(),
+        updatedAt: new Date(), ...(await editorFields()),
       })
       .where(eq(announcements.id, id))
       .returning({ id: announcements.id });

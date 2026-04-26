@@ -154,6 +154,8 @@ export const staff = pgTable(
     photoBlobKey: text("photo_blob_key").references(() => blobAssets.key),
     orderingPriority: integer("ordering_priority").default(0).notNull(),
     isActive: boolean("is_active").default(true).notNull(),
+    lastEditedBy: uuid("last_edited_by").references(() => users.id),
+    lastEditedAt: timestamp("last_edited_at"),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [uniqueIndex("staff_slug_uq").on(t.slug)],
@@ -200,6 +202,8 @@ export const ministries = pgTable(
       .$type<MinistryInquiryConfig>()
       .notNull()
       .default({ enabled: true, buttons: [{ kind: "inquire", label: "Inquire about this ministry", enabled: true }] }),
+    lastEditedBy: uuid("last_edited_by").references(() => users.id),
+    lastEditedAt: timestamp("last_edited_at"),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [
@@ -239,6 +243,8 @@ export const formationPages = pgTable(
       .notNull()
       .default("draft"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    lastEditedBy: uuid("last_edited_by").references(() => users.id),
+    lastEditedAt: timestamp("last_edited_at"),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [
@@ -478,6 +484,8 @@ export const pageSections = pgTable(
     kind: text("kind").notNull(),
     payload: jsonb("payload").$type<PageSectionPayload>().notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    lastEditedBy: uuid("last_edited_by").references(() => users.id),
+    lastEditedAt: timestamp("last_edited_at"),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [
@@ -553,6 +561,8 @@ export const inquiries = pgTable(
     notes: text("notes"),
     assignedTo: uuid("assigned_to").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    lastEditedBy: uuid("last_edited_by").references(() => users.id),
+    lastEditedAt: timestamp("last_edited_at"),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [
@@ -638,6 +648,8 @@ export const announcements = pgTable(
       .default("navy"),
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    lastEditedBy: uuid("last_edited_by").references(() => users.id),
+    lastEditedAt: timestamp("last_edited_at"),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [
@@ -671,6 +683,8 @@ export const posts = pgTable(
       .default("draft"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    lastEditedBy: uuid("last_edited_by").references(() => users.id),
+    lastEditedAt: timestamp("last_edited_at"),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [
@@ -746,6 +760,8 @@ export const events = pgTable(
       .default("draft"),
     createdBy: uuid("created_by").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    lastEditedBy: uuid("last_edited_by").references(() => users.id),
+    lastEditedAt: timestamp("last_edited_at"),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [
@@ -777,6 +793,8 @@ export const massTimes = pgTable(
     }),
     notes: text("notes"),
     isActive: boolean("is_active").default(true).notNull(),
+    lastEditedBy: uuid("last_edited_by").references(() => users.id),
+    lastEditedAt: timestamp("last_edited_at"),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [
@@ -822,6 +840,8 @@ export const seasonalBanners = pgTable(
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
     endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
     isActive: boolean("is_active").default(true).notNull(),
+    lastEditedBy: uuid("last_edited_by").references(() => users.id),
+    lastEditedAt: timestamp("last_edited_at"),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [index("seasonal_banners_window_idx").on(t.startsAt, t.endsAt)],
@@ -1036,6 +1056,13 @@ export const siteSettings = pgTable(
      *  reads best on the navy/85 backdrop. */
     logoBlobKey: text("logo_blob_key").references(() => blobAssets.key),
     logoAlt: text("logo_alt"),
+    /** Browser-tab icon. 32×32 or 64×64 PNG/SVG/ICO. Served via
+     *  app/icon.tsx route handler — Next.js Metadata API picks it up. */
+    faviconBlobKey: text("favicon_blob_key").references(() => blobAssets.key),
+    /** 180×180 PNG used by iOS Add-to-Home-Screen. Falls back to favicon. */
+    appleTouchIconBlobKey: text("apple_touch_icon_blob_key").references(
+      () => blobAssets.key,
+    ),
     footerCopy: text("footer_copy"),
     /** Sanitized HTML rendered in the thin bar below the main footer —
      *  copyright, privacy/terms links, etc. */
@@ -1043,6 +1070,8 @@ export const siteSettings = pgTable(
     densityScale: numeric("density_scale", { precision: 3, scale: 2 })
       .default("1.00")
       .notNull(),
+    lastEditedBy: uuid("last_edited_by").references(() => users.id),
+    lastEditedAt: timestamp("last_edited_at"),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [check("site_settings_singleton_ck", sql`${t.id} = 1`)],

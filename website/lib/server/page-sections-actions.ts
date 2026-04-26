@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { db } from "@/db";
+import { editorFields } from "@/lib/audit";
 import { pageSections, type PageSectionParent } from "@/db/schema";
 import {
   MinistrySectionsManifestSchema,
@@ -43,6 +44,7 @@ export async function saveSectionsForParent(
         ),
       );
     if (parsed.data.sections.length > 0) {
+      const audit = await editorFields();
       await db.insert(pageSections).values(
         parsed.data.sections.map((s, i) => ({
           parentKind,
@@ -50,6 +52,7 @@ export async function saveSectionsForParent(
           position: i,
           kind: s.payload.kind,
           payload: s.payload,
+          ...audit,
         })),
       );
     }

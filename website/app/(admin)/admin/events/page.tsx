@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { events } from "@/db/schema";
+import { events, users } from "@/db/schema";
 import {
   formatMonthShort,
   formatTimeOfDay,
@@ -41,8 +41,11 @@ export default async function AdminEventsList({
       isFeatured: events.isFeatured,
       audiences: events.audiences,
       updatedAt: events.updatedAt,
+      lastEditedAt: events.lastEditedAt,
+      lastEditedByName: users.name,
     })
     .from(events)
+    .leftJoin(users, eq(users.id, events.lastEditedBy))
     .where(where as never)
     .orderBy(desc(events.startsAt))
     .limit(200);
@@ -152,6 +155,11 @@ export default async function AdminEventsList({
                     </td>
                     <td className="px-4 py-3 text-xs text-ink-3">
                       {formatRelative(toDate(r.updatedAt))}
+                      {r.lastEditedByName && (
+                        <div className="text-[10px] text-ink-3/80">
+                          by {r.lastEditedByName}
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <StatusPill status={r.status} />

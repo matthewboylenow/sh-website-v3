@@ -21,6 +21,8 @@ export const SiteSettingsGeneralSchema = z.object({
   welcomeFormRecipients: z.array(z.email()).default([]),
   logoBlobKey: z.string().max(500).optional().nullable(),
   logoAlt: z.string().max(120).optional().nullable(),
+  faviconBlobKey: z.string().max(500).optional().nullable(),
+  appleTouchIconBlobKey: z.string().max(500).optional().nullable(),
   footerCopy: z.string().max(1000).optional().nullable(),
   bottomBarHtml: z.string().max(1000).optional().nullable(),
   densityScale: z

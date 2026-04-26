@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { editorFields } from "@/lib/audit";
 import { seasonalBanners } from "@/db/schema";
 import {
   SeasonalBannerCreateSchema,
@@ -92,7 +93,7 @@ export async function updateBannerAction(
         ...parsed.data,
         ctaUrl: parsed.data.ctaUrl || null,
         photoBlobKey: parsed.data.photoBlobKey || null,
-        updatedAt: new Date(),
+        updatedAt: new Date(), ...(await editorFields()),
       })
       .where(eq(seasonalBanners.id, id))
       .returning({ id: seasonalBanners.id });

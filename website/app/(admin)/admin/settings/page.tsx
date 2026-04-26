@@ -15,7 +15,12 @@ export default async function AdminSiteSettingsPage() {
     .where(eq(siteSettings.id, 1))
     .limit(1);
   if (!row) notFound();
-  const logoPreviewUrl = await assetUrl(row.logoBlobKey);
+  const [logoPreviewUrl, faviconPreviewUrl, appleTouchIconPreviewUrl] =
+    await Promise.all([
+      assetUrl(row.logoBlobKey),
+      assetUrl(row.faviconBlobKey),
+      assetUrl(row.appleTouchIconBlobKey),
+    ]);
 
   return (
     <div>
@@ -34,7 +39,12 @@ export default async function AdminSiteSettingsPage() {
       </header>
 
       <div className="mt-8">
-        <SettingsForm initial={row} logoPreviewUrl={logoPreviewUrl} />
+        <SettingsForm
+          initial={row}
+          logoPreviewUrl={logoPreviewUrl}
+          faviconPreviewUrl={faviconPreviewUrl}
+          appleTouchIconPreviewUrl={appleTouchIconPreviewUrl}
+        />
       </div>
     </div>
   );

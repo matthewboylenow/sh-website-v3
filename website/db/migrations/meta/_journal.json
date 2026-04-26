@@ -120,6 +120,13 @@
       "when": 1777205000000,
       "tag": "0016_pastor_welcome_block",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1777210000000,
+      "tag": "0017_favicon_and_last_edited_by",
+      "breakpoints": true
     }
   ]
 }

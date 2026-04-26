@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { editorFields } from "@/lib/audit";
 import { bulletins } from "@/db/schema";
 import {
   BulletinCreateSchema,
@@ -64,6 +65,7 @@ export async function createBulletinAction(
         pageCount: parsed.data.pageCount,
         // Auto-publish on create — bulletins go live immediately.
         publishedAt: parsed.data.publishedAt ?? new Date(),
+        ...(await editorFields()),
       })
       .returning({ id: bulletins.id });
     revalidateTag("bulletins");
@@ -99,7 +101,7 @@ export async function updateBulletinAction(
   try {
     const [row] = await db
       .update(bulletins)
-      .set(parsed.data)
+      .set({ ...parsed.data, ...(await editorFields()) })
       .where(eq(bulletins.id, id))
       .returning({ id: bulletins.id });
     revalidateTag("bulletins");

@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { editorFields } from "@/lib/audit";
 import { massTimes } from "@/db/schema";
 import {
   MASS_KINDS,
@@ -107,7 +108,7 @@ export async function updateMassTimeAction(
         ...parsed.data,
         presiderId: parsed.data.presiderId || null,
         liveStreamUrl: parsed.data.liveStreamUrl || null,
-        updatedAt: new Date(),
+        updatedAt: new Date(), ...(await editorFields()),
       })
       .where(eq(massTimes.id, id))
       .returning({ id: massTimes.id });

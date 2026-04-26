@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { editorFields } from "@/lib/audit";
 import { formationPages } from "@/db/schema";
 import {
   FormationCreateSchema,
@@ -109,7 +110,7 @@ export async function updateFormationAction(
         photoBlobKey: parsed.data.photoBlobKey || null,
         contactEmail: parsed.data.contactEmail || null,
         leadStaffId: parsed.data.leadStaffId || null,
-        updatedAt: new Date(),
+        updatedAt: new Date(), ...(await editorFields()),
       })
       .where(eq(formationPages.id, id))
       .returning({ id: formationPages.id, slug: formationPages.slug });
