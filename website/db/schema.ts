@@ -496,6 +496,66 @@ export const inquiryEvents = pgTable(
 );
 
 /* ------------------------------------------------------------------ */
+/* Announcements — slide-ins + modal popups (e.g. closures)            */
+/* ------------------------------------------------------------------ */
+
+export const ANNOUNCEMENT_KINDS = ["slide_in", "modal"] as const;
+export type AnnouncementKind = (typeof ANNOUNCEMENT_KINDS)[number];
+
+export const ANNOUNCEMENT_ACCENTS = ["navy", "rust", "gold"] as const;
+export type AnnouncementAccent = (typeof ANNOUNCEMENT_ACCENTS)[number];
+
+/** Repeatable date rows in an announcement card —
+ *  e.g. "Apr 17 · Wear Blue Day". */
+export type AnnouncementDateRow = { label: string; detail: string };
+
+export const announcements = pgTable(
+  "announcements",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    kind: text("kind", { enum: ANNOUNCEMENT_KINDS }).notNull().default("slide_in"),
+    status: text("status", { enum: ["draft", "published", "archived"] })
+      .notNull()
+      .default("draft"),
+    /** Higher priority wins when multiple are active simultaneously. */
+    priority: integer("priority").default(0).notNull(),
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+
+    /* ---- Content ---- */
+    ribbon: text("ribbon"), // small uppercase eyebrow
+    title: text("title").notNull(),
+    body: text("body"), // sanitized HTML
+    imageBlobKey: text("image_blob_key").references(() => blobAssets.key),
+    dateRows: jsonb("date_rows")
+      .$type<AnnouncementDateRow[]>()
+      .notNull()
+      .default([]),
+    ctaLabel: text("cta_label"),
+    ctaHref: text("cta_href"),
+
+    /* ---- Behavior ---- */
+    /** Seconds to wait after page load before sliding in (slide_in only). */
+    showDelaySeconds: numeric("show_delay_seconds", { precision: 4, scale: 1 })
+      .default("2.5")
+      .notNull(),
+    /** Days a dismissal sticks in localStorage. 0 = session-only. */
+    dismissDays: integer("dismiss_days").default(7).notNull(),
+    /** Top-border + ribbon-tint color. */
+    accent: text("accent", { enum: ANNOUNCEMENT_ACCENTS })
+      .notNull()
+      .default("navy"),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("announcements_status_idx").on(t.status),
+    index("announcements_starts_at_idx").on(t.startsAt),
+  ],
+);
+
+/* ------------------------------------------------------------------ */
 /* Posts — pastor letters + stewardship reports                        */
 /* ------------------------------------------------------------------ */
 
@@ -900,6 +960,7 @@ export type Ministry = typeof ministries.$inferSelect;
 export type PageSection = typeof pageSections.$inferSelect;
 export type Event = typeof events.$inferSelect;
 export type Post = typeof posts.$inferSelect;
+export type Announcement = typeof announcements.$inferSelect;
 export type FormationPage = typeof formationPages.$inferSelect;
 export type MassTime = typeof massTimes.$inferSelect;
 export type Bulletin = typeof bulletins.$inferSelect;
