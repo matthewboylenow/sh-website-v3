@@ -24,9 +24,10 @@ export function RichTextEditor({
   initialHtml,
   pathPrefix,
   placeholder,
+  onChange,
 }: {
-  /** Form field name. Hidden input carries the resulting HTML. */
-  name: string;
+  /** Form field name. When provided, a hidden input carries the resulting HTML. */
+  name?: string;
   /** Initial HTML when editing an existing row. */
   initialHtml?: string | null;
   /**
@@ -35,6 +36,8 @@ export function RichTextEditor({
    */
   pathPrefix: string;
   placeholder?: string;
+  /** Optional controlled-state callback. Use *or* `name`, not both. */
+  onChange?: (html: string) => void;
 }) {
   const [html, setHtml] = useState<string>(initialHtml ?? "");
 
@@ -65,7 +68,9 @@ export function RichTextEditor({
       },
     },
     onUpdate: ({ editor }) => {
-      setHtml(editor.getHTML());
+      const next = editor.getHTML();
+      setHtml(next);
+      onChange?.(next);
     },
   });
 
@@ -87,7 +92,7 @@ export function RichTextEditor({
     <div className="rounded-md border border-rule bg-white">
       <Toolbar editor={editor} pathPrefix={pathPrefix} />
       <EditorContent editor={editor} />
-      <input type="hidden" name={name} value={html} />
+      {name && <input type="hidden" name={name} value={html} />}
     </div>
   );
 }

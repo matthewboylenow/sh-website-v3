@@ -3,8 +3,14 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/site/Container";
 import { PhotoPlaceholder } from "@/components/site/PhotoPlaceholder";
 import { RichTextRenderer } from "@/components/site/RichTextRenderer";
+import { SectionRenderer } from "@/components/site/ministry-sections/SectionRenderer";
 import { assetUrl } from "@/lib/blob";
-import { getMinistryBySlug } from "@/lib/queries/ministries.query";
+import {
+  getMinistryBySlug,
+  getMinistrySections,
+} from "@/lib/queries/ministries.query";
+import { buildSectionContext } from "@/lib/section-resolve";
+import type { MinistrySectionPayload } from "@/db/schema";
 import { MinistryInquiryForm } from "./MinistryInquiryForm";
 
 export const revalidate = 3600;
@@ -33,7 +39,12 @@ export default async function MinistryDetailPage({
   if (!data) notFound();
 
   const { ministry: m } = data;
-  const photoUrl = await assetUrl(m.photoBlobKey);
+  const [photoUrl, sectionRows] = await Promise.all([
+    assetUrl(m.photoBlobKey),
+    getMinistrySections(m.id),
+  ]);
+  const sections = sectionRows.map((r) => r.payload as MinistrySectionPayload);
+  const sectionCtx = await buildSectionContext(sections);
 
   return (
     <>
@@ -133,6 +144,14 @@ export default async function MinistryDetailPage({
               </div>
             </aside>
           </div>
+
+          {sections.length > 0 && (
+            <div className="mt-16 space-y-12">
+              {sections.map((s, i) => (
+                <SectionRenderer key={i} payload={s} ctx={sectionCtx} />
+              ))}
+            </div>
+          )}
 
           {m.inquiryConfig?.enabled &&
             m.inquiryConfig.buttons.some((b) => b.enabled) && (

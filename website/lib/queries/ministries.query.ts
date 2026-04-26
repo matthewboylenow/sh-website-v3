@@ -1,7 +1,7 @@
 import { and, asc, eq } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db } from "@/db";
-import { ministries, staff } from "@/db/schema";
+import { ministries, ministrySections, staff } from "@/db/schema";
 
 export const getPublishedMinistries = unstable_cache(
   async () =>
@@ -50,6 +50,22 @@ export const getSpotlightMinistries = unstable_cache(
       .limit(limit),
   ["ministries:spotlight"],
   { tags: ["ministries"], revalidate: 3600 },
+);
+
+export const getMinistrySections = unstable_cache(
+  async (ministryId: string) =>
+    db
+      .select({
+        id: ministrySections.id,
+        kind: ministrySections.kind,
+        position: ministrySections.position,
+        payload: ministrySections.payload,
+      })
+      .from(ministrySections)
+      .where(eq(ministrySections.ministryId, ministryId))
+      .orderBy(asc(ministrySections.position)),
+  ["ministry-sections:by-ministry"],
+  { tags: ["ministries", "ministry-sections"], revalidate: 600 },
 );
 
 /** Distinct category values currently in use — for the /ministries

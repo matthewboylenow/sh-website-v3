@@ -1,0 +1,1170 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import type {
+  ButtonItem,
+  CardGridCard,
+  EmbedPayload,
+  LinkItem,
+  MinistrySectionPayload,
+  SectionHeader,
+} from "@/db/schema";
+import { saveMinistrySectionsAction } from "./_actions";
+import { SectionImagePicker } from "./SectionImagePicker";
+
+/**
+ * Single-state controlled editor over the ministry-sections array.
+ * Save sends the full ordered array via Server Action with replace-set
+ * semantics. Image previews come from a server-resolved Map; new uploads
+ * inject themselves into the local map so the in-flight section renders
+ * its picture without a refresh round-trip.
+ */
+
+type Row = { clientId: string; payload: MinistrySectionPayload };
+
+type StaffOption = { id: string; name: string; role: string | null };
+
+let __id = 0;
+const newClientId = () => `${Date.now()}-${++__id}`;
+
+export function SectionEditor({
+  ministryId,
+  initial,
+  initialImageUrls,
+  staffOptions,
+}: {
+  ministryId: string;
+  initial: { id: string; payload: MinistrySectionPayload }[];
+  /** blobKey → URL, server-resolved on first render. */
+  initialImageUrls: Record<string, string>;
+  staffOptions: StaffOption[];
+}) {
+  const router = useRouter();
+  const [rows, setRows] = useState<Row[]>(
+    initial.map((s) => ({ clientId: s.id, payload: s.payload })),
+  );
+  const [imgUrls, setImgUrls] = useState<Record<string, string>>(initialImageUrls);
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  const updateAt = (i: number, replacer: (p: MinistrySectionPayload) => MinistrySectionPayload) =>
+    setRows((cur) =>
+      cur.map((r, idx) => (idx === i ? { ...r, payload: replacer(r.payload) } : r)),
+    );
+  const removeAt = (i: number) => setRows((cur) => cur.filter((_, idx) => idx !== i));
+  const moveAt = (i: number, dir: -1 | 1) => {
+    setRows((cur) => {
+      const next = [...cur];
+      const t = i + dir;
+      if (t < 0 || t >= next.length) return cur;
+      const a = next[i];
+      const b = next[t];
+      if (!a || !b) return cur;
+      next[i] = b;
+      next[t] = a;
+      return next;
+    });
+  };
+  const addRow = (payload: MinistrySectionPayload) =>
+    setRows((cur) => [...cur, { clientId: newClientId(), payload }]);
+
+  const registerImage = (key: string, url: string) =>
+    setImgUrls((cur) => ({ ...cur, [key]: url }));
+
+  const onSave = () => {
+    setError(null);
+    setSaved(false);
+    start(async () => {
+      const r = await saveMinistrySectionsAction(ministryId, {
+        sections: rows.map((r) => ({ clientId: r.clientId, payload: r.payload })),
+      });
+      if (!r.ok) {
+        setError(r.error);
+        return;
+      }
+      setSaved(true);
+      router.refresh();
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      {rows.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-rule bg-cream/40 px-6 py-12 text-center text-sm text-ink-3">
+          No sections yet. Add one below to start building the page.
+        </p>
+      ) : (
+        <ul className="space-y-3">
+          {rows.map((r, i) => (
+            <li key={r.clientId}>
+              <BlockRow
+                payload={r.payload}
+                index={i}
+                total={rows.length}
+                onUpdate={(replacer) => updateAt(i, replacer)}
+                onMove={(dir) => moveAt(i, dir)}
+                onRemove={() => removeAt(i)}
+                ministryId={ministryId}
+                imgUrls={imgUrls}
+                registerImage={registerImage}
+                staffOptions={staffOptions}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <AddBlockMenu onAdd={addRow} />
+
+      <div className="sticky bottom-0 -mx-4 border-t border-rule bg-white/95 p-4 backdrop-blur sm:-mx-8">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={pending}
+            className="rounded-pill bg-rust px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rust-dark disabled:opacity-70"
+          >
+            {pending ? "Saving…" : "Save sections"}
+          </button>
+          {error && <span className="text-sm font-semibold text-rust-dark">{error}</span>}
+          {saved && !error && (
+            <span className="rounded-md bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+              Saved.
+            </span>
+          )}
+          <span className="ml-auto text-xs text-ink-3">{rows.length}/40 sections</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BlockRow({
+  payload,
+  index,
+  total,
+  onUpdate,
+  onMove,
+  onRemove,
+  ministryId,
+  imgUrls,
+  registerImage,
+  staffOptions,
+}: {
+  payload: MinistrySectionPayload;
+  index: number;
+  total: number;
+  onUpdate: (replacer: (p: MinistrySectionPayload) => MinistrySectionPayload) => void;
+  onMove: (dir: -1 | 1) => void;
+  onRemove: () => void;
+  ministryId: string;
+  imgUrls: Record<string, string>;
+  registerImage: (key: string, url: string) => void;
+  staffOptions: StaffOption[];
+}) {
+  return (
+    <div className="rounded-lg border border-rule bg-white p-4">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <span className="rounded-md bg-navy-pale px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-navy">
+          {prettyKind(payload.kind)}
+        </span>
+        <button
+          type="button"
+          onClick={() => onMove(-1)}
+          disabled={index === 0}
+          title="Move up"
+          className="rounded-md border border-rule bg-white px-2 py-0.5 text-xs hover:border-navy disabled:opacity-30"
+        >
+          ↑
+        </button>
+        <button
+          type="button"
+          onClick={() => onMove(1)}
+          disabled={index === total - 1}
+          title="Move down"
+          className="rounded-md border border-rule bg-white px-2 py-0.5 text-xs hover:border-navy disabled:opacity-30"
+        >
+          ↓
+        </button>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="ml-auto rounded-md border border-rule bg-white px-2 py-1 text-xs text-rust-dark hover:border-rust"
+        >
+          ✕ Remove
+        </button>
+      </div>
+
+      <BlockEditor
+        payload={payload}
+        onUpdate={onUpdate}
+        ministryId={ministryId}
+        imgUrls={imgUrls}
+        registerImage={registerImage}
+        staffOptions={staffOptions}
+      />
+    </div>
+  );
+}
+
+function HeaderEditor({
+  header,
+  onUpdate,
+  required = false,
+}: {
+  header: SectionHeader | undefined;
+  onUpdate: (next: SectionHeader) => void;
+  required?: boolean;
+}) {
+  const h = header ?? {};
+  return (
+    <div className="grid gap-2 sm:grid-cols-[2fr_2fr_1fr]">
+      <input
+        type="text"
+        value={h.heading ?? ""}
+        maxLength={120}
+        placeholder={required ? "Heading (required)" : "Heading (optional)"}
+        onChange={(e) => onUpdate({ ...h, heading: e.target.value })}
+        className="form-input"
+      />
+      <input
+        type="text"
+        value={h.subheading ?? ""}
+        maxLength={200}
+        placeholder="Subheading (optional)"
+        onChange={(e) => onUpdate({ ...h, subheading: e.target.value })}
+        className="form-input"
+      />
+      <input
+        type="text"
+        value={h.anchorId ?? ""}
+        maxLength={60}
+        placeholder="anchor-id"
+        pattern="[a-z0-9-]*"
+        onChange={(e) => onUpdate({ ...h, anchorId: e.target.value })}
+        className="form-input font-mono text-xs"
+      />
+    </div>
+  );
+}
+
+function BlockEditor({
+  payload,
+  onUpdate,
+  ministryId,
+  imgUrls,
+  registerImage,
+  staffOptions,
+}: {
+  payload: MinistrySectionPayload;
+  onUpdate: (replacer: (p: MinistrySectionPayload) => MinistrySectionPayload) => void;
+  ministryId: string;
+  imgUrls: Record<string, string>;
+  registerImage: (key: string, url: string) => void;
+  staffOptions: StaffOption[];
+}) {
+  const path = `ministries/${ministryId}/sections`;
+
+  switch (payload.kind) {
+    case "heading":
+      return (
+        <div className="space-y-2">
+          <HeaderEditor
+            header={payload.header}
+            required
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <select
+            value={payload.level ?? 2}
+            onChange={(e) =>
+              onUpdate(() => ({ ...payload, level: Number(e.target.value) === 3 ? 3 : 2 }))
+            }
+            className="form-input w-32"
+          >
+            <option value={2}>H2 (large)</option>
+            <option value={3}>H3 (small)</option>
+          </select>
+        </div>
+      );
+
+    case "rich_text":
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <RichTextEditor
+            initialHtml={payload.html}
+            pathPrefix={`${path}/rich`}
+            placeholder="Body…"
+            onChange={(html) => onUpdate(() => ({ ...payload, html }))}
+          />
+        </div>
+      );
+
+    case "image":
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <SectionImagePicker
+            value={payload.blobKey}
+            previewUrl={payload.blobKey ? imgUrls[payload.blobKey] : undefined}
+            pathPrefix={path}
+            label="Image"
+            onChange={(next) => {
+              if (next) {
+                registerImage(next.key, next.url);
+                onUpdate(() => ({ ...payload, blobKey: next.key }));
+              } else {
+                onUpdate(() => ({ ...payload, blobKey: "" }));
+              }
+            }}
+          />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <input
+              type="text"
+              value={payload.alt ?? ""}
+              maxLength={200}
+              placeholder="Alt text"
+              onChange={(e) => onUpdate(() => ({ ...payload, alt: e.target.value }))}
+              className="form-input"
+            />
+            <input
+              type="text"
+              value={payload.caption ?? ""}
+              maxLength={300}
+              placeholder="Caption (optional)"
+              onChange={(e) => onUpdate(() => ({ ...payload, caption: e.target.value }))}
+              className="form-input"
+            />
+          </div>
+          <input
+            type="text"
+            value={payload.href ?? ""}
+            maxLength={1000}
+            placeholder="Click-through URL (optional)"
+            onChange={(e) => onUpdate(() => ({ ...payload, href: e.target.value }))}
+            className="form-input font-mono text-sm"
+          />
+        </div>
+      );
+
+    case "image_text":
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <div className="grid gap-3 sm:grid-cols-[200px_1fr]">
+            <SectionImagePicker
+              value={payload.blobKey}
+              previewUrl={payload.blobKey ? imgUrls[payload.blobKey] : undefined}
+              pathPrefix={path}
+              onChange={(next) => {
+                if (next) {
+                  registerImage(next.key, next.url);
+                  onUpdate(() => ({ ...payload, blobKey: next.key }));
+                } else {
+                  onUpdate(() => ({ ...payload, blobKey: "" }));
+                }
+              }}
+            />
+            <RichTextEditor
+              initialHtml={payload.html}
+              pathPrefix={`${path}/rich`}
+              placeholder="Body…"
+              onChange={(html) => onUpdate(() => ({ ...payload, html }))}
+            />
+          </div>
+          <select
+            value={payload.imageSide ?? "left"}
+            onChange={(e) =>
+              onUpdate(() => ({
+                ...payload,
+                imageSide: e.target.value === "right" ? "right" : "left",
+              }))
+            }
+            className="form-input w-44"
+          >
+            <option value="left">Image on left</option>
+            <option value="right">Image on right</option>
+          </select>
+        </div>
+      );
+
+    case "image_gallery": {
+      const images = payload.images;
+      const updateImg = (i: number, patch: Partial<typeof images[number]>) =>
+        onUpdate(() => ({
+          ...payload,
+          images: images.map((x, idx) => (idx === i ? { ...x, ...patch } : x)),
+        }));
+      const removeImg = (i: number) =>
+        onUpdate(() => ({ ...payload, images: images.filter((_, idx) => idx !== i) }));
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <select
+            value={payload.columns ?? 3}
+            onChange={(e) =>
+              onUpdate(() => ({ ...payload, columns: Number(e.target.value) === 2 ? 2 : 3 }))
+            }
+            className="form-input w-32"
+          >
+            <option value={2}>2 columns</option>
+            <option value={3}>3 columns</option>
+          </select>
+          <ul className="space-y-2">
+            {images.map((img, i) => (
+              <li key={i} className="grid items-start gap-2 rounded-md border border-rule bg-cream/40 p-2 sm:grid-cols-[140px_1fr_auto]">
+                <SectionImagePicker
+                  value={img.blobKey}
+                  previewUrl={img.blobKey ? imgUrls[img.blobKey] : undefined}
+                  pathPrefix={path}
+                  onChange={(next) => {
+                    if (next) {
+                      registerImage(next.key, next.url);
+                      updateImg(i, { blobKey: next.key });
+                    } else {
+                      removeImg(i);
+                    }
+                  }}
+                />
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={img.alt ?? ""}
+                    maxLength={200}
+                    placeholder="Alt text"
+                    onChange={(e) => updateImg(i, { alt: e.target.value })}
+                    className="form-input"
+                  />
+                  <input
+                    type="text"
+                    value={img.caption ?? ""}
+                    maxLength={300}
+                    placeholder="Caption (optional)"
+                    onChange={(e) => updateImg(i, { caption: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeImg(i)}
+                  className="rounded-md border border-rule bg-white px-2 py-1 text-xs text-rust-dark hover:border-rust"
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={() =>
+              onUpdate(() => ({ ...payload, images: [...images, { blobKey: "" }] }))
+            }
+            disabled={images.length >= 20}
+            className="rounded-pill border border-rule bg-white px-3 py-1 text-xs font-semibold text-navy hover:border-navy disabled:opacity-50"
+          >
+            + Add image
+          </button>
+        </div>
+      );
+    }
+
+    case "link_list":
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <LinkListEditor
+            items={payload.items}
+            onUpdate={(items) => onUpdate(() => ({ ...payload, items }))}
+          />
+        </div>
+      );
+
+    case "button_group":
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <ButtonGroupEditor
+            items={payload.items}
+            onUpdate={(items) => onUpdate(() => ({ ...payload, items }))}
+          />
+        </div>
+      );
+
+    case "video":
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <input
+            type="url"
+            value={payload.url}
+            maxLength={1000}
+            placeholder="https://example.com/video.mp4 or https://example.com/playlist.m3u8"
+            onChange={(e) => {
+              const url = e.target.value;
+              const type = detectVideoType(url);
+              onUpdate(() => ({ ...payload, url, type }));
+            }}
+            className="form-input font-mono text-sm"
+          />
+          <p className="text-xs text-ink-3">
+            Detected: <strong>{payload.type}</strong>. For YouTube/Vimeo use the Embed block instead.
+          </p>
+          <SectionImagePicker
+            value={payload.posterBlobKey ?? null}
+            previewUrl={
+              payload.posterBlobKey ? imgUrls[payload.posterBlobKey] : undefined
+            }
+            pathPrefix={`${path}/posters`}
+            label="Poster image (optional)"
+            onChange={(next) => {
+              if (next) {
+                registerImage(next.key, next.url);
+                onUpdate(() => ({ ...payload, posterBlobKey: next.key }));
+              } else {
+                onUpdate(() => ({ ...payload, posterBlobKey: null }));
+              }
+            }}
+          />
+          <input
+            type="text"
+            value={payload.caption ?? ""}
+            maxLength={300}
+            placeholder="Caption (optional)"
+            onChange={(e) => onUpdate(() => ({ ...payload, caption: e.target.value }))}
+            className="form-input"
+          />
+        </div>
+      );
+
+    case "embed":
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <EmbedEditor
+            embed={payload.embed}
+            onUpdate={(e) => onUpdate(() => ({ ...payload, embed: e }))}
+          />
+        </div>
+      );
+
+    case "card_grid": {
+      const updateCard = (i: number, patch: Partial<CardGridCard>) =>
+        onUpdate(() => ({
+          ...payload,
+          cards: payload.cards.map((c, idx) => (idx === i ? { ...c, ...patch } : c)),
+        }));
+      const removeCard = (i: number) =>
+        onUpdate(() => ({ ...payload, cards: payload.cards.filter((_, idx) => idx !== i) }));
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <select
+            value={payload.columns ?? 3}
+            onChange={(e) =>
+              onUpdate(() => ({ ...payload, columns: Number(e.target.value) === 2 ? 2 : 3 }))
+            }
+            className="form-input w-32"
+          >
+            <option value={2}>2 columns</option>
+            <option value={3}>3 columns</option>
+          </select>
+          <ul className="space-y-2">
+            {payload.cards.map((c, i) => (
+              <li key={i} className="space-y-2 rounded-md border border-rule bg-cream/40 p-3">
+                <div className="grid gap-2 sm:grid-cols-[140px_1fr_auto] sm:items-start">
+                  <SectionImagePicker
+                    value={c.imageBlobKey ?? null}
+                    previewUrl={c.imageBlobKey ? imgUrls[c.imageBlobKey] : undefined}
+                    pathPrefix={path}
+                    onChange={(next) => {
+                      if (next) {
+                        registerImage(next.key, next.url);
+                        updateCard(i, { imageBlobKey: next.key });
+                      } else {
+                        updateCard(i, { imageBlobKey: null });
+                      }
+                    }}
+                  />
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={c.title}
+                      maxLength={120}
+                      placeholder="Card title"
+                      onChange={(e) => updateCard(i, { title: e.target.value })}
+                      className="form-input"
+                    />
+                    <input
+                      type="text"
+                      value={c.summary ?? ""}
+                      maxLength={500}
+                      placeholder="Summary (optional)"
+                      onChange={(e) => updateCard(i, { summary: e.target.value })}
+                      className="form-input"
+                    />
+                    <input
+                      type="text"
+                      value={c.href ?? ""}
+                      maxLength={1000}
+                      placeholder="Link (optional)"
+                      onChange={(e) => updateCard(i, { href: e.target.value })}
+                      className="form-input font-mono text-sm"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeCard(i)}
+                    className="rounded-md border border-rule bg-white px-2 py-1 text-xs text-rust-dark hover:border-rust"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={() =>
+              onUpdate(() => ({ ...payload, cards: [...payload.cards, { title: "" }] }))
+            }
+            disabled={payload.cards.length >= 12}
+            className="rounded-pill border border-rule bg-white px-3 py-1 text-xs font-semibold text-navy hover:border-navy disabled:opacity-50"
+          >
+            + Add card
+          </button>
+        </div>
+      );
+    }
+
+    case "staff_card":
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <select
+            value={payload.staffId}
+            onChange={(e) => onUpdate(() => ({ ...payload, staffId: e.target.value }))}
+            className="form-input"
+          >
+            <option value="">— Pick a staff member —</option>
+            {staffOptions.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+                {s.role ? ` · ${s.role}` : ""}
+              </option>
+            ))}
+          </select>
+          <label className="flex items-center gap-2 text-xs text-ink-2">
+            <input
+              type="checkbox"
+              checked={!!payload.hideContact}
+              onChange={(e) =>
+                onUpdate(() => ({ ...payload, hideContact: e.target.checked }))
+              }
+              className="size-4"
+            />
+            Hide email / contact
+          </label>
+        </div>
+      );
+
+    case "callout_banner":
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <div className="grid gap-2 sm:grid-cols-[140px_1fr]">
+            <SectionImagePicker
+              value={payload.imageBlobKey ?? null}
+              previewUrl={payload.imageBlobKey ? imgUrls[payload.imageBlobKey] : undefined}
+              pathPrefix={path}
+              onChange={(next) => {
+                if (next) {
+                  registerImage(next.key, next.url);
+                  onUpdate(() => ({ ...payload, imageBlobKey: next.key }));
+                } else {
+                  onUpdate(() => ({ ...payload, imageBlobKey: null }));
+                }
+              }}
+            />
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={payload.tag ?? ""}
+                maxLength={40}
+                placeholder="Tag (e.g. April · Awareness Month)"
+                onChange={(e) => onUpdate(() => ({ ...payload, tag: e.target.value }))}
+                className="form-input"
+              />
+              <input
+                type="text"
+                value={payload.title}
+                maxLength={120}
+                placeholder="Title"
+                onChange={(e) => onUpdate(() => ({ ...payload, title: e.target.value }))}
+                className="form-input"
+              />
+              <textarea
+                value={payload.body ?? ""}
+                maxLength={500}
+                rows={3}
+                placeholder="Body (optional)"
+                onChange={(e) => onUpdate(() => ({ ...payload, body: e.target.value }))}
+                className="form-input"
+              />
+              <div className="grid gap-2 sm:grid-cols-2">
+                <input
+                  type="text"
+                  value={payload.ctaLabel ?? ""}
+                  maxLength={40}
+                  placeholder="CTA label"
+                  onChange={(e) =>
+                    onUpdate(() => ({ ...payload, ctaLabel: e.target.value }))
+                  }
+                  className="form-input"
+                />
+                <input
+                  type="text"
+                  value={payload.ctaHref ?? ""}
+                  maxLength={1000}
+                  placeholder="CTA URL"
+                  onChange={(e) =>
+                    onUpdate(() => ({ ...payload, ctaHref: e.target.value }))
+                  }
+                  className="form-input font-mono text-sm"
+                />
+              </div>
+              <select
+                value={payload.tone ?? "navy"}
+                onChange={(e) =>
+                  onUpdate(() => ({
+                    ...payload,
+                    tone: e.target.value as "navy" | "warm" | "gold",
+                  }))
+                }
+                className="form-input w-32"
+              >
+                <option value="navy">Navy</option>
+                <option value="warm">Warm</option>
+                <option value="gold">Gold</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      );
+
+    case "columns":
+      return <ColumnsEditor payload={payload} onUpdate={onUpdate} />;
+  }
+}
+
+function LinkListEditor({
+  items,
+  onUpdate,
+}: {
+  items: LinkItem[];
+  onUpdate: (next: LinkItem[]) => void;
+}) {
+  const update = (i: number, patch: Partial<LinkItem>) =>
+    onUpdate(items.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
+  const remove = (i: number) => onUpdate(items.filter((_, idx) => idx !== i));
+  const add = () => onUpdate([...items, { label: "", href: "" }]);
+  return (
+    <div className="space-y-2">
+      <ul className="space-y-2">
+        {items.map((l, i) => (
+          <li key={i} className="grid gap-2 sm:grid-cols-[1fr_2fr_140px_auto]">
+            <input
+              type="text"
+              value={l.label}
+              maxLength={120}
+              placeholder="Label"
+              onChange={(e) => update(i, { label: e.target.value })}
+              className="form-input"
+            />
+            <input
+              type="text"
+              value={l.href}
+              maxLength={1000}
+              placeholder="/path or URL"
+              onChange={(e) => update(i, { href: e.target.value })}
+              className="form-input font-mono text-sm"
+            />
+            <select
+              value={l.iconHint ?? ""}
+              onChange={(e) =>
+                update(i, {
+                  iconHint:
+                    (e.target.value as LinkItem["iconHint"]) || undefined,
+                })
+              }
+              className="form-input"
+            >
+              <option value="">Auto icon</option>
+              <option value="external">External</option>
+              <option value="pdf">PDF</option>
+              <option value="form">Form</option>
+              <option value="video">Video</option>
+              <option value="calendar">Calendar</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              disabled={items.length <= 1}
+              className="rounded-md border border-rule bg-white px-2 py-1 text-xs text-rust-dark hover:border-rust disabled:opacity-30"
+            >
+              ✕
+            </button>
+          </li>
+        ))}
+      </ul>
+      <button
+        type="button"
+        onClick={add}
+        disabled={items.length >= 40}
+        className="rounded-pill border border-rule bg-white px-3 py-1 text-xs font-semibold text-navy hover:border-navy disabled:opacity-50"
+      >
+        + Add link
+      </button>
+    </div>
+  );
+}
+
+function ButtonGroupEditor({
+  items,
+  onUpdate,
+}: {
+  items: ButtonItem[];
+  onUpdate: (next: ButtonItem[]) => void;
+}) {
+  const update = (i: number, patch: Partial<ButtonItem>) =>
+    onUpdate(items.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
+  const remove = (i: number) => onUpdate(items.filter((_, idx) => idx !== i));
+  const add = () => onUpdate([...items, { label: "", href: "", variant: "primary" }]);
+  return (
+    <div className="space-y-2">
+      <ul className="space-y-2">
+        {items.map((b, i) => (
+          <li key={i} className="grid gap-2 sm:grid-cols-[1fr_2fr_120px_auto]">
+            <input
+              type="text"
+              value={b.label}
+              maxLength={60}
+              placeholder="Label"
+              onChange={(e) => update(i, { label: e.target.value })}
+              className="form-input"
+            />
+            <input
+              type="text"
+              value={b.href}
+              maxLength={1000}
+              placeholder="/path or URL"
+              onChange={(e) => update(i, { href: e.target.value })}
+              className="form-input font-mono text-sm"
+            />
+            <select
+              value={b.variant ?? "primary"}
+              onChange={(e) =>
+                update(i, { variant: e.target.value as ButtonItem["variant"] })
+              }
+              className="form-input"
+            >
+              <option value="primary">Primary</option>
+              <option value="secondary">Secondary</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              disabled={items.length <= 1}
+              className="rounded-md border border-rule bg-white px-2 py-1 text-xs text-rust-dark hover:border-rust disabled:opacity-30"
+            >
+              ✕
+            </button>
+          </li>
+        ))}
+      </ul>
+      <button
+        type="button"
+        onClick={add}
+        disabled={items.length >= 8}
+        className="rounded-pill border border-rule bg-white px-3 py-1 text-xs font-semibold text-navy hover:border-navy disabled:opacity-50"
+      >
+        + Add button
+      </button>
+    </div>
+  );
+}
+
+function EmbedEditor({
+  embed,
+  onUpdate,
+}: {
+  embed: EmbedPayload;
+  onUpdate: (next: EmbedPayload) => void;
+}) {
+  const [raw, setRaw] = useState(extractEmbedSourceUrl(embed));
+  const [error, setError] = useState<string | null>(null);
+
+  const detect = (url: string) => {
+    setRaw(url);
+    setError(null);
+    if (!url.trim()) return;
+    const next = parseEmbedUrl(url.trim());
+    if (!next) {
+      setError("URL doesn't match an allowlisted provider.");
+      return;
+    }
+    onUpdate(next);
+  };
+
+  return (
+    <div className="space-y-2">
+      <input
+        type="url"
+        value={raw}
+        maxLength={1000}
+        placeholder="Paste a YouTube, Vimeo, Bunny, Google Form, Eventbrite, SignUpGenius, or Touchpoint URL"
+        onChange={(e) => detect(e.target.value)}
+        className="form-input font-mono text-sm"
+      />
+      <p className="text-xs text-ink-3">
+        Provider: <strong>{embed.provider}</strong>
+      </p>
+      {error && <p className="text-xs text-rust-dark">{error}</p>}
+      <input
+        type="text"
+        value={embed.title ?? ""}
+        maxLength={120}
+        placeholder="Title (for screen readers)"
+        onChange={(e) => onUpdate({ ...embed, title: e.target.value })}
+        className="form-input"
+      />
+    </div>
+  );
+}
+
+function ColumnsEditor({
+  payload,
+  onUpdate,
+}: {
+  payload: Extract<MinistrySectionPayload, { kind: "columns" }>;
+  onUpdate: (replacer: (p: MinistrySectionPayload) => MinistrySectionPayload) => void;
+}) {
+  // Wave 13.A ships this stub; the recursive nested-block UI lands in 13.D.
+  return (
+    <div className="space-y-3">
+      <HeaderEditor
+        header={payload.header}
+        onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+      />
+      <p className="rounded-md border border-dashed border-rule bg-cream/40 p-3 text-xs text-ink-3">
+        Columns editor lands in Wave 13.D — for now, this placeholder renders an empty
+        2-column layout with no nested blocks. Add nested blocks via the next sub-wave.
+      </p>
+    </div>
+  );
+}
+
+function AddBlockMenu({
+  onAdd,
+}: {
+  onAdd: (payload: MinistrySectionPayload) => void;
+}) {
+  return (
+    <div className="rounded-md border border-dashed border-rule bg-cream/40 p-4">
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+        Add a block
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {(
+          [
+            ["heading", "Heading"],
+            ["rich_text", "Rich text"],
+            ["image", "Image"],
+            ["image_text", "Image + text"],
+            ["image_gallery", "Image gallery"],
+            ["link_list", "Link list"],
+            ["button_group", "Button group"],
+            ["video", "Video"],
+            ["embed", "Embed"],
+            ["card_grid", "Card grid"],
+            ["staff_card", "Staff card"],
+            ["callout_banner", "Callout banner"],
+            ["columns", "Columns"],
+          ] as const
+        ).map(([k, label]) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => onAdd(blankBlock(k))}
+            className="rounded-pill border border-rule bg-white px-3 py-1 text-xs font-semibold text-navy hover:border-navy"
+          >
+            + {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Helpers                                                             */
+/* ------------------------------------------------------------------ */
+
+function blankBlock(kind: MinistrySectionPayload["kind"]): MinistrySectionPayload {
+  switch (kind) {
+    case "heading":
+      return { kind: "heading", header: { heading: "" } };
+    case "rich_text":
+      return { kind: "rich_text", html: "" };
+    case "image":
+      return { kind: "image", blobKey: "" };
+    case "image_text":
+      return { kind: "image_text", blobKey: "", html: "" };
+    case "image_gallery":
+      return { kind: "image_gallery", images: [{ blobKey: "" }] };
+    case "link_list":
+      return { kind: "link_list", items: [{ label: "", href: "" }] };
+    case "button_group":
+      return {
+        kind: "button_group",
+        items: [{ label: "", href: "", variant: "primary" }],
+      };
+    case "video":
+      return { kind: "video", url: "", type: "mp4" };
+    case "embed":
+      return { kind: "embed", embed: { provider: "iframe", url: "" } };
+    case "card_grid":
+      return { kind: "card_grid", cards: [{ title: "" }] };
+    case "staff_card":
+      return { kind: "staff_card", staffId: "" };
+    case "callout_banner":
+      return { kind: "callout_banner", title: "" };
+    case "columns":
+      return {
+        kind: "columns",
+        columns: [{ blocks: [] }, { blocks: [] }],
+      };
+  }
+}
+
+function prettyKind(k: MinistrySectionPayload["kind"]): string {
+  return {
+    heading: "Heading",
+    rich_text: "Rich text",
+    image: "Image",
+    image_text: "Image + text",
+    image_gallery: "Image gallery",
+    link_list: "Link list",
+    button_group: "Button group",
+    video: "Video",
+    embed: "Embed",
+    card_grid: "Card grid",
+    staff_card: "Staff card",
+    callout_banner: "Callout banner",
+    columns: "Columns",
+  }[k];
+}
+
+function detectVideoType(url: string): "mp4" | "hls" | "youtube" | "vimeo" {
+  const u = url.toLowerCase();
+  if (u.includes("youtube.com") || u.includes("youtu.be")) return "youtube";
+  if (u.includes("vimeo.com")) return "vimeo";
+  if (u.includes(".m3u8")) return "hls";
+  return "mp4";
+}
+
+function extractEmbedSourceUrl(e: EmbedPayload): string {
+  if (e.provider === "youtube") return `https://www.youtube.com/watch?v=${e.videoId}`;
+  if (e.provider === "vimeo") return `https://vimeo.com/${e.videoId}`;
+  return e.url;
+}
+
+/** Match a pasted URL against the allowlisted providers. Returns null
+ *  if no match — the editor surfaces the error to the user. */
+function parseEmbedUrl(url: string): EmbedPayload | null {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, "");
+
+    // YouTube
+    if (host === "youtube.com" || host === "m.youtube.com") {
+      const v = u.searchParams.get("v");
+      if (v) return { provider: "youtube", videoId: v };
+    }
+    if (host === "youtu.be") {
+      const v = u.pathname.replace(/^\//, "");
+      if (v) return { provider: "youtube", videoId: v };
+    }
+
+    // Vimeo
+    if (host === "vimeo.com") {
+      const v = u.pathname.replace(/^\//, "").split("/")[0];
+      if (v && /^\d+$/.test(v)) return { provider: "vimeo", videoId: v };
+    }
+
+    // Bunny — iframe.mediadelivery.net, b-cdn.net, etc.
+    if (host.endsWith("mediadelivery.net") || host.endsWith("b-cdn.net")) {
+      return { provider: "bunny", url };
+    }
+
+    // Google Forms / Docs
+    if (host === "docs.google.com" || host === "forms.gle") {
+      return { provider: "google_form", url };
+    }
+
+    // Eventbrite
+    if (host.endsWith("eventbrite.com") || host.endsWith("evbqa.com")) {
+      return { provider: "eventbrite", url };
+    }
+
+    // SignUpGenius
+    if (host.endsWith("signupgenius.com")) {
+      return { provider: "signupgenius", url };
+    }
+
+    // Touchpoint
+    if (host.endsWith("tpsdb.com") || host.endsWith("touchpointsoftware.com")) {
+      return { provider: "touchpoint", url };
+    }
+
+    // Generic iframe — the long tail. Editor explicitly opted in.
+    return { provider: "iframe", url };
+  } catch {
+    return null;
+  }
+}

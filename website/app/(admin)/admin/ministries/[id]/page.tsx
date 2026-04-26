@@ -45,14 +45,22 @@ export default async function EditMinistryPage({
       </nav>
       <div className="flex flex-wrap items-baseline justify-between gap-4">
         <h1 className="text-3xl">{row.name}</h1>
-        <Link
-          href={`/ministries/${row.slug}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm font-semibold text-rust-dark hover:text-rust"
-        >
-          View on site →
-        </Link>
+        <div className="flex flex-wrap items-baseline gap-4">
+          <Link
+            href={`/admin/ministries/${row.id}/sections`}
+            className="text-sm font-semibold text-rust-dark hover:text-rust"
+          >
+            Edit sections →
+          </Link>
+          <Link
+            href={`/ministries/${row.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-semibold text-rust-dark hover:text-rust"
+          >
+            View on site →
+          </Link>
+        </div>
       </div>
       {saved && (
         <p className="mt-4 inline-block rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">

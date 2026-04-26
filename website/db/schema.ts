@@ -209,6 +209,143 @@ export const ministries = pgTable(
   ],
 );
 
+/* ------------------------------------------------------------------ */
+/* Ministry sections — block-based content below the description       */
+/* ------------------------------------------------------------------ */
+
+/** Common header attached to every block. Optional — many sections
+ *  render anonymously per the live site's pattern. */
+export type SectionHeader = {
+  heading?: string;
+  subheading?: string;
+  /** Anchor id for deep-linking — kebab-case, slugified by the editor. */
+  anchorId?: string;
+};
+
+/** Allowlisted embed providers. The editor parses pasted URLs into one
+ *  of these tagged shapes; render emits the canonical iframe markup. */
+export type EmbedPayload =
+  | { provider: "youtube"; videoId: string; title?: string }
+  | { provider: "vimeo"; videoId: string; title?: string }
+  | { provider: "bunny"; url: string; title?: string }
+  | { provider: "google_form"; url: string; title?: string }
+  | { provider: "eventbrite"; url: string; title?: string }
+  | { provider: "signupgenius"; url: string; title?: string }
+  | { provider: "touchpoint"; url: string; title?: string }
+  | { provider: "iframe"; url: string; title?: string; height?: number };
+
+export type LinkItem = {
+  label: string;
+  href: string;
+  /** Optional small icon hint shown next to the label. */
+  iconHint?: "external" | "pdf" | "form" | "video" | "calendar";
+};
+
+export type ButtonItem = {
+  label: string;
+  href: string;
+  /** Visual variant. Primary = rust pill; secondary = navy outline. */
+  variant?: "primary" | "secondary";
+};
+
+export type CardGridCard = {
+  title: string;
+  summary?: string;
+  href?: string;
+  imageBlobKey?: string | null;
+};
+
+/** Leaf blocks — everything except the recursive Columns wrapper.
+ *  Columns nest one level deep; Columns inside Columns is disallowed. */
+export type MinistryLeafBlock =
+  | { kind: "heading"; header: SectionHeader; level?: 2 | 3 }
+  | { kind: "rich_text"; header?: SectionHeader; html: string }
+  | {
+      kind: "image";
+      header?: SectionHeader;
+      blobKey: string;
+      alt?: string;
+      caption?: string;
+      href?: string;
+    }
+  | {
+      kind: "image_text";
+      header?: SectionHeader;
+      blobKey: string;
+      alt?: string;
+      html: string;
+      imageSide?: "left" | "right";
+    }
+  | {
+      kind: "image_gallery";
+      header?: SectionHeader;
+      images: { blobKey: string; alt?: string; caption?: string }[];
+      columns?: 2 | 3;
+    }
+  | { kind: "link_list"; header?: SectionHeader; items: LinkItem[] }
+  | { kind: "button_group"; header?: SectionHeader; items: ButtonItem[] }
+  | {
+      kind: "video";
+      header?: SectionHeader;
+      url: string;
+      /** Auto-detected: mp4 | hls | youtube | vimeo. Editor stores it
+       *  for fast render-time branching. */
+      type: "mp4" | "hls" | "youtube" | "vimeo";
+      posterBlobKey?: string | null;
+      caption?: string;
+    }
+  | { kind: "card_grid"; header?: SectionHeader; cards: CardGridCard[]; columns?: 2 | 3 }
+  | { kind: "embed"; header?: SectionHeader; embed: EmbedPayload }
+  | {
+      kind: "staff_card";
+      header?: SectionHeader;
+      staffId: string;
+      /** When true, hide email/instagram even if present on the staff row. */
+      hideContact?: boolean;
+    }
+  | {
+      kind: "callout_banner";
+      header?: SectionHeader;
+      tag?: string;
+      title: string;
+      body?: string;
+      ctaLabel?: string;
+      ctaHref?: string;
+      imageBlobKey?: string | null;
+      tone?: "navy" | "warm" | "gold";
+    };
+
+/** Top-level block — leaves plus the Columns wrapper. */
+export type MinistrySectionPayload =
+  | MinistryLeafBlock
+  | {
+      kind: "columns";
+      header?: SectionHeader;
+      columns: { blocks: MinistryLeafBlock[] }[];
+      ratio?: "equal" | "60-40" | "40-60";
+    };
+
+export type MinistrySectionKind = MinistrySectionPayload["kind"];
+
+export const ministrySections = pgTable(
+  "ministry_sections",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ministryId: uuid("ministry_id")
+      .notNull()
+      .references((): AnyPgColumn => ministries.id, { onDelete: "cascade" }),
+    position: integer("position").notNull().default(0),
+    kind: text("kind").notNull(),
+    payload: jsonb("payload").$type<MinistrySectionPayload>().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("ministry_sections_ministry_idx").on(t.ministryId),
+    index("ministry_sections_position_idx").on(t.position),
+  ],
+);
+
 /** Per-ministry inquiry form config. */
 export type SystemFieldKey = "name" | "email" | "phone" | "message";
 export type CustomFieldType = "text" | "textarea" | "select" | "radio" | "checkboxes";
@@ -704,6 +841,7 @@ export const ministryEdits = pgTable(
 export type User = typeof users.$inferSelect;
 export type Staff = typeof staff.$inferSelect;
 export type Ministry = typeof ministries.$inferSelect;
+export type MinistrySection = typeof ministrySections.$inferSelect;
 export type Event = typeof events.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type MassTime = typeof massTimes.$inferSelect;
