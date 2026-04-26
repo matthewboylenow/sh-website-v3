@@ -344,6 +344,41 @@ function renderInner(
       );
     }
 
+    case "featured_ministries":
+      return (
+        <>
+          <HeaderEl header={p.header} />
+          <div className="rounded-md border border-dashed border-rule bg-cream/40 p-4 text-xs text-ink-3">
+            <strong className="text-navy">Featured ministries</strong> · mode:{" "}
+            <code>{p.mode}</code> · count: {p.count}
+            {p.tone === "navy" && " · on-navy bg"}
+            <p className="mt-1 text-[11px]">
+              Live data renders only on the public page; this is an admin preview.
+            </p>
+          </div>
+        </>
+      );
+
+    case "featured_events":
+      return (
+        <>
+          <HeaderEl header={p.header} />
+          <div className="rounded-md border border-dashed border-rule bg-cream/40 p-4 text-xs text-ink-3">
+            <strong className="text-navy">Featured events</strong> · count:{" "}
+            {p.count}
+            {p.category && (
+              <>
+                {" · category: "}
+                <code>{p.category}</code>
+              </>
+            )}
+            <p className="mt-1 text-[11px]">
+              Live data renders only on the public page; this is an admin preview.
+            </p>
+          </div>
+        </>
+      );
+
     case "columns": {
       const ratio =
         p.ratio === "60-40"

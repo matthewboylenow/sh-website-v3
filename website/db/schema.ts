@@ -267,6 +267,8 @@ export type EmbedPayload =
   | { provider: "youtube"; videoId: string; title?: string }
   | { provider: "vimeo"; videoId: string; title?: string }
   | { provider: "bunny"; url: string; title?: string }
+  | { provider: "spotify"; url: string; title?: string }
+  | { provider: "apple_podcasts"; url: string; title?: string }
   | { provider: "google_form"; url: string; title?: string }
   | { provider: "eventbrite"; url: string; title?: string }
   | { provider: "signupgenius"; url: string; title?: string }
@@ -295,7 +297,7 @@ export type CardGridCard = {
 };
 
 /** Parents that can own page_sections rows. Polymorphic discriminator. */
-export const PAGE_SECTION_PARENTS = ["ministry", "formation"] as const;
+export const PAGE_SECTION_PARENTS = ["ministry", "formation", "homepage"] as const;
 export type PageSectionParent = (typeof PAGE_SECTION_PARENTS)[number];
 
 /** Leaf blocks — everything except the recursive Columns wrapper.
@@ -356,6 +358,31 @@ export type PageLeafBlock =
       ctaHref?: string;
       imageBlobKey?: string | null;
       tone?: "navy" | "warm" | "gold";
+    }
+  | {
+      kind: "featured_ministries";
+      header?: SectionHeader;
+      /**
+       * spotlight = orderingPriority + name; random = re-pick each render;
+       * manual = render the exact `ministryIds` list.
+       */
+      mode: "spotlight" | "random" | "manual";
+      count: number;
+      ministryIds?: string[];
+      ctaLabel?: string;
+      ctaHref?: string;
+      /** Background tone — "navy" makes the whole block dark like the
+       *  current "Find your place" section. */
+      tone?: "default" | "navy";
+    }
+  | {
+      kind: "featured_events";
+      header?: SectionHeader;
+      count: number;
+      /** Filter to a specific event category (taxonomy value). */
+      category?: string;
+      ctaLabel?: string;
+      ctaHref?: string;
     };
 
 /** Top-level block — leaves plus the Columns wrapper. */

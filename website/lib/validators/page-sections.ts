@@ -32,6 +32,8 @@ const EmbedPayloadSchema = z.discriminatedUnion("provider", [
   z.object({ provider: z.literal("youtube"), videoId: z.string().min(1).max(40), title: z.string().max(120).optional() }),
   z.object({ provider: z.literal("vimeo"), videoId: z.string().min(1).max(40), title: z.string().max(120).optional() }),
   z.object({ provider: z.literal("bunny"), url: z.string().url().max(1000), title: z.string().max(120).optional() }),
+  z.object({ provider: z.literal("spotify"), url: z.string().url().max(1000), title: z.string().max(120).optional() }),
+  z.object({ provider: z.literal("apple_podcasts"), url: z.string().url().max(1000), title: z.string().max(120).optional() }),
   z.object({ provider: z.literal("google_form"), url: z.string().url().max(1000), title: z.string().max(120).optional() }),
   z.object({ provider: z.literal("eventbrite"), url: z.string().url().max(1000), title: z.string().max(120).optional() }),
   z.object({ provider: z.literal("signupgenius"), url: z.string().url().max(1000), title: z.string().max(120).optional() }),
@@ -142,6 +144,24 @@ const LeafPayloadSchema = z.discriminatedUnion("kind", [
     ctaHref: z.string().max(1000).optional(),
     imageBlobKey: z.string().max(500).optional().nullable(),
     tone: z.enum(["navy", "warm", "gold"]).optional(),
+  }),
+  z.object({
+    kind: z.literal("featured_ministries"),
+    header: HeaderSchema.optional(),
+    mode: z.enum(["spotlight", "random", "manual"]),
+    count: z.coerce.number().int().min(1).max(8),
+    ministryIds: z.array(z.uuid()).max(20).optional(),
+    ctaLabel: z.string().max(40).optional(),
+    ctaHref: z.string().max(1000).optional(),
+    tone: z.enum(["default", "navy"]).optional(),
+  }),
+  z.object({
+    kind: z.literal("featured_events"),
+    header: HeaderSchema.optional(),
+    count: z.coerce.number().int().min(1).max(12),
+    category: z.string().max(60).optional(),
+    ctaLabel: z.string().max(40).optional(),
+    ctaHref: z.string().max(1000).optional(),
   }),
 ]);
 

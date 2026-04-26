@@ -1,9 +1,14 @@
+import Link from "next/link";
 import Image from "next/image";
 import type {
+  Event as EventRow,
+  Ministry as MinistryRow,
   PageSectionPayload,
   SectionHeader,
   EmbedPayload,
 } from "@/db/schema";
+import { EventCard } from "@/components/site/EventCard";
+import { MinistryCard } from "@/components/site/MinistryCard";
 import { RichTextRenderer } from "@/components/site/RichTextRenderer";
 import { VideoBlock } from "./VideoBlock";
 
@@ -26,11 +31,32 @@ export type StaffRendered = {
   bio: string | null;
 };
 
+/** Pre-resolved data for the featured_ministries block. The renderer
+ *  picks up to N from this list per the block's `mode` and `count`. */
+export type FeaturedMinistriesData = {
+  /** All published ministries with the fields cards need. */
+  spotlight: MinistryRow[];
+  /** Map keyed by id for O(1) `manual` lookup. */
+  byId: Map<string, MinistryRow>;
+};
+
+/** Pre-resolved data for the featured_events block. */
+export type FeaturedEventsData = {
+  /** Already-expanded upcoming event instances within the horizon. */
+  instances: Array<
+    EventRow & { occurrenceStartsAt: Date; occurrenceEndsAt: Date }
+  >;
+};
+
 export type RenderContext = {
   /** blobKey → public URL. Missing keys are absent from the map. */
   images: Map<string, string>;
   /** staffId → public-shape staff row. */
   staff: Map<string, StaffRendered>;
+  /** Optional — only resolved when at least one featured_ministries block exists. */
+  featuredMinistries?: FeaturedMinistriesData;
+  /** Optional — only resolved when at least one featured_events block exists. */
+  featuredEvents?: FeaturedEventsData;
 };
 
 export function SectionRenderer({
@@ -396,6 +422,128 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       );
     }
 
+    case "featured_ministries": {
+      const data = ctx.featuredMinistries;
+      if (!data) return null;
+      const onNavy = p.tone === "navy";
+      const picks = pickMinistries(p, data);
+      const innerCols =
+        picks.length >= 3
+          ? "md:grid-cols-2 lg:grid-cols-3"
+          : "md:grid-cols-2";
+      return (
+        <div className={onNavy ? "sh-on-dark -mx-4 rounded-xl bg-navy px-6 py-12 sm:-mx-6 sm:px-10 sm:py-16" : ""}>
+          {p.header && (p.header.heading || p.header.subheading) ? (
+            <header className="mb-8 max-w-[60ch]">
+              {p.header.heading && (
+                <h2 className="font-serif text-2xl font-bold text-navy [.sh-on-dark_&]:text-white">
+                  {p.header.heading}
+                </h2>
+              )}
+              {p.header.subheading && (
+                <p className="mt-2 text-sm text-ink-2 [.sh-on-dark_&]:text-white/85">
+                  {p.header.subheading}
+                </p>
+              )}
+            </header>
+          ) : null}
+          {picks.length === 0 ? (
+            <p className="text-sm text-ink-3">No ministries to feature.</p>
+          ) : (
+            <ul className={`grid gap-6 ${innerCols}`}>
+              {picks.map((m) => {
+                const imageUrl = m.photoBlobKey ? ctx.images.get(m.photoBlobKey) ?? null : null;
+                return (
+                  <li key={m.id}>
+                    <MinistryCard
+                      ministry={m}
+                      tone={onNavy ? "on-navy" : "on-cream"}
+                      imageUrl={imageUrl}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {p.ctaLabel && p.ctaHref && (
+            <div className="mt-8">
+              <Link
+                href={p.ctaHref}
+                className={
+                  onNavy
+                    ? "inline-flex items-center rounded-pill border border-white/30 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                    : "inline-flex items-center rounded-pill border border-rule bg-white px-6 py-2.5 text-sm font-semibold text-navy transition-colors hover:border-navy"
+                }
+              >
+                {p.ctaLabel} <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    case "featured_events": {
+      const data = ctx.featuredEvents;
+      if (!data) return null;
+      const filtered = p.category
+        ? data.instances.filter((e) =>
+            (e.categories ?? []).includes(p.category as string),
+          )
+        : data.instances;
+      const picks = filtered.slice(0, p.count);
+      return (
+        <>
+          {p.header && (p.header.heading || p.header.subheading) ? (
+            <header className="mb-8 max-w-[60ch]">
+              {p.header.heading && (
+                <h2 className="font-serif text-2xl font-bold text-navy">
+                  {p.header.heading}
+                </h2>
+              )}
+              {p.header.subheading && (
+                <p className="mt-2 text-sm text-ink-2">{p.header.subheading}</p>
+              )}
+            </header>
+          ) : null}
+          {picks.length === 0 ? (
+            <p className="text-sm text-ink-3">No upcoming events.</p>
+          ) : (
+            <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {picks.map((e) => {
+                const imageUrl = e.photoBlobKey ? ctx.images.get(e.photoBlobKey) ?? null : null;
+                return (
+                  <li key={`${e.id}-${e.occurrenceStartsAt.toISOString()}`}>
+                    <EventCard
+                      event={{
+                        slug: e.slug,
+                        title: e.title,
+                        startsAt: e.occurrenceStartsAt,
+                        photoBlobKey: e.photoBlobKey,
+                        audiences: e.audiences,
+                        categories: e.categories,
+                      }}
+                      imageUrl={imageUrl}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {p.ctaLabel && p.ctaHref && (
+            <div className="mt-8">
+              <Link
+                href={p.ctaHref}
+                className="inline-flex items-center rounded-pill border border-rule bg-white px-6 py-2.5 text-sm font-semibold text-navy transition-colors hover:border-navy"
+              >
+                {p.ctaLabel} <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          )}
+        </>
+      );
+    }
+
     case "columns": {
       const ratio =
         p.ratio === "60-40"
@@ -426,6 +574,47 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       );
     }
   }
+}
+
+function spotifyEmbedSrc(url: string): string {
+  // Accept both player URLs (https://open.spotify.com/episode/<id>) and
+  // already-embed URLs (https://open.spotify.com/embed/episode/<id>).
+  if (url.includes("/embed/")) return url;
+  return url.replace("open.spotify.com/", "open.spotify.com/embed/");
+}
+
+function applePodcastsEmbedSrc(url: string): string {
+  // Apple uses subdomain `embed.podcasts.apple.com` for iframes. If the
+  // user pasted a regular `podcasts.apple.com` URL, swap it.
+  if (url.startsWith("https://embed.")) return url;
+  return url.replace("https://podcasts.apple.com", "https://embed.podcasts.apple.com");
+}
+
+function pickMinistries(
+  block: Extract<PageSectionPayload, { kind: "featured_ministries" }>,
+  data: FeaturedMinistriesData,
+): MinistryRow[] {
+  const count = Math.max(1, block.count);
+  if (block.mode === "manual") {
+    const ids = block.ministryIds ?? [];
+    return ids
+      .map((id) => data.byId.get(id))
+      .filter((m): m is MinistryRow => Boolean(m))
+      .slice(0, count);
+  }
+  if (block.mode === "random") {
+    // Re-shuffle each render. Caching at the page level (`revalidate`)
+    // freezes the result for a window, which is fine for "feels different
+    // sometimes" without thrashing.
+    const pool = [...data.spotlight];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j]!, pool[i]!];
+    }
+    return pool.slice(0, count);
+  }
+  // spotlight: respect orderingPriority + name (already pre-sorted)
+  return data.spotlight.slice(0, count);
 }
 
 function isExternal(href: string): boolean {
@@ -517,6 +706,32 @@ function EmbedRender({ embed }: { embed: EmbedPayload }) {
             allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
             allowFullScreen
             className="size-full"
+          />
+        </div>
+      );
+    case "spotify":
+      return (
+        <div className="w-full overflow-hidden rounded-xl border border-rule bg-black/5">
+          <iframe
+            src={spotifyEmbedSrc(embed.url)}
+            title={embed.title ?? "Spotify"}
+            loading="lazy"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            allowFullScreen
+            style={{ width: "100%", height: "232px", border: 0 }}
+          />
+        </div>
+      );
+    case "apple_podcasts":
+      return (
+        <div className="w-full overflow-hidden rounded-xl border border-rule bg-black/5">
+          <iframe
+            src={applePodcastsEmbedSrc(embed.url)}
+            title={embed.title ?? "Apple Podcasts"}
+            loading="lazy"
+            allow="autoplay; encrypted-media"
+            sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+            style={{ width: "100%", height: "175px", border: 0 }}
           />
         </div>
       );

@@ -38,6 +38,8 @@ export function SectionEditor({
   initial,
   initialImageUrls,
   staffOptions,
+  ministryOptions = [],
+  eventCategoryOptions = [],
 }: {
   /** Where new image uploads go in Vercel Blob, also used for inline-image
    *  paths in the rich text editor. e.g. "ministries/<id>/sections". */
@@ -47,6 +49,10 @@ export function SectionEditor({
   /** blobKey → URL, server-resolved on first render. */
   initialImageUrls: Record<string, string>;
   staffOptions: StaffOption[];
+  /** All ministries — used by the featured_ministries manual picker. */
+  ministryOptions?: { id: string; name: string }[];
+  /** Taxonomy values — used by the featured_events category picker. */
+  eventCategoryOptions?: readonly string[];
 }) {
   const router = useRouter();
   const [rows, setRows] = useState<Row[]>(
@@ -155,6 +161,8 @@ export function SectionEditor({
                 imgUrls={imgUrls}
                 registerImage={registerImage}
                 staffOptions={staffOptions}
+                ministryOptions={ministryOptions}
+                eventCategoryOptions={eventCategoryOptions}
                 previewing={previewAll || !!previewing[r.clientId]}
                 onTogglePreview={() => togglePreview(r.clientId)}
               />
@@ -199,6 +207,8 @@ function BlockRow({
   imgUrls,
   registerImage,
   staffOptions,
+  ministryOptions,
+  eventCategoryOptions,
   previewing,
   onTogglePreview,
 }: {
@@ -212,6 +222,8 @@ function BlockRow({
   imgUrls: Record<string, string>;
   registerImage: (key: string, url: string) => void;
   staffOptions: StaffOption[];
+  ministryOptions: { id: string; name: string }[];
+  eventCategoryOptions: readonly string[];
   previewing: boolean;
   onTogglePreview: () => void;
 }) {
@@ -275,6 +287,8 @@ function BlockRow({
           imgUrls={imgUrls}
           registerImage={registerImage}
           staffOptions={staffOptions}
+          ministryOptions={ministryOptions}
+          eventCategoryOptions={eventCategoryOptions}
         />
       )}
     </div>
@@ -329,6 +343,8 @@ function BlockEditor({
   imgUrls,
   registerImage,
   staffOptions,
+  ministryOptions,
+  eventCategoryOptions,
 }: {
   payload: PageSectionPayload;
   onUpdate: (replacer: (p: PageSectionPayload) => PageSectionPayload) => void;
@@ -336,6 +352,8 @@ function BlockEditor({
   imgUrls: Record<string, string>;
   registerImage: (key: string, url: string) => void;
   staffOptions: StaffOption[];
+  ministryOptions: { id: string; name: string }[];
+  eventCategoryOptions: readonly string[];
 }) {
   const path = pathPrefix;
 
@@ -858,6 +876,213 @@ function BlockEditor({
         </div>
       );
 
+    case "featured_ministries": {
+      const selectedIds = payload.ministryIds ?? [];
+      const toggle = (id: string) =>
+        onUpdate(() => ({
+          ...payload,
+          ministryIds: selectedIds.includes(id)
+            ? selectedIds.filter((x) => x !== id)
+            : [...selectedIds, id],
+        }));
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <div className="grid gap-2 sm:grid-cols-3">
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+                Pick mode
+              </label>
+              <select
+                value={payload.mode}
+                onChange={(e) =>
+                  onUpdate(() => ({
+                    ...payload,
+                    mode: e.target.value as "spotlight" | "random" | "manual",
+                  }))
+                }
+                className="form-input"
+              >
+                <option value="spotlight">Spotlight (by priority)</option>
+                <option value="random">Random</option>
+                <option value="manual">Manual pick</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+                Count
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={8}
+                value={payload.count}
+                onChange={(e) =>
+                  onUpdate(() => ({
+                    ...payload,
+                    count: Math.max(1, Math.min(8, Number(e.target.value) || 1)),
+                  }))
+                }
+                className="form-input"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+                Tone
+              </label>
+              <select
+                value={payload.tone ?? "default"}
+                onChange={(e) =>
+                  onUpdate(() => ({
+                    ...payload,
+                    tone: e.target.value as "default" | "navy",
+                  }))
+                }
+                className="form-input"
+              >
+                <option value="default">Default (cream/white bg)</option>
+                <option value="navy">On navy</option>
+              </select>
+            </div>
+          </div>
+
+          {payload.mode === "manual" && (
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+                Pick ministries
+              </label>
+              {ministryOptions.length === 0 ? (
+                <p className="text-xs text-ink-3">
+                  No ministries published yet.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {ministryOptions.map((m) => {
+                    const on = selectedIds.includes(m.id);
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => toggle(m.id)}
+                        className={
+                          "rounded-pill px-3 py-1 text-xs font-semibold transition-colors " +
+                          (on
+                            ? "bg-navy text-white"
+                            : "border border-rule bg-white text-navy hover:border-navy")
+                        }
+                      >
+                        {m.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="grid gap-2 sm:grid-cols-[1fr_2fr]">
+            <input
+              type="text"
+              value={payload.ctaLabel ?? ""}
+              maxLength={40}
+              placeholder="CTA label (optional)"
+              onChange={(e) =>
+                onUpdate(() => ({ ...payload, ctaLabel: e.target.value }))
+              }
+              className="form-input"
+            />
+            <input
+              type="text"
+              value={payload.ctaHref ?? ""}
+              maxLength={1000}
+              placeholder="CTA URL (optional)"
+              onChange={(e) =>
+                onUpdate(() => ({ ...payload, ctaHref: e.target.value }))
+              }
+              className="form-input font-mono text-sm"
+            />
+          </div>
+        </div>
+      );
+    }
+
+    case "featured_events":
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+                Count
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={12}
+                value={payload.count}
+                onChange={(e) =>
+                  onUpdate(() => ({
+                    ...payload,
+                    count: Math.max(1, Math.min(12, Number(e.target.value) || 1)),
+                  }))
+                }
+                className="form-input"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+                Filter by category (optional)
+              </label>
+              <select
+                value={payload.category ?? ""}
+                onChange={(e) =>
+                  onUpdate(() => ({
+                    ...payload,
+                    category: e.target.value || undefined,
+                  }))
+                }
+                className="form-input"
+              >
+                <option value="">— All categories —</option>
+                {eventCategoryOptions.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-[1fr_2fr]">
+            <input
+              type="text"
+              value={payload.ctaLabel ?? ""}
+              maxLength={40}
+              placeholder="CTA label (optional)"
+              onChange={(e) =>
+                onUpdate(() => ({ ...payload, ctaLabel: e.target.value }))
+              }
+              className="form-input"
+            />
+            <input
+              type="text"
+              value={payload.ctaHref ?? ""}
+              maxLength={1000}
+              placeholder="CTA URL (optional)"
+              onChange={(e) =>
+                onUpdate(() => ({ ...payload, ctaHref: e.target.value }))
+              }
+              className="form-input font-mono text-sm"
+            />
+          </div>
+        </div>
+      );
+
     case "columns":
       return (
         <ColumnsEditor
@@ -867,6 +1092,8 @@ function BlockEditor({
           imgUrls={imgUrls}
           registerImage={registerImage}
           staffOptions={staffOptions}
+          ministryOptions={ministryOptions}
+          eventCategoryOptions={eventCategoryOptions}
         />
       );
   }
@@ -1064,6 +1291,8 @@ function ColumnsEditor({
   imgUrls,
   registerImage,
   staffOptions,
+  ministryOptions,
+  eventCategoryOptions,
 }: {
   payload: Extract<PageSectionPayload, { kind: "columns" }>;
   onUpdate: (replacer: (p: PageSectionPayload) => PageSectionPayload) => void;
@@ -1071,6 +1300,8 @@ function ColumnsEditor({
   imgUrls: Record<string, string>;
   registerImage: (key: string, url: string) => void;
   staffOptions: StaffOption[];
+  ministryOptions: { id: string; name: string }[];
+  eventCategoryOptions: readonly string[];
 }) {
   const setColumnCount = (count: 2 | 3) => {
     const next = [...payload.columns];
@@ -1139,6 +1370,8 @@ function ColumnsEditor({
             imgUrls={imgUrls}
             registerImage={registerImage}
             staffOptions={staffOptions}
+            ministryOptions={ministryOptions}
+            eventCategoryOptions={eventCategoryOptions}
             onUpdate={(replacer) => updateColumnAt(ci, replacer)}
           />
         ))}
@@ -1154,6 +1387,8 @@ function ColumnLane({
   imgUrls,
   registerImage,
   staffOptions,
+  ministryOptions,
+  eventCategoryOptions,
   onUpdate,
 }: {
   columnIndex: number;
@@ -1162,6 +1397,8 @@ function ColumnLane({
   imgUrls: Record<string, string>;
   registerImage: (key: string, url: string) => void;
   staffOptions: StaffOption[];
+  ministryOptions: { id: string; name: string }[];
+  eventCategoryOptions: readonly string[];
   onUpdate: (replacer: (blocks: PageLeafBlock[]) => PageLeafBlock[]) => void;
 }) {
   const updateAt = (i: number, replacer: (b: PageLeafBlock) => PageLeafBlock) =>
@@ -1226,6 +1463,8 @@ function ColumnLane({
               imgUrls={imgUrls}
               registerImage={registerImage}
               staffOptions={staffOptions}
+              ministryOptions={ministryOptions}
+              eventCategoryOptions={eventCategoryOptions}
             />
           </li>
         ))}
@@ -1259,6 +1498,8 @@ const LEAF_KINDS: [PageLeafBlock["kind"], string][] = [
   ["card_grid", "Cards"],
   ["staff_card", "Staff"],
   ["callout_banner", "Callout"],
+  ["featured_ministries", "Ministries"],
+  ["featured_events", "Events"],
 ];
 
 function blankLeafBlock(kind: PageLeafBlock["kind"]): PageLeafBlock {
@@ -1290,6 +1531,15 @@ function blankLeafBlock(kind: PageLeafBlock["kind"]): PageLeafBlock {
       return { kind: "staff_card", staffId: "" };
     case "callout_banner":
       return { kind: "callout_banner", title: "" };
+    case "featured_ministries":
+      return {
+        kind: "featured_ministries",
+        mode: "spotlight",
+        count: 2,
+        ministryIds: [],
+      };
+    case "featured_events":
+      return { kind: "featured_events", count: 4 };
   }
 }
 
@@ -1318,6 +1568,8 @@ function AddBlockMenu({
             ["card_grid", "Card grid"],
             ["staff_card", "Staff card"],
             ["callout_banner", "Callout banner"],
+            ["featured_ministries", "Featured ministries"],
+            ["featured_events", "Featured events"],
             ["columns", "Columns"],
           ] as const
         ).map(([k, label]) => (
@@ -1368,6 +1620,15 @@ function blankBlock(kind: PageSectionPayload["kind"]): PageSectionPayload {
       return { kind: "staff_card", staffId: "" };
     case "callout_banner":
       return { kind: "callout_banner", title: "" };
+    case "featured_ministries":
+      return {
+        kind: "featured_ministries",
+        mode: "spotlight",
+        count: 2,
+        ministryIds: [],
+      };
+    case "featured_events":
+      return { kind: "featured_events", count: 4 };
     case "columns":
       return {
         kind: "columns",
@@ -1390,6 +1651,8 @@ function prettyKind(k: PageSectionPayload["kind"]): string {
     card_grid: "Card grid",
     staff_card: "Staff card",
     callout_banner: "Callout banner",
+    featured_ministries: "Featured ministries",
+    featured_events: "Featured events",
     columns: "Columns",
   }[k];
 }

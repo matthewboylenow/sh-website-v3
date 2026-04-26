@@ -2,73 +2,94 @@ import { inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
   staff,
+  type Event as EventRow,
+  type Ministry as MinistryRow,
   type PageLeafBlock,
   type PageSectionPayload,
 } from "@/db/schema";
 import { resolveKeys } from "@/lib/blob";
+import {
+  getPublishedMinistries,
+} from "@/lib/queries/ministries.query";
+import { getUpcomingEvents } from "@/lib/queries/events.query";
+import { DEFAULT_HORIZON_MONTHS, expandEvents } from "@/lib/recurrence";
 import type {
+  FeaturedEventsData,
+  FeaturedMinistriesData,
   RenderContext,
   StaffRendered,
 } from "@/components/site/page-sections/SectionRenderer";
 
 /**
- * Walk a list of ministry-section payloads (recursively through Columns)
- * and collect every blob key + staff id referenced. One DB roundtrip
- * each, returned as Maps the renderer reads.
+ * Walk a list of section payloads (recursively through Columns) and
+ * collect every blob key + staff id + flag whether featured_ministries
+ * or featured_events blocks exist anywhere. One DB roundtrip per kind,
+ * returned as Maps the renderer reads.
  */
 
-function walkLeaf(p: PageLeafBlock, blobKeys: Set<string>, staffIds: Set<string>) {
+type WalkAcc = {
+  blobKeys: Set<string>;
+  staffIds: Set<string>;
+  needsMinistries: boolean;
+  needsEvents: boolean;
+};
+
+function walkLeaf(p: PageLeafBlock, acc: WalkAcc) {
   switch (p.kind) {
     case "image":
     case "image_text":
-      blobKeys.add(p.blobKey);
+      acc.blobKeys.add(p.blobKey);
       break;
     case "image_gallery":
-      p.images.forEach((i) => blobKeys.add(i.blobKey));
+      p.images.forEach((i) => acc.blobKeys.add(i.blobKey));
       break;
     case "video":
-      if (p.posterBlobKey) blobKeys.add(p.posterBlobKey);
+      if (p.posterBlobKey) acc.blobKeys.add(p.posterBlobKey);
       break;
     case "card_grid":
       p.cards.forEach((c) => {
-        if (c.imageBlobKey) blobKeys.add(c.imageBlobKey);
+        if (c.imageBlobKey) acc.blobKeys.add(c.imageBlobKey);
       });
       break;
     case "staff_card":
-      staffIds.add(p.staffId);
+      acc.staffIds.add(p.staffId);
       break;
     case "callout_banner":
-      if (p.imageBlobKey) blobKeys.add(p.imageBlobKey);
+      if (p.imageBlobKey) acc.blobKeys.add(p.imageBlobKey);
+      break;
+    case "featured_ministries":
+      acc.needsMinistries = true;
+      break;
+    case "featured_events":
+      acc.needsEvents = true;
       break;
     default:
       break;
   }
 }
 
-function walk(
-  payload: PageSectionPayload,
-  blobKeys: Set<string>,
-  staffIds: Set<string>,
-): void {
+function walk(payload: PageSectionPayload, acc: WalkAcc): void {
   if (payload.kind === "columns") {
-    payload.columns.forEach((c) =>
-      c.blocks.forEach((b) => walkLeaf(b, blobKeys, staffIds)),
-    );
+    payload.columns.forEach((c) => c.blocks.forEach((b) => walkLeaf(b, acc)));
     return;
   }
-  walkLeaf(payload, blobKeys, staffIds);
+  walkLeaf(payload, acc);
 }
 
 export async function buildSectionContext(
   payloads: PageSectionPayload[],
 ): Promise<RenderContext> {
-  const blobKeys = new Set<string>();
-  const staffIds = new Set<string>();
-  for (const p of payloads) walk(p, blobKeys, staffIds);
+  const acc: WalkAcc = {
+    blobKeys: new Set<string>(),
+    staffIds: new Set<string>(),
+    needsMinistries: false,
+    needsEvents: false,
+  };
+  for (const p of payloads) walk(p, acc);
 
-  // Pull staff rows. Photos on staff are also blob keys — fold them in.
+  // Staff rows + their photos.
   const staffRows =
-    staffIds.size > 0
+    acc.staffIds.size > 0
       ? await db
           .select({
             id: staff.id,
@@ -80,13 +101,42 @@ export async function buildSectionContext(
             bio: staff.bio,
           })
           .from(staff)
-          .where(inArray(staff.id, [...staffIds]))
+          .where(inArray(staff.id, [...acc.staffIds]))
       : [];
   for (const s of staffRows) {
-    if (s.photoBlobKey) blobKeys.add(s.photoBlobKey);
+    if (s.photoBlobKey) acc.blobKeys.add(s.photoBlobKey);
   }
 
-  const images = await resolveKeys([...blobKeys]);
+  // Featured ministries — full row payload so we can render the same
+  // MinistryCard the static homepage uses.
+  let featuredMinistries: FeaturedMinistriesData | undefined;
+  if (acc.needsMinistries) {
+    const all = await getPublishedMinistries();
+    const byId = new Map<string, MinistryRow>();
+    all.forEach((m) => byId.set(m.id, m));
+    featuredMinistries = { spotlight: all, byId };
+    for (const m of all) {
+      if (m.photoBlobKey) acc.blobKeys.add(m.photoBlobKey);
+    }
+  }
+
+  // Featured events — expand instances over the standard horizon so
+  // recurring events surface here too. Filtering by category happens at
+  // the renderer.
+  let featuredEvents: FeaturedEventsData | undefined;
+  if (acc.needsEvents) {
+    const upcoming = await getUpcomingEvents(200);
+    const now = new Date();
+    const horizon = new Date(now);
+    horizon.setMonth(horizon.getMonth() + DEFAULT_HORIZON_MONTHS);
+    const instances = expandEvents(upcoming, now, horizon);
+    featuredEvents = { instances };
+    for (const e of instances as EventRow[]) {
+      if (e.photoBlobKey) acc.blobKeys.add(e.photoBlobKey);
+    }
+  }
+
+  const images = await resolveKeys([...acc.blobKeys]);
 
   const staffMap = new Map<string, StaffRendered>();
   for (const s of staffRows) {
@@ -100,5 +150,10 @@ export async function buildSectionContext(
     });
   }
 
-  return { images, staff: staffMap };
+  return {
+    images,
+    staff: staffMap,
+    featuredMinistries,
+    featuredEvents,
+  };
 }
