@@ -57,6 +57,9 @@ function walkLeaf(p: PageLeafBlock, acc: WalkAcc) {
     case "callout_banner":
       if (p.imageBlobKey) acc.blobKeys.add(p.imageBlobKey);
       break;
+    case "pastor_welcome":
+      if (p.photoBlobKey) acc.blobKeys.add(p.photoBlobKey);
+      break;
     case "featured_ministries":
       acc.needsMinistries = true;
       break;

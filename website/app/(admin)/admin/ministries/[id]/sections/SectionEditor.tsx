@@ -16,6 +16,7 @@ import type { SaveSectionsResult } from "@/lib/server/page-sections-actions";
 import type { MinistrySectionsManifestInput } from "@/lib/validators/page-sections";
 import { PreviewBlock } from "./PreviewBlock";
 import { SectionImagePicker } from "./SectionImagePicker";
+import { IconPickerButton } from "@/components/admin/IconPicker";
 
 /**
  * Single-state controlled editor over the page-sections array.
@@ -306,32 +307,54 @@ function HeaderEditor({
 }) {
   const h = header ?? {};
   return (
-    <div className="grid gap-2 sm:grid-cols-[2fr_2fr_1fr]">
-      <input
-        type="text"
-        value={h.heading ?? ""}
-        maxLength={120}
-        placeholder={required ? "Heading (required)" : "Heading (optional)"}
-        onChange={(e) => onUpdate({ ...h, heading: e.target.value })}
-        className="form-input"
-      />
-      <input
-        type="text"
-        value={h.subheading ?? ""}
-        maxLength={200}
-        placeholder="Subheading (optional)"
-        onChange={(e) => onUpdate({ ...h, subheading: e.target.value })}
-        className="form-input"
-      />
-      <input
-        type="text"
-        value={h.anchorId ?? ""}
-        maxLength={60}
-        placeholder="anchor-id"
-        pattern="[a-z0-9-]*"
-        onChange={(e) => onUpdate({ ...h, anchorId: e.target.value })}
-        className="form-input font-mono text-xs"
-      />
+    <div className="space-y-2">
+      <div className="grid gap-2 sm:grid-cols-[1fr_2fr_2fr]">
+        <input
+          type="text"
+          value={h.eyebrow ?? ""}
+          maxLength={60}
+          placeholder='Eyebrow — e.g. "Welcome"'
+          onChange={(e) => onUpdate({ ...h, eyebrow: e.target.value })}
+          className="form-input"
+        />
+        <input
+          type="text"
+          value={h.heading ?? ""}
+          maxLength={120}
+          placeholder={required ? "Heading (required)" : "Heading (optional)"}
+          onChange={(e) => onUpdate({ ...h, heading: e.target.value })}
+          className="form-input"
+        />
+        <input
+          type="text"
+          value={h.subheading ?? ""}
+          maxLength={200}
+          placeholder="Lede / subheading (optional)"
+          onChange={(e) => onUpdate({ ...h, subheading: e.target.value })}
+          className="form-input"
+        />
+      </div>
+      <div className="grid gap-2 sm:grid-cols-[1fr_1fr]">
+        <select
+          value={h.align ?? "left"}
+          onChange={(e) =>
+            onUpdate({ ...h, align: e.target.value as "left" | "center" })
+          }
+          className="form-input"
+        >
+          <option value="left">Align: left</option>
+          <option value="center">Align: center</option>
+        </select>
+        <input
+          type="text"
+          value={h.anchorId ?? ""}
+          maxLength={60}
+          placeholder="anchor-id (optional)"
+          pattern="[a-z0-9-]*"
+          onChange={(e) => onUpdate({ ...h, anchorId: e.target.value })}
+          className="form-input font-mono text-xs"
+        />
+      </div>
     </div>
   );
 }
@@ -738,22 +761,42 @@ function BlockEditor({
             </div>
           </div>
           <ul className="space-y-2">
-            {payload.cards.map((c, i) => (
+            {payload.cards.map((c, i) => {
+              // Show picker on every card so admins can switch layouts later.
+              // The renderer only displays icons on bento tiles (i ≥ 2).
+              const showIconPicker = true;
+              const iconWillRender = payload.layout === "bento" && i >= 2;
+              return (
               <li key={i} className="space-y-2 rounded-md border border-rule bg-cream/40 p-3">
                 <div className="grid gap-2 sm:grid-cols-[140px_1fr_auto] sm:items-start">
-                  <SectionImagePicker
-                    value={c.imageBlobKey ?? null}
-                    previewUrl={c.imageBlobKey ? imgUrls[c.imageBlobKey] : undefined}
-                    pathPrefix={path}
-                    onChange={(next) => {
-                      if (next) {
-                        registerImage(next.key, next.url);
-                        updateCard(i, { imageBlobKey: next.key });
-                      } else {
-                        updateCard(i, { imageBlobKey: null });
-                      }
-                    }}
-                  />
+                  <div className="space-y-3">
+                    <SectionImagePicker
+                      value={c.imageBlobKey ?? null}
+                      previewUrl={c.imageBlobKey ? imgUrls[c.imageBlobKey] : undefined}
+                      pathPrefix={path}
+                      onChange={(next) => {
+                        if (next) {
+                          registerImage(next.key, next.url);
+                          updateCard(i, { imageBlobKey: next.key });
+                        } else {
+                          updateCard(i, { imageBlobKey: null });
+                        }
+                      }}
+                    />
+                    {showIconPicker && (
+                      <div className="space-y-1">
+                        <IconPickerButton
+                          value={c.iconName ?? null}
+                          onChange={(name) => updateCard(i, { iconName: name })}
+                        />
+                        {!iconWillRender && c.iconName && (
+                          <p className="text-[11px] text-rust-dark">
+                            Icon only renders on bento tiles (cards 3+ in bento layout).
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <div className="space-y-2">
                     <input
                       type="text"
@@ -797,7 +840,8 @@ function BlockEditor({
                   </button>
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
           <button
             type="button"
@@ -1200,6 +1244,101 @@ function BlockEditor({
                 onUpdate(() => ({ ...payload, subscribeHref: e.target.value }))
               }
               className="form-input font-mono text-sm"
+            />
+          </div>
+        </div>
+      );
+
+    case "pastor_welcome":
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
+            <input
+              type="url"
+              value={payload.videoUrl ?? ""}
+              maxLength={1000}
+              placeholder="Welcome video URL (mp4, m3u8, YouTube, Vimeo) — optional"
+              onChange={(e) => {
+                const url = e.target.value;
+                const type = url ? detectVideoType(url) : undefined;
+                onUpdate(() => ({
+                  ...payload,
+                  videoUrl: url || undefined,
+                  videoType: type,
+                }));
+              }}
+              className="form-input font-mono text-sm"
+            />
+            <select
+              value={payload.mediaSide ?? "left"}
+              onChange={(e) =>
+                onUpdate(() => ({
+                  ...payload,
+                  mediaSide: e.target.value as "left" | "right",
+                }))
+              }
+              className="form-input"
+            >
+              <option value="left">Media on left</option>
+              <option value="right">Media on right</option>
+            </select>
+          </div>
+          <SectionImagePicker
+            value={payload.photoBlobKey ?? null}
+            previewUrl={
+              payload.photoBlobKey ? imgUrls[payload.photoBlobKey] : undefined
+            }
+            pathPrefix={`${path}/pastor`}
+            label="Pastor photo (used as poster when video is set)"
+            onChange={(next) => {
+              if (next) {
+                registerImage(next.key, next.url);
+                onUpdate(() => ({ ...payload, photoBlobKey: next.key }));
+              } else {
+                onUpdate(() => ({ ...payload, photoBlobKey: null }));
+              }
+            }}
+          />
+          <input
+            type="text"
+            value={payload.photoAlt ?? ""}
+            maxLength={200}
+            placeholder="Photo alt text (optional)"
+            onChange={(e) =>
+              onUpdate(() => ({ ...payload, photoAlt: e.target.value }))
+            }
+            className="form-input"
+          />
+          <RichTextEditor
+            initialHtml={payload.html}
+            pathPrefix={`${path}/pastor`}
+            placeholder="Welcome letter from the pastor…"
+            onChange={(html) => onUpdate(() => ({ ...payload, html }))}
+          />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <input
+              type="text"
+              value={payload.signatureName ?? ""}
+              maxLength={120}
+              placeholder='Signature name — e.g. "Fr. Tom Quinn"'
+              onChange={(e) =>
+                onUpdate(() => ({ ...payload, signatureName: e.target.value }))
+              }
+              className="form-input"
+            />
+            <input
+              type="text"
+              value={payload.signatureRole ?? ""}
+              maxLength={120}
+              placeholder='Signature role — e.g. "Pastor"'
+              onChange={(e) =>
+                onUpdate(() => ({ ...payload, signatureRole: e.target.value }))
+              }
+              className="form-input"
             />
           </div>
         </div>
@@ -1623,6 +1762,7 @@ const LEAF_KINDS: [PageLeafBlock["kind"], string][] = [
   ["featured_ministries", "Ministries"],
   ["featured_events", "Events"],
   ["podcast_episode", "Podcast"],
+  ["pastor_welcome", "Pastor welcome"],
 ];
 
 function blankLeafBlock(kind: PageLeafBlock["kind"]): PageLeafBlock {
@@ -1665,6 +1805,8 @@ function blankLeafBlock(kind: PageLeafBlock["kind"]): PageLeafBlock {
       return { kind: "featured_events", count: 4 };
     case "podcast_episode":
       return { kind: "podcast_episode", url: "" };
+    case "pastor_welcome":
+      return { kind: "pastor_welcome", html: "" };
   }
 }
 
@@ -1696,6 +1838,7 @@ function AddBlockMenu({
             ["featured_ministries", "Featured ministries"],
             ["featured_events", "Featured events"],
             ["podcast_episode", "Podcast episode"],
+            ["pastor_welcome", "Pastor welcome"],
             ["columns", "Columns"],
           ] as const
         ).map(([k, label]) => (
@@ -1757,6 +1900,8 @@ function blankBlock(kind: PageSectionPayload["kind"]): PageSectionPayload {
       return { kind: "featured_events", count: 4 };
     case "podcast_episode":
       return { kind: "podcast_episode", url: "" };
+    case "pastor_welcome":
+      return { kind: "pastor_welcome", html: "" };
     case "columns":
       return {
         kind: "columns",
@@ -1782,6 +1927,7 @@ function prettyKind(k: PageSectionPayload["kind"]): string {
     featured_ministries: "Featured ministries",
     featured_events: "Featured events",
     podcast_episode: "Podcast episode",
+    pastor_welcome: "Pastor welcome",
     columns: "Columns",
   }[k];
 }

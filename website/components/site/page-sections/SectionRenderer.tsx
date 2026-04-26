@@ -10,6 +10,7 @@ import type {
 import { EventCard } from "@/components/site/EventCard";
 import { MinistryCard } from "@/components/site/MinistryCard";
 import { RichTextRenderer } from "@/components/site/RichTextRenderer";
+import { IconRender } from "@/components/site/IconRender";
 import { VideoBlock } from "./VideoBlock";
 
 /**
@@ -86,23 +87,39 @@ function HeaderEl({
   header?: SectionHeader;
   level?: 2 | 3;
 }) {
-  if (!header || (!header.heading && !header.subheading)) return null;
+  if (!header || (!header.heading && !header.subheading && !header.eyebrow))
+    return null;
   const Tag = level === 3 ? "h3" : "h2";
+  const isCenter = header.align === "center";
+  // Display style: clamped serif title + rust rule + lede; mirrors
+  // SectionHead from the original mockup.
+  const wrapClass =
+    "mb-6 max-w-[60ch] " + (isCenter ? "mx-auto text-center" : "");
+  const titleClass =
+    level === 3
+      ? "font-serif text-xl font-bold text-navy [.sh-on-dark_&]:text-white"
+      : "font-serif font-bold text-navy [.sh-on-dark_&]:text-white text-[clamp(28px,3.2vw,40px)] leading-tight";
+  const ruleClass =
+    "mt-3 inline-block h-[3px] w-14 rounded-sm bg-rust [.sh-on-dark_&]:bg-gold";
   return (
-    <header className="mb-4">
+    <header className={wrapClass}>
+      {header.eyebrow && (
+        <span className="mb-1 block font-sans text-xs font-semibold uppercase tracking-[0.14em] text-rust [.sh-on-dark_&]:text-gold">
+          {header.eyebrow}
+        </span>
+      )}
       {header.heading && (
-        <Tag
-          className={
-            level === 3
-              ? "font-serif text-xl font-bold text-navy"
-              : "font-serif text-2xl font-bold text-navy"
-          }
-        >
+        <Tag id={header.anchorId} className={titleClass}>
           {header.heading}
         </Tag>
       )}
+      {header.heading && level === 2 && (
+        <span className={ruleClass} aria-hidden="true" />
+      )}
       {header.subheading && (
-        <p className="mt-1 text-sm text-ink-2">{header.subheading}</p>
+        <p className="mt-3 text-[17px] leading-snug text-ink-2 [.sh-on-dark_&]:text-white/80">
+          {header.subheading}
+        </p>
       )}
     </header>
   );
@@ -629,6 +646,67 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       );
     }
 
+    case "pastor_welcome": {
+      const photoUrl = p.photoBlobKey
+        ? ctx.images.get(p.photoBlobKey) ?? null
+        : null;
+      const reverse = p.mediaSide === "right";
+      const hasVideo = !!p.videoUrl && !!p.videoType;
+      const mediaEl = hasVideo ? (
+        <div className="overflow-hidden rounded-2xl border border-rule">
+          <VideoBlock
+            url={p.videoUrl!}
+            type={p.videoType!}
+            poster={photoUrl ?? undefined}
+          />
+        </div>
+      ) : photoUrl ? (
+        <div className="overflow-hidden rounded-2xl border border-rule">
+          <Image
+            src={photoUrl}
+            alt={p.photoAlt ?? p.signatureName ?? "Pastor"}
+            width={900}
+            height={1100}
+            className="h-auto w-full object-cover"
+          />
+        </div>
+      ) : (
+        <div className="aspect-[4/5] rounded-2xl border border-dashed border-rule bg-cream/40" />
+      );
+      const textEl = (
+        <div>
+          <div className="sh-prose">
+            <RichTextRenderer html={p.html} />
+          </div>
+          {(p.signatureName || p.signatureRole) && (
+            <div className="mt-6 border-t border-rule pt-4">
+              {p.signatureName && (
+                <p className="font-serif text-lg font-bold text-navy [.sh-on-dark_&]:text-white">
+                  {p.signatureName}
+                </p>
+              )}
+              {p.signatureRole && (
+                <p className="text-sm text-ink-2 [.sh-on-dark_&]:text-white/80">
+                  {p.signatureRole}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      );
+      return (
+        <>
+          <HeaderEl header={p.header} />
+          <div
+            className={`grid gap-8 md:grid-cols-[5fr_7fr] md:items-center ${reverse ? "md:[&>*:first-child]:order-2" : ""}`}
+          >
+            {mediaEl}
+            {textEl}
+          </div>
+        </>
+      );
+    }
+
     case "columns": {
       const ratio =
         p.ratio === "60-40"
@@ -842,7 +920,13 @@ function BentoTileCard({
   imageUrl,
   accent,
 }: {
-  card: { title: string; summary?: string; href?: string; imageBlobKey?: string | null };
+  card: {
+    title: string;
+    summary?: string;
+    href?: string;
+    imageBlobKey?: string | null;
+    iconName?: string | null;
+  };
   imageUrl: string | null;
   accent: "default" | "navy";
 }) {
@@ -850,9 +934,17 @@ function BentoTileCard({
     accent === "navy"
       ? "sh-on-dark group block h-full rounded-lg border border-navy/15 bg-navy p-5 text-white transition-all hover:-translate-y-1 hover:shadow-hover"
       : "group block h-full rounded-lg border border-rule bg-white p-5 transition-all hover:-translate-y-1 hover:shadow-hover";
+  // Precedence: icon > image > placeholder arrow.
+  const iconBubbleClass =
+    "mb-3 flex size-12 items-center justify-center rounded-md " +
+    (accent === "navy" ? "bg-white/10 text-gold" : "bg-navy-pale text-navy");
   const inner = (
     <article className={wrapClass}>
-      {imageUrl ? (
+      {card.iconName ? (
+        <div className={iconBubbleClass} aria-hidden="true">
+          <IconRender name={card.iconName} size={24} />
+        </div>
+      ) : imageUrl ? (
         <Image
           src={imageUrl}
           alt=""
@@ -861,15 +953,7 @@ function BentoTileCard({
           className="mb-3 size-12 rounded-md object-cover"
         />
       ) : (
-        <div
-          className={
-            "mb-3 flex size-12 items-center justify-center rounded-md " +
-            (accent === "navy"
-              ? "bg-white/10 text-gold"
-              : "bg-navy-pale text-navy")
-          }
-          aria-hidden="true"
-        >
+        <div className={iconBubbleClass} aria-hidden="true">
           <svg
             width="20"
             height="20"

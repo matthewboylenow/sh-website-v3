@@ -7,6 +7,7 @@ import type {
   SectionHeader,
 } from "@/db/schema";
 import { VideoBlock } from "@/components/site/page-sections/VideoBlock";
+import { IconRender } from "@/components/site/IconRender";
 
 /**
  * Client-side mirror of the public SectionRenderer for in-editor preview.
@@ -54,23 +55,34 @@ function HeaderEl({
   header?: SectionHeader;
   level?: 2 | 3;
 }) {
-  if (!header || (!header.heading && !header.subheading)) return null;
+  if (!header || (!header.heading && !header.subheading && !header.eyebrow))
+    return null;
   const Tag = level === 3 ? "h3" : "h2";
+  const isCenter = header.align === "center";
+  const wrapClass =
+    "mb-6 max-w-[60ch] " + (isCenter ? "mx-auto text-center" : "");
+  const titleClass =
+    level === 3
+      ? "font-serif text-xl font-bold text-navy"
+      : "font-serif font-bold text-navy text-[clamp(28px,3.2vw,40px)] leading-tight";
   return (
-    <header className="mb-4">
-      {header.heading && (
-        <Tag
-          className={
-            level === 3
-              ? "font-serif text-xl font-bold text-navy"
-              : "font-serif text-2xl font-bold text-navy"
-          }
-        >
-          {header.heading}
-        </Tag>
+    <header className={wrapClass}>
+      {header.eyebrow && (
+        <span className="mb-1 block font-sans text-xs font-semibold uppercase tracking-[0.14em] text-rust">
+          {header.eyebrow}
+        </span>
+      )}
+      {header.heading && <Tag className={titleClass}>{header.heading}</Tag>}
+      {header.heading && level === 2 && (
+        <span
+          className="mt-3 inline-block h-[3px] w-14 rounded-sm bg-rust"
+          aria-hidden="true"
+        />
       )}
       {header.subheading && (
-        <p className="mt-1 text-sm text-ink-2">{header.subheading}</p>
+        <p className="mt-3 text-[17px] leading-snug text-ink-2">
+          {header.subheading}
+        </p>
       )}
     </header>
   );
@@ -236,12 +248,17 @@ function renderInner(
           <ul className={`grid gap-6 ${cols}`}>
             {p.cards.map((c, i) => {
               const url = c.imageBlobKey ? imgUrls[c.imageBlobKey] : null;
+              const showIcon = p.layout === "bento" && i >= 2 && c.iconName;
               return (
                 <li
                   key={i}
                   className="overflow-hidden rounded-lg border border-rule bg-white"
                 >
-                  {url ? (
+                  {showIcon ? (
+                    <div className="grid h-48 w-full place-items-center bg-navy-pale text-navy">
+                      <IconRender name={c.iconName} size={48} />
+                    </div>
+                  ) : url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={url} alt={c.title} className="h-48 w-full object-cover" />
                   ) : (
@@ -398,6 +415,59 @@ function renderInner(
           </div>
         </>
       );
+
+    case "pastor_welcome": {
+      const photoUrl = p.photoBlobKey ? imgUrls[p.photoBlobKey] : null;
+      const hasVideo = !!p.videoUrl;
+      const reverse = p.mediaSide === "right";
+      return (
+        <>
+          <HeaderEl header={p.header} />
+          <div
+            className={`grid gap-8 md:grid-cols-[5fr_7fr] md:items-center ${reverse ? "md:[&>*:first-child]:order-2" : ""}`}
+          >
+            {hasVideo ? (
+              <div className="grid aspect-video place-items-center rounded-2xl border border-dashed border-rule bg-navy/5 text-xs text-ink-3">
+                Video plays on the public site
+              </div>
+            ) : photoUrl ? (
+              <div className="overflow-hidden rounded-2xl border border-rule">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photoUrl}
+                  alt={p.photoAlt ?? p.signatureName ?? "Pastor"}
+                  className="h-auto w-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="aspect-[4/5] rounded-2xl border border-dashed border-rule bg-cream/40" />
+            )}
+            <div>
+              <div
+                className="sh-prose"
+                dangerouslySetInnerHTML={{
+                  __html:
+                    p.html ||
+                    '<p class="text-ink-3">No welcome text yet.</p>',
+                }}
+              />
+              {(p.signatureName || p.signatureRole) && (
+                <div className="mt-6 border-t border-rule pt-4">
+                  {p.signatureName && (
+                    <p className="font-serif text-lg font-bold text-navy">
+                      {p.signatureName}
+                    </p>
+                  )}
+                  {p.signatureRole && (
+                    <p className="text-sm text-ink-2">{p.signatureRole}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      );
+    }
 
     case "columns": {
       const ratio =

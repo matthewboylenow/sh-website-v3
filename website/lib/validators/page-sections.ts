@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidIconName } from "@/lib/icon-catalog";
 
 /**
  * Validators for the ministry block system. Mirrors the discriminated
@@ -9,6 +10,8 @@ import { z } from "zod";
 const HeaderSchema = z.object({
   heading: z.string().max(120).optional(),
   subheading: z.string().max(200).optional(),
+  eyebrow: z.string().max(60).optional(),
+  align: z.enum(["left", "center"]).optional(),
   anchorId: z
     .string()
     .max(60)
@@ -52,6 +55,14 @@ const CardGridCardSchema = z.object({
   href: z.string().max(1000).optional(),
   imageBlobKey: z.string().max(500).optional().nullable(),
   ctaLabel: z.string().max(40).optional(),
+  iconName: z
+    .string()
+    .max(60)
+    .optional()
+    .nullable()
+    .refine((v) => v == null || v === "" || isValidIconName(v), {
+      message: "Unknown icon",
+    }),
 });
 
 /**
@@ -177,6 +188,19 @@ const LeafPayloadSchema = z.discriminatedUnion("kind", [
     description: z.string().max(1000).optional(),
     subscribeLabel: z.string().max(40).optional(),
     subscribeHref: z.string().max(1000).optional(),
+  }),
+  z.object({
+    kind: z.literal("pastor_welcome"),
+    header: HeaderSchema.optional(),
+    // Optional in-progress: editor allows saving with no media yet.
+    videoUrl: z.string().max(1000).optional(),
+    videoType: z.enum(["mp4", "hls", "youtube", "vimeo"]).optional(),
+    photoBlobKey: z.string().max(500).optional().nullable(),
+    photoAlt: z.string().max(200).optional(),
+    html: z.string().max(20000),
+    signatureName: z.string().max(120).optional(),
+    signatureRole: z.string().max(120).optional(),
+    mediaSide: z.enum(["left", "right"]).optional(),
   }),
 ]);
 

@@ -257,6 +257,13 @@ export const formationPages = pgTable(
 export type SectionHeader = {
   heading?: string;
   subheading?: string;
+  /** Optional small uppercase tracker shown above the heading.
+   *  Same role as the eyebrow on the live mockup's section heads. */
+  eyebrow?: string;
+  /** "left" (default) or "center". Center sets a max-width and centers
+   *  the eyebrow + title + rule + lede stack — matches the mockup's
+   *  display-style section heads. */
+  align?: "left" | "center";
   /** Anchor id for deep-linking — kebab-case, slugified by the editor. */
   anchorId?: string;
 };
@@ -297,6 +304,10 @@ export type CardGridCard = {
   /** Optional CTA chip label. Renders as a small button on overlay-style
    *  cards; ignored for stacked cards (whole card is already the link). */
   ctaLabel?: string;
+  /** Lucide icon name from the curated catalog. When set, bento tiles
+   *  render the icon instead of the image. Unknown names render nothing
+   *  and the placeholder arrow shows. */
+  iconName?: string | null;
 };
 
 /** Parents that can own page_sections rows. Polymorphic discriminator. */
@@ -402,6 +413,26 @@ export type PageLeafBlock =
       category?: string;
       ctaLabel?: string;
       ctaHref?: string;
+    }
+  | {
+      kind: "pastor_welcome";
+      header?: SectionHeader;
+      /** Optional video — same shape as a video block. When set, the
+       *  media column renders the video; otherwise it falls back to the
+       *  pastor's photo. */
+      videoUrl?: string;
+      videoType?: "mp4" | "hls" | "youtube" | "vimeo";
+      /** Photo shown when no video is set, or as the video poster. */
+      photoBlobKey?: string | null;
+      photoAlt?: string;
+      /** Sanitized HTML body — the welcome letter itself. */
+      html: string;
+      /** Signature line — e.g. "Fr. Tom Quinn". */
+      signatureName?: string;
+      /** Sub-line under the signature — e.g. "Pastor". */
+      signatureRole?: string;
+      /** Which side the media sits on. Default left. */
+      mediaSide?: "left" | "right";
     }
   | {
       kind: "podcast_episode";

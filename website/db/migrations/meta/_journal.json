@@ -113,6 +113,13 @@
       "when": 1777200000000,
       "tag": "0015_homepage_bento_layout",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1777205000000,
+      "tag": "0016_pastor_welcome_block",
+      "breakpoints": true
     }
   ]
 }
