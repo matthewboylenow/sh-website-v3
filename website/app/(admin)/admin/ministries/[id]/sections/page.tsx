@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import {
   ministries,
-  ministrySections,
+  pageSections,
   staff,
-  type MinistrySectionPayload,
+  type PageSectionPayload,
 } from "@/db/schema";
 import { resolveKeys } from "@/lib/blob";
 import { SectionEditor } from "./SectionEditor";
@@ -40,14 +40,19 @@ export default async function MinistrySectionsPage({
   const [rows, staffOptions] = await Promise.all([
     db
       .select({
-        id: ministrySections.id,
-        position: ministrySections.position,
-        kind: ministrySections.kind,
-        payload: ministrySections.payload,
+        id: pageSections.id,
+        position: pageSections.position,
+        kind: pageSections.kind,
+        payload: pageSections.payload,
       })
-      .from(ministrySections)
-      .where(eq(ministrySections.ministryId, id))
-      .orderBy(asc(ministrySections.position)),
+      .from(pageSections)
+      .where(
+        and(
+          eq(pageSections.parentKind, "ministry"),
+          eq(pageSections.parentId, id),
+        ),
+      )
+      .orderBy(asc(pageSections.position)),
     db
       .select({ id: staff.id, name: staff.name, role: staff.role })
       .from(staff)
@@ -57,7 +62,7 @@ export default async function MinistrySectionsPage({
   // Pre-resolve every blob URL referenced in the payloads so the
   // editor renders in-place previews without a round-trip per row.
   const blobKeys = new Set<string>();
-  function walk(p: MinistrySectionPayload) {
+  function walk(p: PageSectionPayload) {
     if (p.kind === "image" || p.kind === "image_text") blobKeys.add(p.blobKey);
     if (p.kind === "image_gallery") p.images.forEach((i) => blobKeys.add(i.blobKey));
     if (p.kind === "video" && p.posterBlobKey) blobKeys.add(p.posterBlobKey);
@@ -66,7 +71,7 @@ export default async function MinistrySectionsPage({
     if (p.kind === "callout_banner" && p.imageBlobKey) blobKeys.add(p.imageBlobKey);
     if (p.kind === "columns") p.columns.forEach((c) => c.blocks.forEach(walk));
   }
-  for (const r of rows) walk(r.payload as MinistrySectionPayload);
+  for (const r of rows) walk(r.payload as PageSectionPayload);
 
   // Also include staff photos so the staff_card editor can preview.
   const staffPhotoRows =
@@ -124,7 +129,7 @@ export default async function MinistrySectionsPage({
           ministryId={m.id}
           initial={rows.map((r) => ({
             id: r.id,
-            payload: r.payload as MinistrySectionPayload,
+            payload: r.payload as PageSectionPayload,
           }))}
           initialImageUrls={initialImageUrls}
           staffOptions={staffOptions}

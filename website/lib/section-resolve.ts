@@ -2,14 +2,14 @@ import { inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
   staff,
-  type MinistryLeafBlock,
-  type MinistrySectionPayload,
+  type PageLeafBlock,
+  type PageSectionPayload,
 } from "@/db/schema";
 import { resolveKeys } from "@/lib/blob";
 import type {
   RenderContext,
   StaffRendered,
-} from "@/components/site/ministry-sections/SectionRenderer";
+} from "@/components/site/page-sections/SectionRenderer";
 
 /**
  * Walk a list of ministry-section payloads (recursively through Columns)
@@ -17,7 +17,7 @@ import type {
  * each, returned as Maps the renderer reads.
  */
 
-function walkLeaf(p: MinistryLeafBlock, blobKeys: Set<string>, staffIds: Set<string>) {
+function walkLeaf(p: PageLeafBlock, blobKeys: Set<string>, staffIds: Set<string>) {
   switch (p.kind) {
     case "image":
     case "image_text":
@@ -46,7 +46,7 @@ function walkLeaf(p: MinistryLeafBlock, blobKeys: Set<string>, staffIds: Set<str
 }
 
 function walk(
-  payload: MinistrySectionPayload,
+  payload: PageSectionPayload,
   blobKeys: Set<string>,
   staffIds: Set<string>,
 ): void {
@@ -60,7 +60,7 @@ function walk(
 }
 
 export async function buildSectionContext(
-  payloads: MinistrySectionPayload[],
+  payloads: PageSectionPayload[],
 ): Promise<RenderContext> {
   const blobKeys = new Set<string>();
   const staffIds = new Set<string>();

@@ -8,22 +8,22 @@ import type {
   CardGridCard,
   EmbedPayload,
   LinkItem,
-  MinistryLeafBlock,
-  MinistrySectionPayload,
+  PageLeafBlock,
+  PageSectionPayload,
   SectionHeader,
 } from "@/db/schema";
 import { saveMinistrySectionsAction } from "./_actions";
 import { SectionImagePicker } from "./SectionImagePicker";
 
 /**
- * Single-state controlled editor over the ministry-sections array.
+ * Single-state controlled editor over the page-sections array.
  * Save sends the full ordered array via Server Action with replace-set
  * semantics. Image previews come from a server-resolved Map; new uploads
  * inject themselves into the local map so the in-flight section renders
  * its picture without a refresh round-trip.
  */
 
-type Row = { clientId: string; payload: MinistrySectionPayload };
+type Row = { clientId: string; payload: PageSectionPayload };
 
 type StaffOption = { id: string; name: string; role: string | null };
 
@@ -37,7 +37,7 @@ export function SectionEditor({
   staffOptions,
 }: {
   ministryId: string;
-  initial: { id: string; payload: MinistrySectionPayload }[];
+  initial: { id: string; payload: PageSectionPayload }[];
   /** blobKey → URL, server-resolved on first render. */
   initialImageUrls: Record<string, string>;
   staffOptions: StaffOption[];
@@ -51,7 +51,7 @@ export function SectionEditor({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  const updateAt = (i: number, replacer: (p: MinistrySectionPayload) => MinistrySectionPayload) =>
+  const updateAt = (i: number, replacer: (p: PageSectionPayload) => PageSectionPayload) =>
     setRows((cur) =>
       cur.map((r, idx) => (idx === i ? { ...r, payload: replacer(r.payload) } : r)),
     );
@@ -69,7 +69,7 @@ export function SectionEditor({
       return next;
     });
   };
-  const addRow = (payload: MinistrySectionPayload) =>
+  const addRow = (payload: PageSectionPayload) =>
     setRows((cur) => [...cur, { clientId: newClientId(), payload }]);
 
   const registerImage = (key: string, url: string) =>
@@ -155,10 +155,10 @@ function BlockRow({
   registerImage,
   staffOptions,
 }: {
-  payload: MinistrySectionPayload;
+  payload: PageSectionPayload;
   index: number;
   total: number;
-  onUpdate: (replacer: (p: MinistrySectionPayload) => MinistrySectionPayload) => void;
+  onUpdate: (replacer: (p: PageSectionPayload) => PageSectionPayload) => void;
   onMove: (dir: -1 | 1) => void;
   onRemove: () => void;
   ministryId: string;
@@ -260,8 +260,8 @@ function BlockEditor({
   registerImage,
   staffOptions,
 }: {
-  payload: MinistrySectionPayload;
-  onUpdate: (replacer: (p: MinistrySectionPayload) => MinistrySectionPayload) => void;
+  payload: PageSectionPayload;
+  onUpdate: (replacer: (p: PageSectionPayload) => PageSectionPayload) => void;
   ministryId: string;
   imgUrls: Record<string, string>;
   registerImage: (key: string, url: string) => void;
@@ -995,8 +995,8 @@ function ColumnsEditor({
   registerImage,
   staffOptions,
 }: {
-  payload: Extract<MinistrySectionPayload, { kind: "columns" }>;
-  onUpdate: (replacer: (p: MinistrySectionPayload) => MinistrySectionPayload) => void;
+  payload: Extract<PageSectionPayload, { kind: "columns" }>;
+  onUpdate: (replacer: (p: PageSectionPayload) => PageSectionPayload) => void;
   ministryId: string;
   imgUrls: Record<string, string>;
   registerImage: (key: string, url: string) => void;
@@ -1009,7 +1009,7 @@ function ColumnsEditor({
     onUpdate(() => ({ ...payload, columns: next }));
   };
 
-  const updateColumnAt = (i: number, replacer: (blocks: MinistryLeafBlock[]) => MinistryLeafBlock[]) =>
+  const updateColumnAt = (i: number, replacer: (blocks: PageLeafBlock[]) => PageLeafBlock[]) =>
     onUpdate(() => ({
       ...payload,
       columns: payload.columns.map((c, idx) =>
@@ -1087,14 +1087,14 @@ function ColumnLane({
   onUpdate,
 }: {
   columnIndex: number;
-  blocks: MinistryLeafBlock[];
+  blocks: PageLeafBlock[];
   ministryId: string;
   imgUrls: Record<string, string>;
   registerImage: (key: string, url: string) => void;
   staffOptions: StaffOption[];
-  onUpdate: (replacer: (blocks: MinistryLeafBlock[]) => MinistryLeafBlock[]) => void;
+  onUpdate: (replacer: (blocks: PageLeafBlock[]) => PageLeafBlock[]) => void;
 }) {
-  const updateAt = (i: number, replacer: (b: MinistryLeafBlock) => MinistryLeafBlock) =>
+  const updateAt = (i: number, replacer: (b: PageLeafBlock) => PageLeafBlock) =>
     onUpdate((cur) => cur.map((b, idx) => (idx === i ? replacer(b) : b)));
   const removeAt = (i: number) => onUpdate((cur) => cur.filter((_, idx) => idx !== i));
   const moveAt = (i: number, dir: -1 | 1) =>
@@ -1109,7 +1109,7 @@ function ColumnLane({
       next[t] = a;
       return next;
     });
-  const add = (kind: MinistryLeafBlock["kind"]) =>
+  const add = (kind: PageLeafBlock["kind"]) =>
     onUpdate((cur) => [...cur, blankLeafBlock(kind)]);
 
   return (
@@ -1150,8 +1150,8 @@ function ColumnLane({
             </div>
             {/* Reuse the leaf editor by upcasting to the section payload type. */}
             <BlockEditor
-              payload={b as unknown as MinistrySectionPayload}
-              onUpdate={(replacer) => updateAt(i, (cur) => replacer(cur as unknown as MinistrySectionPayload) as MinistryLeafBlock)}
+              payload={b as unknown as PageSectionPayload}
+              onUpdate={(replacer) => updateAt(i, (cur) => replacer(cur as unknown as PageSectionPayload) as PageLeafBlock)}
               ministryId={ministryId}
               imgUrls={imgUrls}
               registerImage={registerImage}
@@ -1176,7 +1176,7 @@ function ColumnLane({
   );
 }
 
-const LEAF_KINDS: [MinistryLeafBlock["kind"], string][] = [
+const LEAF_KINDS: [PageLeafBlock["kind"], string][] = [
   ["heading", "Heading"],
   ["rich_text", "Text"],
   ["image", "Image"],
@@ -1191,7 +1191,7 @@ const LEAF_KINDS: [MinistryLeafBlock["kind"], string][] = [
   ["callout_banner", "Callout"],
 ];
 
-function blankLeafBlock(kind: MinistryLeafBlock["kind"]): MinistryLeafBlock {
+function blankLeafBlock(kind: PageLeafBlock["kind"]): PageLeafBlock {
   switch (kind) {
     case "heading":
       return { kind: "heading", header: { heading: "" } };
@@ -1226,7 +1226,7 @@ function blankLeafBlock(kind: MinistryLeafBlock["kind"]): MinistryLeafBlock {
 function AddBlockMenu({
   onAdd,
 }: {
-  onAdd: (payload: MinistrySectionPayload) => void;
+  onAdd: (payload: PageSectionPayload) => void;
 }) {
   return (
     <div className="rounded-md border border-dashed border-rule bg-cream/40 p-4">
@@ -1269,7 +1269,7 @@ function AddBlockMenu({
 /* Helpers                                                             */
 /* ------------------------------------------------------------------ */
 
-function blankBlock(kind: MinistrySectionPayload["kind"]): MinistrySectionPayload {
+function blankBlock(kind: PageSectionPayload["kind"]): PageSectionPayload {
   switch (kind) {
     case "heading":
       return { kind: "heading", header: { heading: "" } };
@@ -1306,7 +1306,7 @@ function blankBlock(kind: MinistrySectionPayload["kind"]): MinistrySectionPayloa
   }
 }
 
-function prettyKind(k: MinistrySectionPayload["kind"]): string {
+function prettyKind(k: PageSectionPayload["kind"]): string {
   return {
     heading: "Heading",
     rich_text: "Rich text",

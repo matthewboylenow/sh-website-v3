@@ -3,14 +3,14 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/site/Container";
 import { PhotoPlaceholder } from "@/components/site/PhotoPlaceholder";
 import { RichTextRenderer } from "@/components/site/RichTextRenderer";
-import { SectionRenderer } from "@/components/site/ministry-sections/SectionRenderer";
+import { SectionRenderer } from "@/components/site/page-sections/SectionRenderer";
 import { assetUrl } from "@/lib/blob";
 import {
   getMinistryBySlug,
   getMinistrySections,
 } from "@/lib/queries/ministries.query";
 import { buildSectionContext } from "@/lib/section-resolve";
-import type { MinistrySectionPayload } from "@/db/schema";
+import type { PageSectionPayload } from "@/db/schema";
 import { MinistryInquiryForm } from "./MinistryInquiryForm";
 
 export const revalidate = 3600;
@@ -43,7 +43,7 @@ export default async function MinistryDetailPage({
     assetUrl(m.photoBlobKey),
     getMinistrySections(m.id),
   ]);
-  const sections = sectionRows.map((r) => r.payload as MinistrySectionPayload);
+  const sections = sectionRows.map((r) => r.payload as PageSectionPayload);
   const sectionCtx = await buildSectionContext(sections);
 
   return (

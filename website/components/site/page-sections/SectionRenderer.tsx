@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type {
-  MinistrySectionPayload,
+  PageSectionPayload,
   SectionHeader,
   EmbedPayload,
 } from "@/db/schema";
@@ -38,7 +38,7 @@ export function SectionRenderer({
   ctx,
   nested = false,
 }: {
-  payload: MinistrySectionPayload;
+  payload: PageSectionPayload;
   ctx: RenderContext;
   /** True when rendered inside a Columns block — tightens spacing. */
   nested?: boolean;
@@ -82,7 +82,7 @@ function HeaderEl({
   );
 }
 
-function renderInner(p: MinistrySectionPayload, ctx: RenderContext): React.ReactNode {
+function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode {
   switch (p.kind) {
     case "heading":
       return <HeaderEl header={p.header} level={p.level ?? 2} />;
@@ -414,7 +414,7 @@ function renderInner(p: MinistrySectionPayload, ctx: RenderContext): React.React
                   // so the SectionRenderer's switch handles them.
                   <SectionRenderer
                     key={bi}
-                    payload={b as MinistrySectionPayload}
+                    payload={b as PageSectionPayload}
                     ctx={ctx}
                     nested
                   />

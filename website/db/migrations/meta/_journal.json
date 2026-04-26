@@ -64,6 +64,13 @@
       "when": 1777165661408,
       "tag": "0008_complete_karma",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1777170000000,
+      "tag": "0009_polymorphic_sections",
+      "breakpoints": true
     }
   ]
 }

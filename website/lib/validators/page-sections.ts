@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /**
  * Validators for the ministry block system. Mirrors the discriminated
- * union in db/schema.ts (MinistrySectionPayload). Recursive on the
+ * union in db/schema.ts (PageSectionPayload). Recursive on the
  * Columns block, capped at one nesting level by `nestedBlock`.
  */
 
@@ -155,12 +155,12 @@ const ColumnsBlockSchema = z.object({
     .max(3),
 });
 
-export const MinistrySectionPayloadSchema = z.union([
+export const PageSectionPayloadSchema = z.union([
   LeafPayloadSchema,
   ColumnsBlockSchema,
 ]);
 
-export type MinistrySectionPayloadInput = z.infer<typeof MinistrySectionPayloadSchema>;
+export type PageSectionPayloadInput = z.infer<typeof PageSectionPayloadSchema>;
 
 export const MinistrySectionsManifestSchema = z.object({
   sections: z
@@ -168,7 +168,7 @@ export const MinistrySectionsManifestSchema = z.object({
       z.object({
         /** Stable client id used to target updates pre-save. Empty string for new rows. */
         clientId: z.string().max(40),
-        payload: MinistrySectionPayloadSchema,
+        payload: PageSectionPayloadSchema,
       }),
     )
     .max(40),

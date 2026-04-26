@@ -1,26 +1,23 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { ministries, ministrySections } from "@/db/schema";
+import { ministries } from "@/db/schema";
 import {
-  MinistrySectionsManifestSchema,
-  type MinistrySectionsManifestInput,
-} from "@/lib/validators/ministry-sections";
-
-type Result = { ok: true } | { ok: false; error: string };
+  saveSectionsForParent,
+  type SaveSectionsResult,
+} from "@/lib/server/page-sections-actions";
+import type { MinistrySectionsManifestInput } from "@/lib/validators/page-sections";
 
 /**
- * Replace-set semantics: the editor sends the full ordered array each
- * save. We delete the existing rows and insert the new set, all in a
- * transaction. Cleaner than diffing — the section count is small.
+ * Ministry-side wrapper for the polymorphic section saver. Authorization:
+ * admins/editors save freely; ministry leads only their own ministries.
  */
 export async function saveMinistrySectionsAction(
   ministryId: string,
   manifest: MinistrySectionsManifestInput,
-): Promise<Result> {
+): Promise<SaveSectionsResult> {
   const session = await auth();
   if (!session?.user) return { ok: false, error: "Not signed in" };
 
@@ -32,14 +29,7 @@ export async function saveMinistrySectionsAction(
     }
   }
 
-  const parsed = MinistrySectionsManifestSchema.safeParse(manifest);
-  if (!parsed.success) {
-    const first = parsed.error.issues[0];
-    const path = first?.path.join(".") ?? "section";
-    return { ok: false, error: `${path}: ${first?.message ?? "Invalid input"}` };
-  }
-
-  // Confirm the ministry exists before clearing the table.
+  // Confirm the parent exists before writing.
   const [m] = await db
     .select({ id: ministries.id })
     .from(ministries)
@@ -47,26 +37,5 @@ export async function saveMinistrySectionsAction(
     .limit(1);
   if (!m) return { ok: false, error: "Ministry not found" };
 
-  try {
-    await db.transaction(async (tx) => {
-      await tx
-        .delete(ministrySections)
-        .where(eq(ministrySections.ministryId, ministryId));
-      if (parsed.data.sections.length > 0) {
-        await tx.insert(ministrySections).values(
-          parsed.data.sections.map((s, i) => ({
-            ministryId,
-            position: i,
-            kind: s.payload.kind,
-            payload: s.payload,
-          })),
-        );
-      }
-    });
-    revalidateTag("ministries");
-    revalidateTag("ministry-sections");
-    return { ok: true };
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "Database error" };
-  }
+  return saveSectionsForParent("ministry", ministryId, manifest);
 }

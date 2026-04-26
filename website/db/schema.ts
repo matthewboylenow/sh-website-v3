@@ -255,9 +255,13 @@ export type CardGridCard = {
   imageBlobKey?: string | null;
 };
 
+/** Parents that can own page_sections rows. Polymorphic discriminator. */
+export const PAGE_SECTION_PARENTS = ["ministry", "formation"] as const;
+export type PageSectionParent = (typeof PAGE_SECTION_PARENTS)[number];
+
 /** Leaf blocks — everything except the recursive Columns wrapper.
  *  Columns nest one level deep; Columns inside Columns is disallowed. */
-export type MinistryLeafBlock =
+export type PageLeafBlock =
   | { kind: "heading"; header: SectionHeader; level?: 2 | 3 }
   | { kind: "rich_text"; header?: SectionHeader; html: string }
   | {
@@ -316,33 +320,39 @@ export type MinistryLeafBlock =
     };
 
 /** Top-level block — leaves plus the Columns wrapper. */
-export type MinistrySectionPayload =
-  | MinistryLeafBlock
+export type PageSectionPayload =
+  | PageLeafBlock
   | {
       kind: "columns";
       header?: SectionHeader;
-      columns: { blocks: MinistryLeafBlock[] }[];
+      columns: { blocks: PageLeafBlock[] }[];
       ratio?: "equal" | "60-40" | "40-60";
     };
 
-export type MinistrySectionKind = MinistrySectionPayload["kind"];
+export type PageSectionKind = PageSectionPayload["kind"];
 
-export const ministrySections = pgTable(
-  "ministry_sections",
+/**
+ * Polymorphic section table. parentKind discriminates whether parentId
+ * points at a ministry or a formation page. We don't FK parentId because
+ * Postgres can't FK across multiple parent tables; the indexed
+ * (parentKind, parentId) composite covers lookups, and ON DELETE CASCADE
+ * is implemented in app code on the parent's delete path.
+ */
+export const pageSections = pgTable(
+  "page_sections",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    ministryId: uuid("ministry_id")
-      .notNull()
-      .references((): AnyPgColumn => ministries.id, { onDelete: "cascade" }),
+    parentKind: text("parent_kind", { enum: PAGE_SECTION_PARENTS }).notNull(),
+    parentId: uuid("parent_id").notNull(),
     position: integer("position").notNull().default(0),
     kind: text("kind").notNull(),
-    payload: jsonb("payload").$type<MinistrySectionPayload>().notNull(),
+    payload: jsonb("payload").$type<PageSectionPayload>().notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [
-    index("ministry_sections_ministry_idx").on(t.ministryId),
-    index("ministry_sections_position_idx").on(t.position),
+    index("page_sections_parent_idx").on(t.parentKind, t.parentId),
+    index("page_sections_position_idx").on(t.position),
   ],
 );
 
@@ -841,7 +851,7 @@ export const ministryEdits = pgTable(
 export type User = typeof users.$inferSelect;
 export type Staff = typeof staff.$inferSelect;
 export type Ministry = typeof ministries.$inferSelect;
-export type MinistrySection = typeof ministrySections.$inferSelect;
+export type PageSection = typeof pageSections.$inferSelect;
 export type Event = typeof events.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type MassTime = typeof massTimes.$inferSelect;

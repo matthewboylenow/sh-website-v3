@@ -1,7 +1,8 @@
 import { and, asc, eq } from "drizzle-orm";
+import type { PageSectionParent } from "@/db/schema";
 import { unstable_cache } from "next/cache";
 import { db } from "@/db";
-import { ministries, ministrySections, staff } from "@/db/schema";
+import { ministries, pageSections, staff } from "@/db/schema";
 
 export const getPublishedMinistries = unstable_cache(
   async () =>
@@ -52,21 +53,31 @@ export const getSpotlightMinistries = unstable_cache(
   { tags: ["ministries"], revalidate: 3600 },
 );
 
-export const getMinistrySections = unstable_cache(
-  async (ministryId: string) =>
+/** Generic loader, used by both ministries and formation pages. */
+export const getPageSections = unstable_cache(
+  async (parentKind: PageSectionParent, parentId: string) =>
     db
       .select({
-        id: ministrySections.id,
-        kind: ministrySections.kind,
-        position: ministrySections.position,
-        payload: ministrySections.payload,
+        id: pageSections.id,
+        kind: pageSections.kind,
+        position: pageSections.position,
+        payload: pageSections.payload,
       })
-      .from(ministrySections)
-      .where(eq(ministrySections.ministryId, ministryId))
-      .orderBy(asc(ministrySections.position)),
-  ["ministry-sections:by-ministry"],
-  { tags: ["ministries", "ministry-sections"], revalidate: 600 },
+      .from(pageSections)
+      .where(
+        and(
+          eq(pageSections.parentKind, parentKind),
+          eq(pageSections.parentId, parentId),
+        ),
+      )
+      .orderBy(asc(pageSections.position)),
+  ["page-sections:by-parent"],
+  { tags: ["page-sections", "ministries", "formation"], revalidate: 600 },
 );
+
+/** Convenience wrapper for the ministry call sites. */
+export const getMinistrySections = (ministryId: string) =>
+  getPageSections("ministry", ministryId);
 
 /** Distinct category values currently in use — for the /ministries
  *  filter sidebar. */
