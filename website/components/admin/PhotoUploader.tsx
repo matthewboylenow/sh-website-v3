@@ -4,6 +4,7 @@ import { upload } from "@vercel/blob/client";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { ALLOWED_IMAGE_TYPES } from "@/lib/validators/blob";
+import { MediaPickerModal } from "./MediaPickerModal";
 
 type State =
   | { kind: "idle" }
@@ -51,8 +52,20 @@ export function PhotoUploader({
       : { kind: "idle" },
   );
   const [alt, setAlt] = useState(initialAlt ?? "");
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const onPick = () => inputRef.current?.click();
+  const openLibrary = () => setPickerOpen(true);
+  const onLibrarySelect = (item: { key: string; url: string; alt: string | null }) => {
+    setState({
+      kind: "ready",
+      key: item.key,
+      previewUrl: item.url,
+      isPdf: item.key.toLowerCase().endsWith(".pdf"),
+    });
+    if (item.alt) setAlt(item.alt);
+    setPickerOpen(false);
+  };
 
   const onFile = async (file: File) => {
     const isPdf = file.type === "application/pdf";
@@ -123,15 +136,26 @@ export function PhotoUploader({
       />
 
       {state.kind === "idle" && (
-        <button
-          type="button"
-          onClick={onPick}
-          className="flex w-full flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-rule bg-cream px-6 py-10 text-center text-sm text-ink-3 transition-colors hover:border-navy hover:bg-navy-pale/30"
-        >
-          <UploadIcon />
-          <span className="font-semibold text-navy">Drop image or click to choose</span>
-          <span className="text-xs text-ink-3">JPG, PNG, WebP · up to 15MB</span>
-        </button>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={onPick}
+            className="flex w-full flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-rule bg-cream px-6 py-10 text-center text-sm text-ink-3 transition-colors hover:border-navy hover:bg-navy-pale/30"
+          >
+            <UploadIcon />
+            <span className="font-semibold text-navy">Drop image or click to choose</span>
+            <span className="text-xs text-ink-3">JPG, PNG, WebP · up to 15MB</span>
+          </button>
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={openLibrary}
+              className="text-xs font-semibold text-rust-dark hover:text-rust"
+            >
+              Or pick from media library →
+            </button>
+          </div>
+        </div>
       )}
 
       {state.kind === "uploading" && (
@@ -189,13 +213,22 @@ export function PhotoUploader({
           )}
           <div className="flex items-center justify-between gap-3 text-xs text-ink-3">
             <span className="truncate font-mono">{state.key.slice(0, 60)}</span>
-            <button
-              type="button"
-              onClick={onPick}
-              className="font-semibold text-rust-dark hover:text-rust"
-            >
-              Replace
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={openLibrary}
+                className="font-semibold text-navy hover:text-rust-dark"
+              >
+                From library
+              </button>
+              <button
+                type="button"
+                onClick={onPick}
+                className="font-semibold text-rust-dark hover:text-rust"
+              >
+                Replace
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -224,6 +257,12 @@ export function PhotoUploader({
           const file = e.target.files?.[0];
           if (file) void onFile(file);
         }}
+      />
+
+      <MediaPickerModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={onLibrarySelect}
       />
     </div>
   );

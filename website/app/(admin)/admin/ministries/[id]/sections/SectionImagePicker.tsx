@@ -2,6 +2,7 @@
 
 import { upload } from "@vercel/blob/client";
 import { useRef, useState } from "react";
+import { MediaPickerModal } from "@/components/admin/MediaPickerModal";
 
 /**
  * Slim controlled image picker for the section editor — uploads to
@@ -27,6 +28,7 @@ export function SectionImagePicker({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const onPick = async (file: File) => {
     if (!ALLOWED.includes(file.type)) {
@@ -88,7 +90,15 @@ export function SectionImagePicker({
               disabled={busy}
               className="rounded-md border border-rule bg-white px-3 py-1 text-xs font-semibold text-navy hover:border-navy"
             >
-              Replace
+              Upload
+            </button>
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              disabled={busy}
+              className="rounded-md border border-rule bg-white px-3 py-1 text-xs font-semibold text-navy hover:border-navy"
+            >
+              Library
             </button>
             <button
               type="button"
@@ -100,14 +110,24 @@ export function SectionImagePicker({
           </div>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={busy}
-          className="flex h-20 w-full items-center justify-center rounded-md border-2 border-dashed border-rule bg-cream/40 text-sm font-semibold text-ink-2 hover:border-navy hover:text-navy disabled:opacity-50"
-        >
-          {busy ? "Uploading…" : "+ Choose image"}
-        </button>
+        <div className="space-y-1.5">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={busy}
+            className="flex h-20 w-full items-center justify-center rounded-md border-2 border-dashed border-rule bg-cream/40 text-sm font-semibold text-ink-2 hover:border-navy hover:text-navy disabled:opacity-50"
+          >
+            {busy ? "Uploading…" : "+ Upload image"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            disabled={busy}
+            className="block w-full text-center text-[11px] font-semibold text-rust-dark hover:text-rust"
+          >
+            Or pick from library →
+          </button>
+        </div>
       )}
       <input
         ref={inputRef}
@@ -121,6 +141,15 @@ export function SectionImagePicker({
         }}
       />
       {error && <p className="mt-1 text-xs text-rust-dark">{error}</p>}
+
+      <MediaPickerModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(item) => {
+          onChange({ key: item.key, url: item.url });
+          setPickerOpen(false);
+        }}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import { useEffect, useState } from "react";
+import { MediaPickerModal } from "./MediaPickerModal";
 
 /**
  * Rich-text editor used across content editors (events.body,
@@ -107,6 +108,20 @@ function Toolbar({
   pathPrefix: string;
 }) {
   const [imgPending, setImgPending] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const onLibraryPick = (item: { key: string; url: string; alt: string | null }) => {
+    editor
+      .chain()
+      .focus()
+      .setImage({ src: item.url, alt: item.alt ?? "" })
+      .run();
+    editor.chain().focus().updateAttributes("image", {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ["data-blob-key" as any]: item.key,
+    }).run();
+    setPickerOpen(false);
+  };
 
   const insertLink = () => {
     const prev = editor.getAttributes("link").href as string | undefined;
@@ -279,10 +294,22 @@ function Toolbar({
       <ToolbarButton
         onClick={insertImage}
         disabled={imgPending}
-        label="Insert image"
+        label="Upload image"
       >
         {imgPending ? "…" : "🖼"}
       </ToolbarButton>
+      <ToolbarButton
+        onClick={() => setPickerOpen(true)}
+        label="Pick from library"
+      >
+        📚
+      </ToolbarButton>
+
+      <MediaPickerModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={onLibraryPick}
+      />
     </div>
   );
 }
