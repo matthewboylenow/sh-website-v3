@@ -13,6 +13,7 @@ import type {
   SectionHeader,
 } from "@/db/schema";
 import { saveMinistrySectionsAction } from "./_actions";
+import { PreviewBlock } from "./PreviewBlock";
 import { SectionImagePicker } from "./SectionImagePicker";
 
 /**
@@ -50,6 +51,13 @@ export function SectionEditor({
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  /** Per-row preview toggle, keyed by clientId. */
+  const [previewing, setPreviewing] = useState<Record<string, boolean>>({});
+  /** Master toggle — flips every row to preview, but per-row state still
+   *  wins after a manual toggle (user intent). */
+  const [previewAll, setPreviewAll] = useState(false);
+  const togglePreview = (clientId: string) =>
+    setPreviewing((cur) => ({ ...cur, [clientId]: !cur[clientId] }));
 
   const updateAt = (i: number, replacer: (p: PageSectionPayload) => PageSectionPayload) =>
     setRows((cur) =>
@@ -93,6 +101,36 @@ export function SectionEditor({
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-end gap-3 rounded-md border border-rule bg-white px-3 py-2">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3">
+          View
+        </span>
+        <button
+          type="button"
+          onClick={() => setPreviewAll(false)}
+          className={
+            "rounded-pill px-3 py-1 text-xs font-semibold " +
+            (!previewAll
+              ? "bg-navy text-white"
+              : "border border-rule bg-white text-navy hover:border-navy")
+          }
+        >
+          Edit
+        </button>
+        <button
+          type="button"
+          onClick={() => setPreviewAll(true)}
+          className={
+            "rounded-pill px-3 py-1 text-xs font-semibold " +
+            (previewAll
+              ? "bg-navy text-white"
+              : "border border-rule bg-white text-navy hover:border-navy")
+          }
+        >
+          Preview all
+        </button>
+      </div>
+
       {rows.length === 0 ? (
         <p className="rounded-lg border border-dashed border-rule bg-cream/40 px-6 py-12 text-center text-sm text-ink-3">
           No sections yet. Add one below to start building the page.
@@ -112,6 +150,8 @@ export function SectionEditor({
                 imgUrls={imgUrls}
                 registerImage={registerImage}
                 staffOptions={staffOptions}
+                previewing={previewAll || !!previewing[r.clientId]}
+                onTogglePreview={() => togglePreview(r.clientId)}
               />
             </li>
           ))}
@@ -154,6 +194,8 @@ function BlockRow({
   imgUrls,
   registerImage,
   staffOptions,
+  previewing,
+  onTogglePreview,
 }: {
   payload: PageSectionPayload;
   index: number;
@@ -165,6 +207,8 @@ function BlockRow({
   imgUrls: Record<string, string>;
   registerImage: (key: string, url: string) => void;
   staffOptions: StaffOption[];
+  previewing: boolean;
+  onTogglePreview: () => void;
 }) {
   return (
     <div className="rounded-lg border border-rule bg-white p-4">
@@ -192,21 +236,42 @@ function BlockRow({
         </button>
         <button
           type="button"
+          onClick={onTogglePreview}
+          className={
+            "ml-auto rounded-md border px-2 py-0.5 text-[10px] font-semibold " +
+            (previewing
+              ? "border-navy bg-navy text-white"
+              : "border-rule bg-white text-navy hover:border-navy")
+          }
+          title="Toggle Edit / Preview"
+        >
+          {previewing ? "Edit" : "Preview"}
+        </button>
+        <button
+          type="button"
           onClick={onRemove}
-          className="ml-auto rounded-md border border-rule bg-white px-2 py-1 text-xs text-rust-dark hover:border-rust"
+          className="rounded-md border border-rule bg-white px-2 py-1 text-xs text-rust-dark hover:border-rust"
         >
           ✕ Remove
         </button>
       </div>
 
-      <BlockEditor
-        payload={payload}
-        onUpdate={onUpdate}
-        ministryId={ministryId}
-        imgUrls={imgUrls}
-        registerImage={registerImage}
-        staffOptions={staffOptions}
-      />
+      {previewing ? (
+        <PreviewBlock
+          payload={payload}
+          imgUrls={imgUrls}
+          staffOptions={staffOptions}
+        />
+      ) : (
+        <BlockEditor
+          payload={payload}
+          onUpdate={onUpdate}
+          ministryId={ministryId}
+          imgUrls={imgUrls}
+          registerImage={registerImage}
+          staffOptions={staffOptions}
+        />
+      )}
     </div>
   );
 }
