@@ -1,10 +1,10 @@
 "use client";
 
 import { useId, useState } from "react";
-import type { MinistryInquiryConfig } from "@/db/schema";
+import type { InquiryField, MinistryInquiryConfig } from "@/db/schema";
+import { fieldKey, resolveFields, SYSTEM_INPUT_TYPE } from "@/lib/inquiry-fields";
 
 type Kind = MinistryInquiryConfig["buttons"][number]["kind"];
-type CustomField = NonNullable<MinistryInquiryConfig["customFields"]>[number];
 
 export function MinistryInquiryForm({
   slug,
@@ -53,7 +53,7 @@ export function MinistryInquiryForm({
           kind={activeKind}
           kindLabel={enabledButtons.find((b) => b.kind === activeKind)?.label ?? ""}
           ministryName={ministryName}
-          customFields={config.customFields ?? []}
+          fields={resolveFields(config)}
           onClose={() => setActiveKind(null)}
         />
       )}
@@ -66,14 +66,14 @@ function InquiryFormBody({
   kind,
   kindLabel,
   ministryName,
-  customFields,
+  fields,
   onClose,
 }: {
   slug: string;
   kind: Kind;
   kindLabel: string;
   ministryName: string;
-  customFields: CustomField[];
+  fields: InquiryField[];
   onClose: () => void;
 }) {
   const baseId = useId();
@@ -88,20 +88,34 @@ function InquiryFormBody({
 
     const fd = new FormData(e.currentTarget);
 
-    // Collect custom-field answers, keyed by the configured label so the
-    // admin dashboard renders them by question rather than positional id.
+    // System slots — pull by hardcoded names. They only render when shown,
+    // so missing ones default to empty.
+    const sysName = String(fd.get("name") ?? "").trim();
+    const sysEmail = String(fd.get("email") ?? "").trim();
+    const sysPhone = String(fd.get("phone") ?? "").trim();
+    const sysMessage = String(fd.get("message") ?? "").trim();
+
+    // Custom fields — collect by id and key into customAnswers using the
+    // visible label. Checkboxes return multiple values that we join.
     const customAnswers: Record<string, string> = {};
-    customFields.forEach((f, i) => {
-      const v = String(fd.get(`cf-${i}`) ?? "").trim();
-      if (v) customAnswers[f.label] = v;
-    });
+    for (const f of fields) {
+      if (f.kind !== "custom") continue;
+      const formName = `cf-${f.id}`;
+      if (f.type === "checkboxes") {
+        const vals = fd.getAll(formName).map((v) => String(v));
+        if (vals.length > 0) customAnswers[f.label] = vals.join(" · ");
+      } else {
+        const v = String(fd.get(formName) ?? "").trim();
+        if (v) customAnswers[f.label] = v;
+      }
+    }
 
     const body = {
       kind,
-      name: String(fd.get("name") ?? "").trim(),
-      email: String(fd.get("email") ?? "").trim(),
-      phone: String(fd.get("phone") ?? "").trim() || null,
-      message: String(fd.get("message") ?? "").trim() || null,
+      name: sysName,
+      email: sysEmail,
+      phone: sysPhone || null,
+      message: sysMessage || null,
       customAnswers: Object.keys(customAnswers).length > 0 ? customAnswers : undefined,
     };
 
@@ -140,74 +154,12 @@ function InquiryFormBody({
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-rust-dark">
         {kindLabel}
       </p>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field id={`${baseId}-name`} label="Your name" required>
-          <input
-            id={`${baseId}-name`}
-            name="name"
-            type="text"
-            required
-            maxLength={200}
-            autoComplete="name"
-            className="form-input"
-          />
-        </Field>
-        <Field id={`${baseId}-email`} label="Email" required>
-          <input
-            id={`${baseId}-email`}
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            className="form-input"
-          />
-        </Field>
-      </div>
-      <Field id={`${baseId}-phone`} label="Phone (optional)">
-        <input
-          id={`${baseId}-phone`}
-          name="phone"
-          type="tel"
-          maxLength={30}
-          autoComplete="tel"
-          className="form-input"
-        />
-      </Field>
-      <Field id={`${baseId}-message`} label="Anything you'd like the leader to know? (optional)">
-        <textarea
-          id={`${baseId}-message`}
-          name="message"
-          rows={4}
-          maxLength={5000}
-          className="form-input"
-        />
-      </Field>
 
-      {customFields.map((f, i) => {
-        const id = `${baseId}-cf-${i}`;
-        const label = f.required ? f.label : `${f.label} (optional)`;
+      {fields.map((f) => {
+        if (f.kind === "system" && !f.shown) return null;
+        const id = `${baseId}-${fieldKey(f)}`;
         return (
-          <Field key={i} id={id} label={label} required={f.required}>
-            {f.type === "textarea" ? (
-              <textarea
-                id={id}
-                name={`cf-${i}`}
-                rows={3}
-                required={f.required}
-                maxLength={2000}
-                className="form-input"
-              />
-            ) : (
-              <input
-                id={id}
-                name={`cf-${i}`}
-                type="text"
-                required={f.required}
-                maxLength={500}
-                className="form-input"
-              />
-            )}
-          </Field>
+          <FieldRow key={fieldKey(f)} field={f} id={id} idPrefix={baseId} />
         );
       })}
 
@@ -235,6 +187,143 @@ function InquiryFormBody({
         </button>
       </div>
     </form>
+  );
+}
+
+function FieldRow({
+  field,
+  id,
+  idPrefix,
+}: {
+  field: InquiryField;
+  id: string;
+  idPrefix: string;
+}) {
+  if (field.kind === "system") {
+    const inputType = SYSTEM_INPUT_TYPE[field.systemKey];
+    const name = field.systemKey;
+    return (
+      <Field id={id} label={field.label} required={field.required}>
+        {inputType === "textarea" ? (
+          <textarea
+            id={id}
+            name={name}
+            rows={4}
+            required={field.required}
+            maxLength={5000}
+            className="form-input"
+          />
+        ) : (
+          <input
+            id={id}
+            name={name}
+            type={inputType}
+            required={field.required}
+            maxLength={field.systemKey === "phone" ? 30 : 200}
+            autoComplete={
+              field.systemKey === "name"
+                ? "name"
+                : field.systemKey === "email"
+                  ? "email"
+                  : field.systemKey === "phone"
+                    ? "tel"
+                    : undefined
+            }
+            className="form-input"
+          />
+        )}
+      </Field>
+    );
+  }
+
+  // Custom field
+  const name = `cf-${field.id}`;
+  const options = field.options ?? [];
+
+  if (field.type === "textarea") {
+    return (
+      <Field id={id} label={field.label} required={field.required}>
+        <textarea
+          id={id}
+          name={name}
+          rows={3}
+          required={field.required}
+          maxLength={2000}
+          className="form-input"
+        />
+      </Field>
+    );
+  }
+
+  if (field.type === "select") {
+    return (
+      <Field id={id} label={field.label} required={field.required}>
+        <select id={id} name={name} required={field.required} className="form-input">
+          <option value="">— Choose one —</option>
+          {options.map((o, i) => (
+            <option key={`${i}-${o}`} value={o}>
+              {o}
+            </option>
+          ))}
+        </select>
+      </Field>
+    );
+  }
+
+  if (field.type === "radio") {
+    return (
+      <fieldset>
+        <legend className="mb-1 block text-xs font-semibold text-ink-2">
+          {field.label}
+          {field.required && <span className="text-rust-dark"> *</span>}
+        </legend>
+        <div className="space-y-1.5">
+          {options.map((o, i) => {
+            const optId = `${idPrefix}-${field.id}-r${i}`;
+            return (
+              <label key={`${i}-${o}`} htmlFor={optId} className="flex items-center gap-2 text-sm text-ink">
+                <input
+                  id={optId}
+                  type="radio"
+                  name={name}
+                  value={o}
+                  required={field.required && i === 0}
+                  className="size-4"
+                />
+                {o}
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+    );
+  }
+
+  // checkboxes
+  return (
+    <fieldset>
+      <legend className="mb-1 block text-xs font-semibold text-ink-2">
+        {field.label}
+        {field.required && <span className="text-rust-dark"> *</span>}
+      </legend>
+      <div className="space-y-1.5">
+        {options.map((o, i) => {
+          const optId = `${idPrefix}-${field.id}-c${i}`;
+          return (
+            <label key={`${i}-${o}`} htmlFor={optId} className="flex items-center gap-2 text-sm text-ink">
+              <input
+                id={optId}
+                type="checkbox"
+                name={name}
+                value={o}
+                className="size-4"
+              />
+              {o}
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }
 

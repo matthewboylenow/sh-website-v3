@@ -210,6 +210,26 @@ export const ministries = pgTable(
 );
 
 /** Per-ministry inquiry form config. */
+export type SystemFieldKey = "name" | "email" | "phone" | "message";
+export type CustomFieldType = "text" | "textarea" | "select" | "radio" | "checkboxes";
+
+export type InquiryField =
+  | {
+      kind: "system";
+      systemKey: SystemFieldKey;
+      label: string;
+      required: boolean;
+      shown: boolean;
+    }
+  | {
+      kind: "custom";
+      id: string;
+      label: string;
+      type: CustomFieldType;
+      options?: string[];
+      required: boolean;
+    };
+
 export type MinistryInquiryConfig = {
   enabled: boolean;
   buttons: {
@@ -217,11 +237,8 @@ export type MinistryInquiryConfig = {
     label: string;
     enabled: boolean;
   }[];
-  customFields?: {
-    label: string;
-    type: "text" | "textarea";
-    required: boolean;
-  }[];
+  /** When undefined or empty, public form renders the 4 system defaults. */
+  fields?: InquiryField[];
 };
 
 /* ------------------------------------------------------------------ */

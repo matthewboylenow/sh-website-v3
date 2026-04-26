@@ -6,7 +6,17 @@ import { AdminField } from "@/components/admin/AdminField";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { TagPicker } from "@/components/admin/TagPicker";
-import type { MinistryInquiryConfig } from "@/db/schema";
+import type {
+  CustomFieldType,
+  InquiryField,
+  MinistryInquiryConfig,
+  SystemFieldKey,
+} from "@/db/schema";
+import {
+  DEFAULT_SYSTEM_FIELDS,
+  FORCED_SYSTEM_KEYS,
+  newCustomFieldId,
+} from "@/lib/inquiry-fields";
 import { MINISTRY_CATEGORIES } from "@/lib/validators/ministries";
 import {
   createMinistryAction,
@@ -44,10 +54,15 @@ function normalizeConfig(c: MinistryInquiryConfig | null | undefined): MinistryI
     const match = incoming.find((b) => b.kind === d.kind);
     return match ?? d;
   });
+  // Always show the editor with at least the four system defaults so
+  // admins can edit them. If the saved config has fields, use them; if
+  // not, preload the defaults.
+  const fields =
+    c?.fields && c.fields.length > 0 ? c.fields : DEFAULT_SYSTEM_FIELDS.map((f) => ({ ...f }));
   return {
     enabled: c?.enabled ?? true,
     buttons,
-    customFields: c?.customFields,
+    fields,
   };
 }
 
@@ -382,28 +397,25 @@ function InquiryConfigEditor({
       buttons: value.buttons.map((b) => (b.kind === kind ? { ...b, ...patch } : b)),
     });
 
-  type CustomField = NonNullable<MinistryInquiryConfig["customFields"]>[number];
-  const customFields = value.customFields ?? [];
+  const fields = value.fields ?? [];
+  const setFields = (next: InquiryField[]) => onChange({ ...value, fields: next });
 
-  const setCustomFields = (next: CustomField[]) =>
-    onChange({ ...value, customFields: next });
+  const addCustomField = (type: CustomFieldType) => {
+    const id = newCustomFieldId();
+    const fresh: InquiryField =
+      type === "text" || type === "textarea"
+        ? { kind: "custom", id, label: "", type, required: false }
+        : { kind: "custom", id, label: "", type, options: [""], required: false };
+    setFields([...fields, fresh]);
+  };
 
-  const addField = () =>
-    setCustomFields([
-      ...customFields,
-      { label: "", type: "text", required: false },
-    ]);
+  const updateAt = (idx: number, replacer: (f: InquiryField) => InquiryField) =>
+    setFields(fields.map((f, i) => (i === idx ? replacer(f) : f)));
 
-  const updateField = (idx: number, patch: Partial<CustomField>) =>
-    setCustomFields(
-      customFields.map((f, i) => (i === idx ? { ...f, ...patch } : f)),
-    );
+  const removeAt = (idx: number) => setFields(fields.filter((_, i) => i !== idx));
 
-  const removeField = (idx: number) =>
-    setCustomFields(customFields.filter((_, i) => i !== idx));
-
-  const moveField = (idx: number, dir: -1 | 1) => {
-    const next = [...customFields];
+  const moveAt = (idx: number, dir: -1 | 1) => {
+    const next = [...fields];
     const target = idx + dir;
     if (target < 0 || target >= next.length) return;
     const a = next[idx];
@@ -411,8 +423,10 @@ function InquiryConfigEditor({
     if (!a || !b) return;
     next[idx] = b;
     next[target] = a;
-    setCustomFields(next);
+    setFields(next);
   };
+
+  const customFieldCount = fields.filter((f) => f.kind === "custom").length;
 
   return (
     <div className="space-y-6 rounded-lg border border-rule bg-white p-5">
@@ -460,101 +474,323 @@ function InquiryConfigEditor({
 
       <div className="border-t border-rule pt-5">
         <div className="flex items-baseline justify-between gap-4">
-          <h3 className="font-serif text-lg font-bold text-navy">Custom fields</h3>
-          <button
-            type="button"
-            onClick={addField}
-            disabled={customFields.length >= 8}
-            className="rounded-pill bg-navy px-3 py-1 text-xs font-semibold text-white hover:bg-navy-light disabled:opacity-50"
-          >
-            + Add field
-          </button>
+          <h3 className="font-serif text-lg font-bold text-navy">Form fields</h3>
+          <span className="text-[11px] text-ink-3">
+            {fields.length}/20 · {customFieldCount} custom
+          </span>
         </div>
         <p className="mt-1 text-xs text-ink-3">
-          Up to 8 extra questions to ask on the form (e.g. &ldquo;What grade is your child in?&rdquo;).
-          Snapshotted at submission so renaming a field later won&rsquo;t break old rows.
+          Default name + email always show (visitors need them to be reachable).
+          Phone and message can be hidden. Add custom questions below — answers
+          are snapshotted at submission so renaming later won&rsquo;t break old rows.
         </p>
 
-        {customFields.length === 0 ? (
-          <p className="mt-4 rounded-md border border-dashed border-rule px-4 py-6 text-center text-xs text-ink-3">
-            No custom fields yet. Default name / email / phone / message always show.
-          </p>
-        ) : (
-          <ul className="mt-4 space-y-3">
-            {customFields.map((f, i) => (
-              <li key={i} className="rounded-md border border-rule bg-cream/40 p-3">
-                <div className="grid gap-2 sm:grid-cols-[1fr_120px_auto] sm:items-end">
-                  <div>
-                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
-                      Question
-                    </label>
-                    <input
-                      type="text"
-                      value={f.label}
-                      maxLength={80}
-                      placeholder='e.g. "What grade is your child in?"'
-                      onChange={(e) => updateField(i, { label: e.target.value })}
-                      className="form-input"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
-                      Type
-                    </label>
-                    <select
-                      value={f.type}
-                      onChange={(e) =>
-                        updateField(i, { type: e.target.value as CustomField["type"] })
-                      }
-                      className="form-input"
-                    >
-                      <option value="text">Single line</option>
-                      <option value="textarea">Multi-line</option>
-                    </select>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => moveField(i, -1)}
-                      disabled={i === 0}
-                      title="Move up"
-                      className="rounded-md border border-rule bg-white px-2 py-1 text-xs hover:border-navy disabled:opacity-30"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveField(i, 1)}
-                      disabled={i === customFields.length - 1}
-                      title="Move down"
-                      className="rounded-md border border-rule bg-white px-2 py-1 text-xs hover:border-navy disabled:opacity-30"
-                    >
-                      ↓
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeField(i)}
-                      title="Remove"
-                      className="rounded-md border border-rule bg-white px-2 py-1 text-xs text-rust-dark hover:border-rust"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-                <label className="mt-2 flex items-center gap-2 text-xs text-ink-2">
-                  <input
-                    type="checkbox"
-                    checked={f.required}
-                    onChange={(e) => updateField(i, { required: e.target.checked })}
-                    className="size-4"
-                  />
-                  Required
-                </label>
-              </li>
-            ))}
-          </ul>
-        )}
+        <ul className="mt-4 space-y-3">
+          {fields.map((f, i) => (
+            <li key={i}>
+              {f.kind === "system" ? (
+                <SystemFieldRow
+                  field={f}
+                  index={i}
+                  total={fields.length}
+                  onUpdate={(patch) =>
+                    updateAt(i, (cur) =>
+                      cur.kind === "system" ? { ...cur, ...patch } : cur,
+                    )
+                  }
+                  onMove={(dir) => moveAt(i, dir)}
+                />
+              ) : (
+                <CustomFieldRow
+                  field={f}
+                  index={i}
+                  total={fields.length}
+                  onUpdate={(patch) =>
+                    updateAt(i, (cur) =>
+                      cur.kind === "custom" ? { ...cur, ...patch } : cur,
+                    )
+                  }
+                  onMove={(dir) => moveAt(i, dir)}
+                  onRemove={() => removeAt(i)}
+                />
+              )}
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-dashed border-rule pt-4">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+            Add field:
+          </span>
+          {(
+            [
+              ["text", "Single line"],
+              ["textarea", "Multi-line"],
+              ["select", "Dropdown"],
+              ["radio", "Radio"],
+              ["checkboxes", "Checkboxes"],
+            ] as const
+          ).map(([t, label]) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => addCustomField(t)}
+              disabled={fields.length >= 20}
+              className="rounded-pill border border-rule bg-white px-3 py-1 text-xs font-semibold text-navy hover:border-navy disabled:opacity-50"
+            >
+              + {label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
+}
+
+function SystemFieldRow({
+  field,
+  index,
+  total,
+  onUpdate,
+  onMove,
+}: {
+  field: Extract<InquiryField, { kind: "system" }>;
+  index: number;
+  total: number;
+  onUpdate: (patch: Partial<Extract<InquiryField, { kind: "system" }>>) => void;
+  onMove: (dir: -1 | 1) => void;
+}) {
+  const locked = (FORCED_SYSTEM_KEYS as SystemFieldKey[]).includes(field.systemKey);
+  const tagBg = locked
+    ? "bg-rust-pale text-rust-dark"
+    : "bg-navy-pale text-navy";
+  return (
+    <div className="rounded-md border border-rule bg-cream/40 p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${tagBg}`}
+        >
+          {field.systemKey} {locked && "· required"}
+        </span>
+        <ReorderButtons index={index} total={total} onMove={onMove} />
+      </div>
+      <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+        <div>
+          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+            Label visitors see
+          </label>
+          <input
+            type="text"
+            value={field.label}
+            maxLength={80}
+            onChange={(e) => onUpdate({ label: e.target.value })}
+            className="form-input"
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-3 text-xs text-ink-2">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={field.required}
+              disabled={locked}
+              onChange={(e) => onUpdate({ required: e.target.checked })}
+              className="size-4"
+            />
+            Required
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={field.shown}
+              disabled={locked}
+              onChange={(e) => onUpdate({ shown: e.target.checked })}
+              className="size-4"
+            />
+            Shown
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CustomFieldRow({
+  field,
+  index,
+  total,
+  onUpdate,
+  onMove,
+  onRemove,
+}: {
+  field: Extract<InquiryField, { kind: "custom" }>;
+  index: number;
+  total: number;
+  onUpdate: (patch: Partial<Extract<InquiryField, { kind: "custom" }>>) => void;
+  onMove: (dir: -1 | 1) => void;
+  onRemove: () => void;
+}) {
+  const needsOptions =
+    field.type === "select" || field.type === "radio" || field.type === "checkboxes";
+  const options = field.options ?? [];
+
+  const setOptions = (next: string[]) => onUpdate({ options: next });
+  const addOption = () => setOptions([...options, ""]);
+  const updateOption = (i: number, v: string) =>
+    setOptions(options.map((o, idx) => (idx === i ? v : o)));
+  const removeOption = (i: number) =>
+    setOptions(options.filter((_, idx) => idx !== i));
+
+  return (
+    <div className="rounded-md border border-rule bg-white p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-700">
+          custom · {prettyType(field.type)}
+        </span>
+        <ReorderButtons index={index} total={total} onMove={onMove} />
+        <button
+          type="button"
+          onClick={onRemove}
+          title="Remove field"
+          className="ml-auto rounded-md border border-rule bg-white px-2 py-1 text-xs text-rust-dark hover:border-rust"
+        >
+          ✕ Remove
+        </button>
+      </div>
+      <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_140px] sm:items-end">
+        <div>
+          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+            Question
+          </label>
+          <input
+            type="text"
+            value={field.label}
+            maxLength={80}
+            placeholder='e.g. "What grade is your child in?"'
+            onChange={(e) => onUpdate({ label: e.target.value })}
+            className="form-input"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+            Type
+          </label>
+          <select
+            value={field.type}
+            onChange={(e) => {
+              const t = e.target.value as CustomFieldType;
+              const willNeedOpts = t === "select" || t === "radio" || t === "checkboxes";
+              onUpdate({
+                type: t,
+                options: willNeedOpts ? (options.length > 0 ? options : [""]) : undefined,
+              });
+            }}
+            className="form-input"
+          >
+            <option value="text">Single line</option>
+            <option value="textarea">Multi-line</option>
+            <option value="select">Dropdown</option>
+            <option value="radio">Radio</option>
+            <option value="checkboxes">Checkboxes</option>
+          </select>
+        </div>
+      </div>
+
+      {needsOptions && (
+        <div className="mt-3 rounded-md border border-dashed border-rule bg-cream/40 p-2.5">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+            Options
+          </p>
+          <ul className="space-y-1.5">
+            {options.map((o, i) => (
+              <li key={i} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={o}
+                  maxLength={80}
+                  onChange={(e) => updateOption(i, e.target.value)}
+                  placeholder={`Option ${i + 1}`}
+                  className="form-input flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeOption(i)}
+                  disabled={options.length <= 1}
+                  title="Remove option"
+                  className="rounded-md border border-rule bg-white px-2 py-1 text-xs text-rust-dark hover:border-rust disabled:opacity-30"
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={addOption}
+            disabled={options.length >= 20}
+            className="mt-2 rounded-pill border border-rule bg-white px-3 py-1 text-xs font-semibold text-navy hover:border-navy disabled:opacity-50"
+          >
+            + Add option
+          </button>
+        </div>
+      )}
+
+      <label className="mt-3 flex items-center gap-2 text-xs text-ink-2">
+        <input
+          type="checkbox"
+          checked={field.required}
+          onChange={(e) => onUpdate({ required: e.target.checked })}
+          className="size-4"
+        />
+        Required
+      </label>
+    </div>
+  );
+}
+
+function ReorderButtons({
+  index,
+  total,
+  onMove,
+}: {
+  index: number;
+  total: number;
+  onMove: (dir: -1 | 1) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        type="button"
+        onClick={() => onMove(-1)}
+        disabled={index === 0}
+        title="Move up"
+        className="rounded-md border border-rule bg-white px-2 py-0.5 text-xs hover:border-navy disabled:opacity-30"
+      >
+        ↑
+      </button>
+      <button
+        type="button"
+        onClick={() => onMove(1)}
+        disabled={index === total - 1}
+        title="Move down"
+        className="rounded-md border border-rule bg-white px-2 py-0.5 text-xs hover:border-navy disabled:opacity-30"
+      >
+        ↓
+      </button>
+    </div>
+  );
+}
+
+function prettyType(t: CustomFieldType): string {
+  switch (t) {
+    case "text":
+      return "Single line";
+    case "textarea":
+      return "Multi-line";
+    case "select":
+      return "Dropdown";
+    case "radio":
+      return "Radio";
+    case "checkboxes":
+      return "Checkboxes";
+  }
 }
