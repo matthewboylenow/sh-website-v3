@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import type { MinistryInquiryConfig } from "@/db/schema";
 
 type Kind = MinistryInquiryConfig["buttons"][number]["kind"];
+type CustomField = NonNullable<MinistryInquiryConfig["customFields"]>[number];
 
 export function MinistryInquiryForm({
   slug,
@@ -52,6 +53,7 @@ export function MinistryInquiryForm({
           kind={activeKind}
           kindLabel={enabledButtons.find((b) => b.kind === activeKind)?.label ?? ""}
           ministryName={ministryName}
+          customFields={config.customFields ?? []}
           onClose={() => setActiveKind(null)}
         />
       )}
@@ -64,12 +66,14 @@ function InquiryFormBody({
   kind,
   kindLabel,
   ministryName,
+  customFields,
   onClose,
 }: {
   slug: string;
   kind: Kind;
   kindLabel: string;
   ministryName: string;
+  customFields: CustomField[];
   onClose: () => void;
 }) {
   const baseId = useId();
@@ -83,12 +87,22 @@ function InquiryFormBody({
     setSubmitting(true);
 
     const fd = new FormData(e.currentTarget);
+
+    // Collect custom-field answers, keyed by the configured label so the
+    // admin dashboard renders them by question rather than positional id.
+    const customAnswers: Record<string, string> = {};
+    customFields.forEach((f, i) => {
+      const v = String(fd.get(`cf-${i}`) ?? "").trim();
+      if (v) customAnswers[f.label] = v;
+    });
+
     const body = {
       kind,
       name: String(fd.get("name") ?? "").trim(),
       email: String(fd.get("email") ?? "").trim(),
       phone: String(fd.get("phone") ?? "").trim() || null,
       message: String(fd.get("message") ?? "").trim() || null,
+      customAnswers: Object.keys(customAnswers).length > 0 ? customAnswers : undefined,
     };
 
     try {
@@ -168,6 +182,34 @@ function InquiryFormBody({
           className="form-input"
         />
       </Field>
+
+      {customFields.map((f, i) => {
+        const id = `${baseId}-cf-${i}`;
+        const label = f.required ? f.label : `${f.label} (optional)`;
+        return (
+          <Field key={i} id={id} label={label} required={f.required}>
+            {f.type === "textarea" ? (
+              <textarea
+                id={id}
+                name={`cf-${i}`}
+                rows={3}
+                required={f.required}
+                maxLength={2000}
+                className="form-input"
+              />
+            ) : (
+              <input
+                id={id}
+                name={`cf-${i}`}
+                type="text"
+                required={f.required}
+                maxLength={500}
+                className="form-input"
+              />
+            )}
+          </Field>
+        );
+      })}
 
       {error && (
         <p className="rounded-md border-l-4 border-rust bg-rust-pale px-3 py-2 text-sm text-rust-dark">

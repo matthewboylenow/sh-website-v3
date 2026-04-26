@@ -150,6 +150,7 @@ export async function POST(
         email: parsed.data.email,
         phone: parsed.data.phone ?? null,
         message: parsed.data.message ?? null,
+        customAnswers: parsed.data.customAnswers ?? null,
       });
     } catch (err) {
       // Email failure shouldn't lose the inquiry; log + carry on.
@@ -171,6 +172,7 @@ async function emailLeads(args: {
   email: string;
   phone: string | null;
   message: string | null;
+  customAnswers: Record<string, string> | null;
 }) {
   const baseUrl =
     process.env.AUTH_URL ?? process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
@@ -203,6 +205,7 @@ function htmlBody(v: {
   email: string;
   phone: string | null;
   message: string | null;
+  customAnswers: Record<string, string> | null;
   linkContacted: string;
   linkJoined: string;
   linkStuck: string;
@@ -210,6 +213,14 @@ function htmlBody(v: {
 }): string {
   const esc = (s: string) =>
     s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const customRows = v.customAnswers
+    ? Object.entries(v.customAnswers)
+        .map(
+          ([q, a]) =>
+            `<tr><td style="padding:6px 0;color:#6B6B6B;vertical-align:top;">${esc(q)}</td><td style="padding:6px 0;white-space:pre-wrap;">${esc(a)}</td></tr>`,
+        )
+        .join("")
+    : "";
   return `
 <!doctype html>
 <html><body style="font-family:Helvetica,Arial,sans-serif;background:#FAF9F7;padding:32px;">
@@ -222,6 +233,7 @@ function htmlBody(v: {
       <tr><td style="padding:6px 0;color:#6B6B6B;width:90px;">Email</td><td style="padding:6px 0;"><a href="mailto:${encodeURIComponent(v.email)}" style="color:#A73F25;">${esc(v.email)}</a></td></tr>
       ${v.phone ? `<tr><td style="padding:6px 0;color:#6B6B6B;">Phone</td><td style="padding:6px 0;">${esc(v.phone)}</td></tr>` : ""}
       ${v.message ? `<tr><td style="padding:6px 0;color:#6B6B6B;vertical-align:top;">Message</td><td style="padding:6px 0;white-space:pre-wrap;">${esc(v.message)}</td></tr>` : ""}
+      ${customRows}
     </table>
 
     <p style="margin:32px 0 12px;color:#1F346D;font-weight:600;font-size:13px;">Quick actions (24-hour links)</p>
@@ -247,11 +259,15 @@ function textBody(v: {
   email: string;
   phone: string | null;
   message: string | null;
+  customAnswers: Record<string, string> | null;
   linkContacted: string;
   linkJoined: string;
   linkStuck: string;
   linkDashboard: string;
 }): string {
+  const customLines = v.customAnswers
+    ? Object.entries(v.customAnswers).map(([q, a]) => `${q}: ${a}`)
+    : [];
   return [
     `${v.kindLabel} — ${v.ministryName}`,
     ``,
@@ -259,6 +275,7 @@ function textBody(v: {
     `Email:   ${v.email}`,
     v.phone ? `Phone:   ${v.phone}` : "",
     v.message ? `Message: ${v.message}` : "",
+    ...customLines,
     ``,
     `Quick actions (24-hour links):`,
     `  Contacted:  ${v.linkContacted}`,

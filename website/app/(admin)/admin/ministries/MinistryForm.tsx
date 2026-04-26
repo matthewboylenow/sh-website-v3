@@ -382,47 +382,179 @@ function InquiryConfigEditor({
       buttons: value.buttons.map((b) => (b.kind === kind ? { ...b, ...patch } : b)),
     });
 
+  type CustomField = NonNullable<MinistryInquiryConfig["customFields"]>[number];
+  const customFields = value.customFields ?? [];
+
+  const setCustomFields = (next: CustomField[]) =>
+    onChange({ ...value, customFields: next });
+
+  const addField = () =>
+    setCustomFields([
+      ...customFields,
+      { label: "", type: "text", required: false },
+    ]);
+
+  const updateField = (idx: number, patch: Partial<CustomField>) =>
+    setCustomFields(
+      customFields.map((f, i) => (i === idx ? { ...f, ...patch } : f)),
+    );
+
+  const removeField = (idx: number) =>
+    setCustomFields(customFields.filter((_, i) => i !== idx));
+
+  const moveField = (idx: number, dir: -1 | 1) => {
+    const next = [...customFields];
+    const target = idx + dir;
+    if (target < 0 || target >= next.length) return;
+    const a = next[idx];
+    const b = next[target];
+    if (!a || !b) return;
+    next[idx] = b;
+    next[target] = a;
+    setCustomFields(next);
+  };
+
   return (
-    <div className="rounded-lg border border-rule bg-white p-5">
-      <div className="flex items-baseline justify-between gap-4">
-        <h3 className="font-serif text-lg font-bold text-navy">Inquiry buttons</h3>
-        <label className="flex items-center gap-2 text-xs text-ink-2">
-          <input
-            type="checkbox"
-            checked={value.enabled}
-            onChange={(e) => setEnabled(e.target.checked)}
-            className="size-4"
-          />
-          Form enabled
-        </label>
-      </div>
-      <p className="mt-1 text-xs text-ink-3">
-        Toggle which buttons appear on the public ministry page. Edit the label to
-        match the ask (e.g. &ldquo;Sign up for Confirmation prep&rdquo;).
-      </p>
-      <ul className="mt-4 space-y-3">
-        {value.buttons.map((b) => (
-          <li key={b.kind} className="flex items-center gap-3">
-            <label className="flex w-24 shrink-0 items-center gap-2 text-xs font-semibold text-ink-2">
-              <input
-                type="checkbox"
-                checked={b.enabled}
-                onChange={(e) => setButton(b.kind, { enabled: e.target.checked })}
-                className="size-4"
-              />
-              <span className="capitalize">{b.kind}</span>
-            </label>
+    <div className="space-y-6 rounded-lg border border-rule bg-white p-5">
+      <div>
+        <div className="flex items-baseline justify-between gap-4">
+          <h3 className="font-serif text-lg font-bold text-navy">Inquiry buttons</h3>
+          <label className="flex items-center gap-2 text-xs text-ink-2">
             <input
-              type="text"
-              value={b.label}
-              maxLength={80}
-              disabled={!b.enabled}
-              onChange={(e) => setButton(b.kind, { label: e.target.value })}
-              className="form-input flex-1 disabled:bg-stone-50 disabled:text-ink-3"
+              type="checkbox"
+              checked={value.enabled}
+              onChange={(e) => setEnabled(e.target.checked)}
+              className="size-4"
             />
-          </li>
-        ))}
-      </ul>
+            Form enabled
+          </label>
+        </div>
+        <p className="mt-1 text-xs text-ink-3">
+          Toggle which buttons appear on the public ministry page. Edit the label to
+          match the ask (e.g. &ldquo;Sign up for Confirmation prep&rdquo;).
+        </p>
+        <ul className="mt-4 space-y-3">
+          {value.buttons.map((b) => (
+            <li key={b.kind} className="flex items-center gap-3">
+              <label className="flex w-24 shrink-0 items-center gap-2 text-xs font-semibold text-ink-2">
+                <input
+                  type="checkbox"
+                  checked={b.enabled}
+                  onChange={(e) => setButton(b.kind, { enabled: e.target.checked })}
+                  className="size-4"
+                />
+                <span className="capitalize">{b.kind}</span>
+              </label>
+              <input
+                type="text"
+                value={b.label}
+                maxLength={80}
+                disabled={!b.enabled}
+                onChange={(e) => setButton(b.kind, { label: e.target.value })}
+                className="form-input flex-1 disabled:bg-stone-50 disabled:text-ink-3"
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="border-t border-rule pt-5">
+        <div className="flex items-baseline justify-between gap-4">
+          <h3 className="font-serif text-lg font-bold text-navy">Custom fields</h3>
+          <button
+            type="button"
+            onClick={addField}
+            disabled={customFields.length >= 8}
+            className="rounded-pill bg-navy px-3 py-1 text-xs font-semibold text-white hover:bg-navy-light disabled:opacity-50"
+          >
+            + Add field
+          </button>
+        </div>
+        <p className="mt-1 text-xs text-ink-3">
+          Up to 8 extra questions to ask on the form (e.g. &ldquo;What grade is your child in?&rdquo;).
+          Snapshotted at submission so renaming a field later won&rsquo;t break old rows.
+        </p>
+
+        {customFields.length === 0 ? (
+          <p className="mt-4 rounded-md border border-dashed border-rule px-4 py-6 text-center text-xs text-ink-3">
+            No custom fields yet. Default name / email / phone / message always show.
+          </p>
+        ) : (
+          <ul className="mt-4 space-y-3">
+            {customFields.map((f, i) => (
+              <li key={i} className="rounded-md border border-rule bg-cream/40 p-3">
+                <div className="grid gap-2 sm:grid-cols-[1fr_120px_auto] sm:items-end">
+                  <div>
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+                      Question
+                    </label>
+                    <input
+                      type="text"
+                      value={f.label}
+                      maxLength={80}
+                      placeholder='e.g. "What grade is your child in?"'
+                      onChange={(e) => updateField(i, { label: e.target.value })}
+                      className="form-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+                      Type
+                    </label>
+                    <select
+                      value={f.type}
+                      onChange={(e) =>
+                        updateField(i, { type: e.target.value as CustomField["type"] })
+                      }
+                      className="form-input"
+                    >
+                      <option value="text">Single line</option>
+                      <option value="textarea">Multi-line</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => moveField(i, -1)}
+                      disabled={i === 0}
+                      title="Move up"
+                      className="rounded-md border border-rule bg-white px-2 py-1 text-xs hover:border-navy disabled:opacity-30"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveField(i, 1)}
+                      disabled={i === customFields.length - 1}
+                      title="Move down"
+                      className="rounded-md border border-rule bg-white px-2 py-1 text-xs hover:border-navy disabled:opacity-30"
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeField(i)}
+                      title="Remove"
+                      className="rounded-md border border-rule bg-white px-2 py-1 text-xs text-rust-dark hover:border-rust"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                <label className="mt-2 flex items-center gap-2 text-xs text-ink-2">
+                  <input
+                    type="checkbox"
+                    checked={f.required}
+                    onChange={(e) => updateField(i, { required: e.target.checked })}
+                    className="size-4"
+                  />
+                  Required
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
