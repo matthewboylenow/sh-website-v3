@@ -348,6 +348,37 @@ export const posts = pgTable(
 /* Events                                                              */
 /* ------------------------------------------------------------------ */
 
+/** Two-letter weekday codes — match RFC 5545 BYDAY abbreviations. */
+export const WEEKDAYS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"] as const;
+export type Weekday = (typeof WEEKDAYS)[number];
+
+/** End condition for a recurrence — "never" caps at the expansion horizon. */
+export type RecurrenceEnd =
+  | { kind: "never" }
+  | { kind: "count"; count: number }
+  | { kind: "until"; until: string /* ISO yyyy-mm-dd */ };
+
+/** Recurrence rule. v1 supports weekly and "nth weekday of the month". */
+export type Recurrence =
+  | {
+      freq: "weekly";
+      /** Repeat every N weeks. 1 = every week. */
+      interval: number;
+      /** Weekdays the event recurs on (≥ 1). */
+      byday: Weekday[];
+      ends: RecurrenceEnd;
+    }
+  | {
+      freq: "monthly_nth";
+      /** Repeat every N months. 1 = every month. */
+      interval: number;
+      /** Which week of the month — 1=first, …, 5=fifth, "last"=last. */
+      nth: 1 | 2 | 3 | 4 | 5 | "last";
+      /** Single weekday for monthly_nth. */
+      weekday: Weekday;
+      ends: RecurrenceEnd;
+    };
+
 export const events = pgTable(
   "events",
   {
@@ -363,6 +394,15 @@ export const events = pgTable(
     categories: text("categories").array().default(sql`'{}'`).notNull(),
     photoBlobKey: text("photo_blob_key").references(() => blobAssets.key),
     registerUrl: text("register_url"),
+    /** Custom CTA label for the register button. Falls back to "Sign Up". */
+    registerCtaLabel: text("register_cta_label"),
+    /** Recurrence rule. Null for one-off events. */
+    recurrence: jsonb("recurrence").$type<Recurrence>(),
+    /** ISO timestamps to skip when expanding the recurrence — cancellations. */
+    exceptionDates: jsonb("exception_dates")
+      .$type<string[]>()
+      .notNull()
+      .default([]),
     isFeatured: boolean("is_featured").default(false).notNull(),
     status: text("status", { enum: ["draft", "published", "archived"] })
       .notNull()

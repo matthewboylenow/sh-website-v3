@@ -43,6 +43,13 @@
       "when": 1777163499493,
       "tag": "0005_gray_malice",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777164065424,
+      "tag": "0006_worthless_korath",
+      "breakpoints": true
     }
   ]
 }

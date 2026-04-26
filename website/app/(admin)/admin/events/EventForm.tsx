@@ -5,6 +5,8 @@ import { useState, useTransition } from "react";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { TagPicker } from "@/components/admin/TagPicker";
+import type { Recurrence } from "@/db/schema";
+import { RecurrenceEditor } from "./RecurrenceEditor";
 import {
   createEventAction,
   setEventStatusAction,
@@ -22,9 +24,12 @@ type EventFormValues = {
   audiences: string[] | null;
   categories: string[] | null;
   registerUrl: string | null;
+  registerCtaLabel: string | null;
   photoBlobKey: string | null;
   isFeatured: boolean;
   status: "draft" | "published" | "archived";
+  recurrence: Recurrence | null;
+  exceptionDates: string[] | null;
 };
 
 /** Convert a Date | ISO string to the "YYYY-MM-DDThh:mm" shape the
@@ -56,6 +61,15 @@ export function EventForm({
   const [pending, start] = useTransition();
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [topError, setTopError] = useState<string | null>(null);
+  const [recurrence, setRecurrence] = useState<Recurrence | null>(
+    defaultValues.recurrence ?? null,
+  );
+  const [exceptionDates, setExceptionDates] = useState<string[]>(
+    defaultValues.exceptionDates ?? [],
+  );
+  const [startsAtLocal, setStartsAtLocal] = useState<string>(
+    toLocalInputValue(defaultValues.startsAt),
+  );
 
   const onSubmit = (formData: FormData) => {
     setErrors({});
@@ -157,7 +171,8 @@ export function EventForm({
               id="ev-startsAt"
               name="startsAt"
               type="datetime-local"
-              defaultValue={toLocalInputValue(defaultValues.startsAt)}
+              value={startsAtLocal}
+              onChange={(e) => setStartsAtLocal(e.target.value)}
               required
               className="form-input"
             />
@@ -211,21 +226,57 @@ export function EventForm({
           />
         </Field>
 
-        <Field
-          name="registerUrl"
-          label="Register URL"
-          hint="External registration link if any. Leave blank for free / no-registration."
-          errors={errors.registerUrl}
-        >
-          <input
-            id="ev-registerUrl"
+        <RecurrenceEditor
+          value={recurrence}
+          onChange={setRecurrence}
+          exceptionDates={exceptionDates}
+          onExceptionsChange={setExceptionDates}
+          baseStart={startsAtLocal}
+        />
+        <input
+          type="hidden"
+          name="recurrence"
+          value={recurrence ? JSON.stringify(recurrence) : ""}
+        />
+        <input
+          type="hidden"
+          name="exceptionDates"
+          value={JSON.stringify(exceptionDates)}
+        />
+
+        <div className="grid gap-5 sm:grid-cols-[2fr_1fr]">
+          <Field
             name="registerUrl"
-            type="url"
-            defaultValue={defaultValues.registerUrl ?? ""}
-            placeholder="https://"
-            className="form-input"
-          />
-        </Field>
+            label="Register URL"
+            hint="External registration link if any. Leave blank for free / no-registration."
+            errors={errors.registerUrl}
+          >
+            <input
+              id="ev-registerUrl"
+              name="registerUrl"
+              type="url"
+              defaultValue={defaultValues.registerUrl ?? ""}
+              placeholder="https://"
+              className="form-input"
+            />
+          </Field>
+          <Field
+            name="registerCtaLabel"
+            label="CTA label"
+            hint='Falls back to "Sign Up" when blank.'
+            errors={errors.registerCtaLabel}
+          >
+            <input
+              id="ev-registerCtaLabel"
+              name="registerCtaLabel"
+              type="text"
+              defaultValue={defaultValues.registerCtaLabel ?? ""}
+              maxLength={40}
+              placeholder="Sign Up"
+              className="form-input"
+            />
+          </Field>
+        </div>
 
         <Field name="body" label="Body" errors={errors.body}>
           <RichTextEditor

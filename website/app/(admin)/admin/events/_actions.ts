@@ -46,6 +46,30 @@ function parseEventForm(formData: FormData) {
       .map((s) => s.trim())
       .filter(Boolean);
 
+  // Recurrence + exceptions ride along as JSON in hidden inputs from the
+  // client form (avoids hand-parsing a multi-field nested structure).
+  let recurrence: unknown = null;
+  const recRaw = get("recurrence");
+  if (recRaw) {
+    try {
+      recurrence = JSON.parse(recRaw);
+    } catch {
+      // Leave null — Zod will surface the issue if required.
+    }
+  }
+  let exceptionDates: string[] = [];
+  const excRaw = get("exceptionDates");
+  if (excRaw) {
+    try {
+      const parsed = JSON.parse(excRaw);
+      if (Array.isArray(parsed)) {
+        exceptionDates = parsed.filter((s) => typeof s === "string");
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   return {
     slug: get("slug"),
     title: get("title"),
@@ -57,9 +81,12 @@ function parseEventForm(formData: FormData) {
     audiences: getList("audiences"),
     categories: getList("categories"),
     registerUrl: get("registerUrl") || null,
+    registerCtaLabel: get("registerCtaLabel") || null,
     photoBlobKey: get("photoBlobKey") || null,
     isFeatured: formData.get("isFeatured") === "on",
     status: (get("status") || "draft") as "draft" | "published" | "archived",
+    recurrence,
+    exceptionDates,
   };
 }
 
@@ -81,7 +108,10 @@ export async function createEventAction(formData: FormData): Promise<ActionResul
       .values({
         ...parsed.data,
         registerUrl: parsed.data.registerUrl || null,
+        registerCtaLabel: parsed.data.registerCtaLabel || null,
         photoBlobKey: parsed.data.photoBlobKey || null,
+        recurrence: parsed.data.recurrence ?? null,
+        exceptionDates: parsed.data.exceptionDates ?? [],
         createdBy: guard.session.user.id,
       })
       .returning({ id: events.id, slug: events.slug });
@@ -120,7 +150,10 @@ export async function updateEventAction(
       .set({
         ...parsed.data,
         registerUrl: parsed.data.registerUrl || null,
+        registerCtaLabel: parsed.data.registerCtaLabel || null,
         photoBlobKey: parsed.data.photoBlobKey || null,
+        recurrence: parsed.data.recurrence ?? null,
+        exceptionDates: parsed.data.exceptionDates ?? [],
         updatedAt: new Date(),
       })
       .where(eq(events.id, id))

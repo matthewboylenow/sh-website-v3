@@ -16,6 +16,7 @@ import {
   getUpcomingEvents,
 } from "@/lib/queries/events.query";
 import { getSiteSettings } from "@/lib/queries/site-settings.query";
+import { DEFAULT_HORIZON_MONTHS, expandEvents } from "@/lib/recurrence";
 
 export const metadata = {
   title: "Events",
@@ -52,7 +53,15 @@ export default async function EventsPage({
     ministryAudiences: [],
   };
 
-  const filtered = allUpcoming.filter((e) => {
+  // Expand recurring events into concrete instances across the next
+  // 6 months (DEFAULT_HORIZON_MONTHS). Each item keeps its parent event's
+  // metadata + a `occurrenceStartsAt` that we treat as the display date.
+  const now = new Date();
+  const horizon = new Date(now);
+  horizon.setMonth(horizon.getMonth() + DEFAULT_HORIZON_MONTHS);
+  const instances = expandEvents(allUpcoming, now, horizon);
+
+  const filtered = instances.filter((e) => {
     if (audience !== "all" && !(e.audiences ?? []).includes(audience)) return false;
     if (category && !(e.categories ?? []).includes(category)) return false;
     if (q) {
@@ -62,10 +71,10 @@ export default async function EventsPage({
     return true;
   });
 
-  // Group by month for display.
+  // Group by month for display, keyed off the *occurrence* date.
   const byMonth = new Map<string, typeof filtered>();
   for (const e of filtered) {
-    const key = monthKey(e.startsAt);
+    const key = monthKey(e.occurrenceStartsAt);
     const list = byMonth.get(key) ?? [];
     list.push(e);
     byMonth.set(key, list);
@@ -74,7 +83,7 @@ export default async function EventsPage({
   return (
     <>
       <InteriorHero
-        eyebrow={formatDateRangeEyebrow(allUpcoming)}
+        eyebrow={formatDateRangeEyebrow(instances)}
         title="What's on."
         lede="Everything happening across the parish. Filter by audience or category, or search for something specific."
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "Events" }]}
@@ -85,9 +94,14 @@ export default async function EventsPage({
 
       <section className="py-16">
         <Container width="wide">
-          {/* Featured card */}
+          {/* Featured card — for recurring events, snap to the next instance. */}
           {featured && (
-            <FeaturedCard event={featured} />
+            <FeaturedCard
+              event={featured}
+              displayStartsAt={
+                expandEvents([featured], now, horizon)[0]?.occurrenceStartsAt ?? null
+              }
+            />
           )}
 
           {/* Active filter summary */}
@@ -129,11 +143,11 @@ export default async function EventsPage({
                       </h2>
                       <ul className="mt-4 divide-y divide-rule overflow-hidden rounded-lg border border-rule bg-white">
                         {entries.map((e) => (
-                          <li key={e.id}>
+                          <li key={`${e.id}-${e.occurrenceStartsAt.toISOString()}`}>
                             <EventRow
                               slug={e.slug}
                               title={e.title}
-                              startsAt={e.startsAt}
+                              startsAt={e.occurrenceStartsAt}
                               location={e.location}
                               audiences={e.audiences}
                               categories={e.categories}
@@ -155,10 +169,12 @@ export default async function EventsPage({
 
 function FeaturedCard({
   event,
+  displayStartsAt,
 }: {
   event: NonNullable<Awaited<ReturnType<typeof getLatestFeaturedEvent>>>;
+  displayStartsAt: Date | null;
 }) {
-  const d = toDate(event.startsAt);
+  const d = displayStartsAt ?? toDate(event.startsAt);
   return (
     <div className="sh-on-dark mb-10 grid gap-8 rounded-xl bg-navy p-8 text-white md:grid-cols-[260px_1fr] md:items-center md:p-10">
       <div className="rounded-lg border border-white/15 bg-gradient-to-br from-gold/20 to-rust-dark/25 p-8 text-center">
@@ -180,12 +196,29 @@ function FeaturedCard({
         {event.lede && (
           <p className="mt-3 max-w-[60ch] text-white/85">{event.lede}</p>
         )}
-        <Link
-          href={`/events/${event.slug}`}
-          className="mt-5 inline-flex items-center gap-2 rounded-pill bg-rust px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rust-dark"
-        >
-          Event details <span aria-hidden="true">→</span>
-        </Link>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          {event.registerUrl && (
+            <a
+              href={event.registerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-pill bg-rust px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rust-dark"
+            >
+              {event.registerCtaLabel || "Sign Up"}
+              <span aria-hidden="true">→</span>
+            </a>
+          )}
+          <Link
+            href={`/events/${event.slug}`}
+            className={
+              event.registerUrl
+                ? "inline-flex items-center gap-2 rounded-pill border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/20"
+                : "inline-flex items-center gap-2 rounded-pill bg-rust px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rust-dark"
+            }
+          >
+            Event details <span aria-hidden="true">→</span>
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -294,11 +327,11 @@ function EmptyState() {
 }
 
 function formatDateRangeEyebrow(
-  events: Awaited<ReturnType<typeof getUpcomingEvents>>,
+  instances: Array<{ occurrenceStartsAt: Date }>,
 ) {
-  if (events.length === 0) return "Upcoming events";
-  const first = toDate(events[0]!.startsAt);
-  const last = toDate(events[events.length - 1]!.startsAt);
+  if (instances.length === 0) return "Upcoming events";
+  const first = instances[0]!.occurrenceStartsAt;
+  const last = instances[instances.length - 1]!.occurrenceStartsAt;
   const firstLabel = formatMonthLong(first);
   const lastLabel = formatMonthLong(last);
   const year = last.getFullYear();
