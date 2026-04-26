@@ -4,18 +4,18 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import {
-  ministries,
+  formationPages,
   pageSections,
   staff,
   type PageSectionPayload,
 } from "@/db/schema";
 import { resolveKeys } from "@/lib/blob";
-import { SectionEditor } from "./SectionEditor";
-import { saveMinistrySectionsAction } from "./_actions";
+import { SectionEditor } from "@/app/(admin)/admin/ministries/[id]/sections/SectionEditor";
+import { saveFormationSectionsAction } from "./_actions";
 
 export const metadata = { title: "Sections · Admin" };
 
-export default async function MinistrySectionsPage({
+export default async function FormationSectionsPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -23,20 +23,15 @@ export default async function MinistrySectionsPage({
   const { id } = await params;
 
   const session = await auth();
-  if (!session?.user) redirect(`/sign-in?callbackUrl=/admin/ministries/${id}/sections`);
+  if (!session?.user) redirect(`/sign-in?callbackUrl=/admin/formation/${id}/sections`);
+  if (session.user.role === "ministry_lead") redirect("/admin");
 
-  const role = session.user.role;
-  if (role === "ministry_lead") {
-    const myIds = session.user.ministryIds ?? [];
-    if (!myIds.includes(id)) redirect("/admin");
-  }
-
-  const [m] = await db
-    .select({ id: ministries.id, name: ministries.name, slug: ministries.slug })
-    .from(ministries)
-    .where(eq(ministries.id, id))
+  const [p] = await db
+    .select({ id: formationPages.id, name: formationPages.name, slug: formationPages.slug })
+    .from(formationPages)
+    .where(eq(formationPages.id, id))
     .limit(1);
-  if (!m) notFound();
+  if (!p) notFound();
 
   const [rows, staffOptions] = await Promise.all([
     db
@@ -49,7 +44,7 @@ export default async function MinistrySectionsPage({
       .from(pageSections)
       .where(
         and(
-          eq(pageSections.parentKind, "ministry"),
+          eq(pageSections.parentKind, "formation"),
           eq(pageSections.parentId, id),
         ),
       )
@@ -60,21 +55,22 @@ export default async function MinistrySectionsPage({
       .orderBy(asc(staff.orderingPriority), asc(staff.name)),
   ]);
 
-  // Pre-resolve every blob URL referenced in the payloads so the
-  // editor renders in-place previews without a round-trip per row.
   const blobKeys = new Set<string>();
-  function walk(p: PageSectionPayload) {
-    if (p.kind === "image" || p.kind === "image_text") blobKeys.add(p.blobKey);
-    if (p.kind === "image_gallery") p.images.forEach((i) => blobKeys.add(i.blobKey));
-    if (p.kind === "video" && p.posterBlobKey) blobKeys.add(p.posterBlobKey);
-    if (p.kind === "card_grid")
-      p.cards.forEach((c) => c.imageBlobKey && blobKeys.add(c.imageBlobKey));
-    if (p.kind === "callout_banner" && p.imageBlobKey) blobKeys.add(p.imageBlobKey);
-    if (p.kind === "columns") p.columns.forEach((c) => c.blocks.forEach(walk));
+  function walk(payload: PageSectionPayload) {
+    if (payload.kind === "image" || payload.kind === "image_text")
+      blobKeys.add(payload.blobKey);
+    if (payload.kind === "image_gallery")
+      payload.images.forEach((i) => blobKeys.add(i.blobKey));
+    if (payload.kind === "video" && payload.posterBlobKey)
+      blobKeys.add(payload.posterBlobKey);
+    if (payload.kind === "card_grid")
+      payload.cards.forEach((c) => c.imageBlobKey && blobKeys.add(c.imageBlobKey));
+    if (payload.kind === "callout_banner" && payload.imageBlobKey)
+      blobKeys.add(payload.imageBlobKey);
+    if (payload.kind === "columns") payload.columns.forEach((c) => c.blocks.forEach(walk));
   }
   for (const r of rows) walk(r.payload as PageSectionPayload);
 
-  // Also include staff photos so the staff_card editor can preview.
   const staffPhotoRows =
     staffOptions.length > 0
       ? await db
@@ -93,32 +89,32 @@ export default async function MinistrySectionsPage({
   return (
     <div>
       <nav className="mb-2 text-xs text-ink-3">
-        <Link href="/admin/ministries" className="hover:text-rust-dark">Ministries</Link>
+        <Link href="/admin/formation" className="hover:text-rust-dark">Formation</Link>
         <span aria-hidden="true" className="mx-2">/</span>
-        <Link href={`/admin/ministries/${m.id}`} className="hover:text-rust-dark">
-          {m.name}
+        <Link href={`/admin/formation/${p.id}`} className="hover:text-rust-dark">
+          {p.name}
         </Link>
         <span aria-hidden="true" className="mx-2">/</span>
         <span>Sections</span>
       </nav>
       <div className="flex flex-wrap items-baseline justify-between gap-4">
         <div>
-          <h1 className="text-3xl">{m.name} · Sections</h1>
+          <h1 className="text-3xl">{p.name} · Sections</h1>
           <p className="sh-lede mt-2 text-[15px]">
             Block-based content rendered below the description on{" "}
             <Link
-              href={`/ministries/${m.slug}`}
+              href={`/formation/${p.slug}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-rust-dark hover:text-rust"
             >
-              /ministries/{m.slug}
+              /formation/{p.slug}
             </Link>
-            . Drag-free reordering with arrows.
+            .
           </p>
         </div>
         <Link
-          href={`/admin/ministries/${m.id}`}
+          href={`/admin/formation/${p.id}`}
           className="text-sm font-semibold text-rust-dark hover:text-rust"
         >
           ← Edit core fields
@@ -127,8 +123,8 @@ export default async function MinistrySectionsPage({
 
       <div className="mt-8">
         <SectionEditor
-          pathPrefix={`ministries/${m.id}/sections`}
-          onSave={saveMinistrySectionsAction.bind(null, m.id)}
+          pathPrefix={`formation/${p.id}/sections`}
+          onSave={saveFormationSectionsAction.bind(null, p.id)}
           initial={rows.map((r) => ({
             id: r.id,
             payload: r.payload as PageSectionPayload,

@@ -71,6 +71,13 @@
       "when": 1777170000000,
       "tag": "0009_polymorphic_sections",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1777175000000,
+      "tag": "0010_formation_pages",
+      "breakpoints": true
     }
   ]
 }

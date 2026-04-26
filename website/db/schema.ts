@@ -210,6 +210,45 @@ export const ministries = pgTable(
 );
 
 /* ------------------------------------------------------------------ */
+/* Formation pages — religious-ed content (kids/youth/adults/families) */
+/* ------------------------------------------------------------------ */
+
+export const FORMATION_CATEGORIES = [
+  "kids",
+  "youth",
+  "adults",
+  "families",
+] as const;
+export type FormationCategory = (typeof FORMATION_CATEGORIES)[number];
+
+export const formationPages = pgTable(
+  "formation_pages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    summary: text("summary"),
+    description: text("description"), // sanitized HTML from TipTap
+    category: text("category", { enum: FORMATION_CATEGORIES }).notNull(),
+    audiences: text("audiences").array().default(sql`'{}'`).notNull(),
+    photoBlobKey: text("photo_blob_key").references(() => blobAssets.key),
+    contactEmail: text("contact_email"),
+    leadStaffId: uuid("lead_staff_id").references(() => staff.id),
+    orderingPriority: integer("ordering_priority").default(100).notNull(),
+    status: text("status", { enum: ["draft", "published", "archived"] })
+      .notNull()
+      .default("draft"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("formation_pages_slug_uq").on(t.slug),
+    index("formation_pages_category_idx").on(t.category),
+    index("formation_pages_status_idx").on(t.status),
+  ],
+);
+
+/* ------------------------------------------------------------------ */
 /* Ministry sections — block-based content below the description       */
 /* ------------------------------------------------------------------ */
 
@@ -854,6 +893,7 @@ export type Ministry = typeof ministries.$inferSelect;
 export type PageSection = typeof pageSections.$inferSelect;
 export type Event = typeof events.$inferSelect;
 export type Post = typeof posts.$inferSelect;
+export type FormationPage = typeof formationPages.$inferSelect;
 export type MassTime = typeof massTimes.$inferSelect;
 export type Bulletin = typeof bulletins.$inferSelect;
 export type SeasonalBanner = typeof seasonalBanners.$inferSelect;

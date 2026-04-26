@@ -12,7 +12,8 @@ import type {
   PageSectionPayload,
   SectionHeader,
 } from "@/db/schema";
-import { saveMinistrySectionsAction } from "./_actions";
+import type { SaveSectionsResult } from "@/lib/server/page-sections-actions";
+import type { MinistrySectionsManifestInput } from "@/lib/validators/page-sections";
 import { PreviewBlock } from "./PreviewBlock";
 import { SectionImagePicker } from "./SectionImagePicker";
 
@@ -32,12 +33,16 @@ let __id = 0;
 const newClientId = () => `${Date.now()}-${++__id}`;
 
 export function SectionEditor({
-  ministryId,
+  pathPrefix,
+  onSave,
   initial,
   initialImageUrls,
   staffOptions,
 }: {
-  ministryId: string;
+  /** Where new image uploads go in Vercel Blob, also used for inline-image
+   *  paths in the rich text editor. e.g. "ministries/<id>/sections". */
+  pathPrefix: string;
+  onSave: (manifest: MinistrySectionsManifestInput) => Promise<SaveSectionsResult>;
   initial: { id: string; payload: PageSectionPayload }[];
   /** blobKey → URL, server-resolved on first render. */
   initialImageUrls: Record<string, string>;
@@ -83,11 +88,11 @@ export function SectionEditor({
   const registerImage = (key: string, url: string) =>
     setImgUrls((cur) => ({ ...cur, [key]: url }));
 
-  const onSave = () => {
+  const handleSave = () => {
     setError(null);
     setSaved(false);
     start(async () => {
-      const r = await saveMinistrySectionsAction(ministryId, {
+      const r = await onSave({
         sections: rows.map((r) => ({ clientId: r.clientId, payload: r.payload })),
       });
       if (!r.ok) {
@@ -146,7 +151,7 @@ export function SectionEditor({
                 onUpdate={(replacer) => updateAt(i, replacer)}
                 onMove={(dir) => moveAt(i, dir)}
                 onRemove={() => removeAt(i)}
-                ministryId={ministryId}
+                pathPrefix={pathPrefix}
                 imgUrls={imgUrls}
                 registerImage={registerImage}
                 staffOptions={staffOptions}
@@ -164,7 +169,7 @@ export function SectionEditor({
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3">
           <button
             type="button"
-            onClick={onSave}
+            onClick={handleSave}
             disabled={pending}
             className="rounded-pill bg-rust px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rust-dark disabled:opacity-70"
           >
@@ -190,7 +195,7 @@ function BlockRow({
   onUpdate,
   onMove,
   onRemove,
-  ministryId,
+  pathPrefix,
   imgUrls,
   registerImage,
   staffOptions,
@@ -203,7 +208,7 @@ function BlockRow({
   onUpdate: (replacer: (p: PageSectionPayload) => PageSectionPayload) => void;
   onMove: (dir: -1 | 1) => void;
   onRemove: () => void;
-  ministryId: string;
+  pathPrefix: string;
   imgUrls: Record<string, string>;
   registerImage: (key: string, url: string) => void;
   staffOptions: StaffOption[];
@@ -266,7 +271,7 @@ function BlockRow({
         <BlockEditor
           payload={payload}
           onUpdate={onUpdate}
-          ministryId={ministryId}
+          pathPrefix={pathPrefix}
           imgUrls={imgUrls}
           registerImage={registerImage}
           staffOptions={staffOptions}
@@ -320,19 +325,19 @@ function HeaderEditor({
 function BlockEditor({
   payload,
   onUpdate,
-  ministryId,
+  pathPrefix,
   imgUrls,
   registerImage,
   staffOptions,
 }: {
   payload: PageSectionPayload;
   onUpdate: (replacer: (p: PageSectionPayload) => PageSectionPayload) => void;
-  ministryId: string;
+  pathPrefix: string;
   imgUrls: Record<string, string>;
   registerImage: (key: string, url: string) => void;
   staffOptions: StaffOption[];
 }) {
-  const path = `ministries/${ministryId}/sections`;
+  const path = pathPrefix;
 
   switch (payload.kind) {
     case "heading":
@@ -858,7 +863,7 @@ function BlockEditor({
         <ColumnsEditor
           payload={payload}
           onUpdate={onUpdate}
-          ministryId={ministryId}
+          pathPrefix={pathPrefix}
           imgUrls={imgUrls}
           registerImage={registerImage}
           staffOptions={staffOptions}
@@ -1055,14 +1060,14 @@ function EmbedEditor({
 function ColumnsEditor({
   payload,
   onUpdate,
-  ministryId,
+  pathPrefix,
   imgUrls,
   registerImage,
   staffOptions,
 }: {
   payload: Extract<PageSectionPayload, { kind: "columns" }>;
   onUpdate: (replacer: (p: PageSectionPayload) => PageSectionPayload) => void;
-  ministryId: string;
+  pathPrefix: string;
   imgUrls: Record<string, string>;
   registerImage: (key: string, url: string) => void;
   staffOptions: StaffOption[];
@@ -1130,7 +1135,7 @@ function ColumnsEditor({
             key={ci}
             columnIndex={ci}
             blocks={col.blocks}
-            ministryId={ministryId}
+            pathPrefix={pathPrefix}
             imgUrls={imgUrls}
             registerImage={registerImage}
             staffOptions={staffOptions}
@@ -1145,7 +1150,7 @@ function ColumnsEditor({
 function ColumnLane({
   columnIndex,
   blocks,
-  ministryId,
+  pathPrefix,
   imgUrls,
   registerImage,
   staffOptions,
@@ -1153,7 +1158,7 @@ function ColumnLane({
 }: {
   columnIndex: number;
   blocks: PageLeafBlock[];
-  ministryId: string;
+  pathPrefix: string;
   imgUrls: Record<string, string>;
   registerImage: (key: string, url: string) => void;
   staffOptions: StaffOption[];
@@ -1217,7 +1222,7 @@ function ColumnLane({
             <BlockEditor
               payload={b as unknown as PageSectionPayload}
               onUpdate={(replacer) => updateAt(i, (cur) => replacer(cur as unknown as PageSectionPayload) as PageLeafBlock)}
-              ministryId={ministryId}
+              pathPrefix={pathPrefix}
               imgUrls={imgUrls}
               registerImage={registerImage}
               staffOptions={staffOptions}
