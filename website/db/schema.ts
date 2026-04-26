@@ -255,7 +255,33 @@ export const formationPages = pgTable(
 );
 
 /* ------------------------------------------------------------------ */
-/* Ministry sections — block-based content below the description       */
+/* Generic pages — block-based CMS pages outside the fixed routes      */
+/* ------------------------------------------------------------------ */
+
+export const pages = pgTable(
+  "pages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    summary: text("summary"),
+    photoBlobKey: text("photo_blob_key").references(() => blobAssets.key),
+    status: text("status", { enum: ["draft", "published", "archived"] })
+      .notNull()
+      .default("draft"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    lastEditedBy: uuid("last_edited_by").references(() => users.id),
+    lastEditedAt: timestamp("last_edited_at"),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("pages_slug_uq").on(t.slug),
+    index("pages_status_idx").on(t.status),
+  ],
+);
+
+/* ------------------------------------------------------------------ */
+/* Page sections — block-based content                                  */
 /* ------------------------------------------------------------------ */
 
 /** Common header attached to every block. Optional — many sections
@@ -317,7 +343,7 @@ export type CardGridCard = {
 };
 
 /** Parents that can own page_sections rows. Polymorphic discriminator. */
-export const PAGE_SECTION_PARENTS = ["ministry", "formation", "homepage"] as const;
+export const PAGE_SECTION_PARENTS = ["ministry", "formation", "homepage", "page"] as const;
 export type PageSectionParent = (typeof PAGE_SECTION_PARENTS)[number];
 
 /** Leaf blocks — everything except the recursive Columns wrapper.
@@ -1138,6 +1164,7 @@ export const ministryEdits = pgTable(
 export type User = typeof users.$inferSelect;
 export type Staff = typeof staff.$inferSelect;
 export type Ministry = typeof ministries.$inferSelect;
+export type Page = typeof pages.$inferSelect;
 export type PageSection = typeof pageSections.$inferSelect;
 export type Event = typeof events.$inferSelect;
 export type Post = typeof posts.$inferSelect;

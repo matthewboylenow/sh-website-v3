@@ -134,6 +134,13 @@
       "when": 1777215000000,
       "tag": "0018_description_to_blocks",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1777220000000,
+      "tag": "0019_pages_table",
+      "breakpoints": true
     }
   ]
 }

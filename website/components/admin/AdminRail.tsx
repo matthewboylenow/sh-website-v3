@@ -11,6 +11,7 @@ const CONTENT_ADMIN = [
   { href: "/admin/mass-times", label: "Mass times" },
   { href: "/admin/ministries", label: "Ministries" },
   { href: "/admin/formation", label: "Formation" },
+  { href: "/admin/pages", label: "Pages" },
   { href: "/admin/staff", label: "Staff" },
   { href: "/admin/bulletins", label: "Bulletins" },
   { href: "/admin/seasonal-banners", label: "Seasonal banners" },
