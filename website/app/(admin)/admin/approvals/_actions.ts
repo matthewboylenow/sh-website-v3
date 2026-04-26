@@ -41,17 +41,19 @@ export async function approveMinistryEditAction(editId: string): Promise<ActionR
   // column on ministries yet (post-launch ticket). Approvals UI shows
   // the FAQ diff for context but admins note out-of-band changes.
 
-  await db.transaction(async (tx) => {
-    await tx.update(ministries).set(setClause).where(eq(ministries.id, edit.ministryId));
-    await tx
-      .update(ministryEdits)
-      .set({
-        status: "approved",
-        reviewedBy: guard.session.user.id,
-        reviewedAt: new Date(),
-      })
-      .where(eq(ministryEdits.id, editId));
-  });
+  // Sequential update — Neon HTTP driver doesn't support transactions.
+  // If the second update fails the ministry has the new content but the
+  // edit row is still pending; admin can re-approve and the second
+  // update completes. No data loss either way.
+  await db.update(ministries).set(setClause).where(eq(ministries.id, edit.ministryId));
+  await db
+    .update(ministryEdits)
+    .set({
+      status: "approved",
+      reviewedBy: guard.session.user.id,
+      reviewedAt: new Date(),
+    })
+    .where(eq(ministryEdits.id, editId));
 
   revalidateTag("ministries");
   return { ok: true };

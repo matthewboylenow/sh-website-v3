@@ -10,7 +10,13 @@ import {
 /**
  * Shared replace-set save for page_sections. Authorization happens in
  * the caller — ministry leads only edit their own ministries' sections,
- * etc. This helper just validates + writes inside a transaction.
+ * etc.
+ *
+ * Implementation note: Neon's HTTP driver doesn't support transactions,
+ * so we run delete + insert sequentially. If the insert fails after the
+ * delete succeeds, the page renders empty and the admin retries the
+ * save (their unsaved form state is still in memory). Acceptable
+ * trade-off for keeping Edge-compatible HTTP transport.
  */
 
 export type SaveSectionsResult = { ok: true } | { ok: false; error: string };
@@ -28,31 +34,27 @@ export async function saveSectionsForParent(
   }
 
   try {
-    await db.transaction(async (tx) => {
-      await tx
-        .delete(pageSections)
-        .where(
-          and(
-            eq(pageSections.parentKind, parentKind),
-            eq(pageSections.parentId, parentId),
-          ),
-        );
-      if (parsed.data.sections.length > 0) {
-        await tx.insert(pageSections).values(
-          parsed.data.sections.map((s, i) => ({
-            parentKind,
-            parentId,
-            position: i,
-            kind: s.payload.kind,
-            payload: s.payload,
-          })),
-        );
-      }
-    });
-    // Bust both possible parents — cheap, lets either content type pick up.
+    await db
+      .delete(pageSections)
+      .where(
+        and(
+          eq(pageSections.parentKind, parentKind),
+          eq(pageSections.parentId, parentId),
+        ),
+      );
+    if (parsed.data.sections.length > 0) {
+      await db.insert(pageSections).values(
+        parsed.data.sections.map((s, i) => ({
+          parentKind,
+          parentId,
+          position: i,
+          kind: s.payload.kind,
+          payload: s.payload,
+        })),
+      );
+    }
     revalidateTag("ministries");
     revalidateTag("formation");
-    revalidateTag("page-sections");
     revalidateTag("page-sections");
     return { ok: true };
   } catch (err) {
