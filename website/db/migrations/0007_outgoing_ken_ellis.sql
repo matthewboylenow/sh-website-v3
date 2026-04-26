@@ -1,0 +1,1 @@
+ALTER TABLE "site_settings" ADD COLUMN "redirects" jsonb DEFAULT '[]'::jsonb NOT NULL;

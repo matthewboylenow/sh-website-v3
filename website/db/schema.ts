@@ -596,6 +596,15 @@ export type NavManifest = {
   items: NavItem[];
 };
 
+/** Vanity-URL redirects edited from /admin/settings/redirects.
+ *  Matched in middleware before any auth gate. `permanent` flips to a
+ *  308; default is 307 so search engines don't memoize a wrong target. */
+export type Redirect = {
+  from: string;
+  to: string;
+  permanent?: boolean;
+};
+
 export const DEFAULT_NAV_MANIFEST: NavManifest = {
   items: [
     { label: "I'm New", href: "/im-new" },
@@ -634,6 +643,10 @@ export const siteSettings = pgTable(
       .$type<NavManifest>()
       .notNull()
       .default(DEFAULT_NAV_MANIFEST),
+    redirects: jsonb("redirects")
+      .$type<Redirect[]>()
+      .notNull()
+      .default([]),
     footerCopy: text("footer_copy"),
     densityScale: numeric("density_scale", { precision: 3, scale: 2 })
       .default("1.00")
