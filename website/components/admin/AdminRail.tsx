@@ -6,6 +6,7 @@ import { type Role } from "@/auth.config";
 
 const CONTENT_ADMIN = [
   { href: "/admin/events", label: "Events" },
+  { href: "/admin/posts", label: "Posts" },
   { href: "/admin/mass-times", label: "Mass times" },
   { href: "/admin/ministries", label: "Ministries" },
   { href: "/admin/staff", label: "Staff" },

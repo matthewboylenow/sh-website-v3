@@ -310,6 +310,41 @@ export const inquiryEvents = pgTable(
 );
 
 /* ------------------------------------------------------------------ */
+/* Posts — pastor letters + stewardship reports                        */
+/* ------------------------------------------------------------------ */
+
+export const POST_CATEGORIES = ["pastor", "stewardship"] as const;
+export type PostCategory = (typeof POST_CATEGORIES)[number];
+
+export const posts = pgTable(
+  "posts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    summary: text("summary"),
+    body: text("body"), // sanitized HTML from TipTap
+    category: text("category", { enum: POST_CATEGORIES }).notNull(),
+    photoBlobKey: text("photo_blob_key").references(() => blobAssets.key),
+    authorId: uuid("author_id").references(() => users.id),
+    /** Display name shown publicly (overrides users.name when set). */
+    authorName: text("author_name"),
+    status: text("status", { enum: ["draft", "published", "archived"] })
+      .notNull()
+      .default("draft"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("posts_slug_uq").on(t.slug),
+    index("posts_category_idx").on(t.category),
+    index("posts_published_at_idx").on(t.publishedAt),
+    index("posts_status_idx").on(t.status),
+  ],
+);
+
+/* ------------------------------------------------------------------ */
 /* Events                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -617,6 +652,7 @@ export type User = typeof users.$inferSelect;
 export type Staff = typeof staff.$inferSelect;
 export type Ministry = typeof ministries.$inferSelect;
 export type Event = typeof events.$inferSelect;
+export type Post = typeof posts.$inferSelect;
 export type MassTime = typeof massTimes.$inferSelect;
 export type Bulletin = typeof bulletins.$inferSelect;
 export type SeasonalBanner = typeof seasonalBanners.$inferSelect;

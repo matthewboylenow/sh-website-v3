@@ -36,6 +36,13 @@
       "when": 1777163050732,
       "tag": "0004_first_cable",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777163499493,
+      "tag": "0005_gray_malice",
+      "breakpoints": true
     }
   ]
 }
