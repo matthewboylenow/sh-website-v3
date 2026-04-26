@@ -677,7 +677,7 @@ function BlockEditor({
             header={payload.header}
             onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
           />
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-3">
             <div>
               <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
                 Layout
@@ -695,9 +695,26 @@ function BlockEditor({
                 <option value="uniform">Uniform grid</option>
                 <option value="bento">Bento (2 large + tiles)</option>
               </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+                Card style
+              </label>
+              <select
+                value={payload.cardStyle ?? "stacked"}
+                onChange={(e) =>
+                  onUpdate(() => ({
+                    ...payload,
+                    cardStyle: e.target.value as "stacked" | "overlay",
+                  }))
+                }
+                className="form-input"
+              >
+                <option value="stacked">Stacked (image, then text)</option>
+                <option value="overlay">Overlay (text on image)</option>
+              </select>
               <p className="mt-1 text-[11px] text-ink-3">
-                Bento: first 2 cards render large with prominent images;
-                rest drop into a compact 4-up tile row underneath.
+                Overlay applies to large cards only; bento tiles stay stacked.
               </p>
             </div>
             <div>
@@ -761,6 +778,14 @@ function BlockEditor({
                       placeholder="Link (optional)"
                       onChange={(e) => updateCard(i, { href: e.target.value })}
                       className="form-input font-mono text-sm"
+                    />
+                    <input
+                      type="text"
+                      value={c.ctaLabel ?? ""}
+                      maxLength={40}
+                      placeholder='CTA label (optional) — e.g. "Learn more"'
+                      onChange={(e) => updateCard(i, { ctaLabel: e.target.value })}
+                      className="form-input"
                     />
                   </div>
                   <button

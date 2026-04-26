@@ -51,6 +51,7 @@ const CardGridCardSchema = z.object({
   summary: z.string().max(500).optional(),
   href: z.string().max(1000).optional(),
   imageBlobKey: z.string().max(500).optional().nullable(),
+  ctaLabel: z.string().max(40).optional(),
 });
 
 /**
@@ -126,6 +127,7 @@ const LeafPayloadSchema = z.discriminatedUnion("kind", [
     cards: z.array(CardGridCardSchema).min(1).max(12),
     layout: z.enum(["uniform", "bento"]).optional(),
     columns: z.union([z.literal(2), z.literal(3)]).optional(),
+    cardStyle: z.enum(["stacked", "overlay"]).optional(),
   }),
   z.object({
     kind: z.literal("embed"),

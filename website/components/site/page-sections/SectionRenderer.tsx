@@ -287,6 +287,8 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
     }
 
     case "card_grid": {
+      const cardStyle = p.cardStyle ?? "stacked";
+
       // Bento: first 2 cards = large image-prominent, rest = compact 4-up.
       // Falls back to uniform when fewer than 3 cards (no compact tier
       // would render anyway).
@@ -306,10 +308,12 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
                   <BentoHeroCard
                     card={c}
                     imageUrl={c.imageBlobKey ? ctx.images.get(c.imageBlobKey) ?? null : null}
+                    style={cardStyle}
                   />
                 </li>
               ))}
             </ul>
+            {/* Tiles always stay stacked — overlay reads poorly at small sizes. */}
             <ul className={`mt-5 grid gap-4 ${tileCols}`}>
               {tiles.map((c, i) => (
                 <li key={`tile-${i}`}>
@@ -331,47 +335,15 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
         <>
           <HeaderEl header={p.header} />
           <ul className={`grid gap-6 ${cols}`}>
-            {p.cards.map((c, i) => {
-              const url = c.imageBlobKey ? ctx.images.get(c.imageBlobKey) ?? null : null;
-              const inner = (
-                <article className="group overflow-hidden rounded-lg border border-rule bg-white transition-all hover:-translate-y-1 hover:shadow-hover">
-                  {url ? (
-                    <Image
-                      src={url}
-                      alt={c.title}
-                      width={600}
-                      height={400}
-                      className="h-48 w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-48 w-full bg-gradient-to-br from-navy to-navy-dark" />
-                  )}
-                  <div className="p-5">
-                    <h4 className="font-serif text-base font-bold text-navy group-hover:text-rust-dark">
-                      {c.title}
-                    </h4>
-                    {c.summary && (
-                      <p className="mt-2 text-sm text-ink-2">{c.summary}</p>
-                    )}
-                  </div>
-                </article>
-              );
-              return (
-                <li key={i}>
-                  {c.href ? (
-                    <a
-                      href={c.href}
-                      target={isExternal(c.href) ? "_blank" : undefined}
-                      rel={isExternal(c.href) ? "noopener noreferrer" : undefined}
-                    >
-                      {inner}
-                    </a>
-                  ) : (
-                    inner
-                  )}
-                </li>
-              );
-            })}
+            {p.cards.map((c, i) => (
+              <li key={i}>
+                <UniformCard
+                  card={c}
+                  imageUrl={c.imageBlobKey ? ctx.images.get(c.imageBlobKey) ?? null : null}
+                  style={cardStyle}
+                />
+              </li>
+            ))}
           </ul>
         </>
       );
@@ -689,34 +661,168 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
   }
 }
 
+type CardData = {
+  title: string;
+  summary?: string;
+  href?: string;
+  imageBlobKey?: string | null;
+  ctaLabel?: string;
+};
+
 function BentoHeroCard({
   card,
   imageUrl,
+  style,
 }: {
-  card: { title: string; summary?: string; href?: string; imageBlobKey?: string | null };
+  card: CardData;
   imageUrl: string | null;
+  style: "stacked" | "overlay";
 }) {
-  const inner = (
-    <article className="group block h-full overflow-hidden rounded-lg border border-rule bg-white transition-all hover:-translate-y-1 hover:shadow-hover">
-      {imageUrl ? (
-        <Image
-          src={imageUrl}
-          alt={card.title}
-          width={1200}
-          height={675}
-          className="aspect-[16/9] w-full object-cover"
+  const inner =
+    style === "overlay" ? (
+      <article className="group relative block aspect-[16/10] h-full overflow-hidden rounded-lg shadow-md transition-all hover:-translate-y-1 hover:shadow-hover">
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={card.title}
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-navy to-navy-dark" />
+        )}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10"
         />
-      ) : (
-        <div className="aspect-[16/9] w-full bg-gradient-to-br from-navy to-navy-dark" />
-      )}
-      <div className="p-7 md:p-8">
-        <h3 className="font-serif text-2xl font-bold text-navy group-hover:text-rust-dark">
-          {card.title}
-        </h3>
-        {card.summary && <p className="mt-2 text-ink-2">{card.summary}</p>}
-      </div>
-    </article>
+        <div className="sh-on-dark absolute inset-x-0 bottom-0 p-7 md:p-8">
+          <h3 className="font-serif text-2xl font-bold text-white drop-shadow-md md:text-3xl">
+            {card.title}
+          </h3>
+          {card.summary && (
+            <p className="mt-2 max-w-[40ch] text-white/90 drop-shadow">
+              {card.summary}
+            </p>
+          )}
+          {card.ctaLabel && (
+            <span className="mt-4 inline-flex items-center gap-1.5 rounded-pill bg-white/15 px-4 py-1.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors group-hover:bg-rust">
+              {card.ctaLabel} <span aria-hidden="true">→</span>
+            </span>
+          )}
+        </div>
+      </article>
+    ) : (
+      <article className="group block h-full overflow-hidden rounded-lg border border-rule bg-white transition-all hover:-translate-y-1 hover:shadow-hover">
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={card.title}
+            width={1200}
+            height={675}
+            className="aspect-[16/9] w-full object-cover"
+          />
+        ) : (
+          <div className="aspect-[16/9] w-full bg-gradient-to-br from-navy to-navy-dark" />
+        )}
+        <div className="p-7 md:p-8">
+          <h3 className="font-serif text-2xl font-bold text-navy group-hover:text-rust-dark">
+            {card.title}
+          </h3>
+          {card.summary && <p className="mt-2 text-ink-2">{card.summary}</p>}
+          {card.ctaLabel && (
+            <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-rust-dark group-hover:text-rust">
+              {card.ctaLabel} <span aria-hidden="true">→</span>
+            </span>
+          )}
+        </div>
+      </article>
+    );
+  return card.href ? (
+    <a
+      href={card.href}
+      target={isExternal(card.href) ? "_blank" : undefined}
+      rel={isExternal(card.href) ? "noopener noreferrer" : undefined}
+      className="block h-full"
+    >
+      {inner}
+    </a>
+  ) : (
+    inner
   );
+}
+
+function UniformCard({
+  card,
+  imageUrl,
+  style,
+}: {
+  card: CardData;
+  imageUrl: string | null;
+  style: "stacked" | "overlay";
+}) {
+  const inner =
+    style === "overlay" ? (
+      <article className="group relative block aspect-[4/5] h-full overflow-hidden rounded-lg shadow-md transition-all hover:-translate-y-1 hover:shadow-hover">
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={card.title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-navy to-navy-dark" />
+        )}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/10"
+        />
+        <div className="sh-on-dark absolute inset-x-0 bottom-0 p-5">
+          <h4 className="font-serif text-xl font-bold text-white drop-shadow-md">
+            {card.title}
+          </h4>
+          {card.summary && (
+            <p className="mt-1.5 text-sm text-white/90 drop-shadow">
+              {card.summary}
+            </p>
+          )}
+          {card.ctaLabel && (
+            <span className="mt-3 inline-flex items-center gap-1.5 rounded-pill bg-white/15 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm transition-colors group-hover:bg-rust">
+              {card.ctaLabel} <span aria-hidden="true">→</span>
+            </span>
+          )}
+        </div>
+      </article>
+    ) : (
+      <article className="group h-full overflow-hidden rounded-lg border border-rule bg-white transition-all hover:-translate-y-1 hover:shadow-hover">
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={card.title}
+            width={600}
+            height={400}
+            className="h-48 w-full object-cover"
+          />
+        ) : (
+          <div className="h-48 w-full bg-gradient-to-br from-navy to-navy-dark" />
+        )}
+        <div className="p-5">
+          <h4 className="font-serif text-base font-bold text-navy group-hover:text-rust-dark">
+            {card.title}
+          </h4>
+          {card.summary && (
+            <p className="mt-2 text-sm text-ink-2">{card.summary}</p>
+          )}
+          {card.ctaLabel && (
+            <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-rust-dark group-hover:text-rust">
+              {card.ctaLabel} <span aria-hidden="true">→</span>
+            </span>
+          )}
+        </div>
+      </article>
+    );
   return card.href ? (
     <a
       href={card.href}

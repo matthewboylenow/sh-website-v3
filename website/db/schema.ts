@@ -294,6 +294,9 @@ export type CardGridCard = {
   summary?: string;
   href?: string;
   imageBlobKey?: string | null;
+  /** Optional CTA chip label. Renders as a small button on overlay-style
+   *  cards; ignored for stacked cards (whole card is already the link). */
+  ctaLabel?: string;
 };
 
 /** Parents that can own page_sections rows. Polymorphic discriminator. */
@@ -349,6 +352,12 @@ export type PageLeafBlock =
        *  serve you" pattern. */
       layout?: "uniform" | "bento";
       columns?: 2 | 3;
+      /** "stacked" = image at top, text below (existing behavior).
+       *  "overlay" = image fills the card with a dark gradient overlay;
+       *  title/summary/CTA layer on top. Applies to uniform cards + bento
+       *  heroes; bento tiles stay stacked regardless because they're too
+       *  small to read text-over-image. */
+      cardStyle?: "stacked" | "overlay";
     }
   | { kind: "embed"; header?: SectionHeader; embed: EmbedPayload }
   | {
