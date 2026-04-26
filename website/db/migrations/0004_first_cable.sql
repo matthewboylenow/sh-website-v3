@@ -1,0 +1,1 @@
+ALTER TABLE "site_settings" ADD COLUMN "nav" jsonb DEFAULT '{"items":[{"label":"I''m New","href":"/im-new"},{"label":"Worship","href":"/mass"},{"label":"Ministries","href":"/ministries"},{"label":"Events","href":"/events"},{"label":"Bulletin","href":"/bulletin"}]}'::jsonb NOT NULL;

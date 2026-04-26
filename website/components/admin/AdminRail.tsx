@@ -21,6 +21,7 @@ const CONTENT_MINISTRY_LEAD = [
 const SETTINGS = [
   { href: "/admin/settings", label: "Site settings", role: "admin" as const },
   { href: "/admin/settings/giving", label: "Giving links", role: "admin" as const },
+  { href: "/admin/settings/navigation", label: "Navigation", role: "admin" as const },
   { href: "/admin/settings/taxonomies", label: "Taxonomies", role: "admin" as const },
   { href: "/admin/matchmaker", label: "Matchmaker", role: "admin" as const },
   { href: "/admin/users", label: "Users & roles", role: "admin" as const },

@@ -486,6 +486,51 @@ export type Taxonomies = {
   ministryAudiences: string[];
 };
 
+/**
+ * Public masthead nav. Each top-level item can either be a plain link or
+ * carry a 3-column mega-menu (link sections + optional featured card).
+ * Edited from /admin/settings/navigation.
+ */
+export type NavLink = { label: string; href: string };
+
+export type NavMegaSection = {
+  heading: string;
+  links: NavLink[];
+};
+
+export type NavMegaFeature = {
+  tag?: string;
+  title: string;
+  body?: string;
+  ctaLabel: string;
+  ctaHref: string;
+};
+
+export type NavMega = {
+  sections: NavMegaSection[];
+  feature?: NavMegaFeature;
+};
+
+export type NavItem = {
+  label: string;
+  href: string;
+  mega?: NavMega;
+};
+
+export type NavManifest = {
+  items: NavItem[];
+};
+
+export const DEFAULT_NAV_MANIFEST: NavManifest = {
+  items: [
+    { label: "I'm New", href: "/im-new" },
+    { label: "Worship", href: "/mass" },
+    { label: "Ministries", href: "/ministries" },
+    { label: "Events", href: "/events" },
+    { label: "Bulletin", href: "/bulletin" },
+  ],
+};
+
 export const siteSettings = pgTable(
   "site_settings",
   {
@@ -510,6 +555,10 @@ export const siteSettings = pgTable(
       .$type<Taxonomies>()
       .notNull()
       .default({ eventCategories: [], eventAudiences: [], ministryAudiences: [] }),
+    nav: jsonb("nav")
+      .$type<NavManifest>()
+      .notNull()
+      .default(DEFAULT_NAV_MANIFEST),
     footerCopy: text("footer_copy"),
     densityScale: numeric("density_scale", { precision: 3, scale: 2 })
       .default("1.00")
