@@ -383,6 +383,20 @@ export type PageLeafBlock =
       category?: string;
       ctaLabel?: string;
       ctaHref?: string;
+    }
+  | {
+      kind: "podcast_episode";
+      header?: SectionHeader;
+      /** Spotify, Apple Podcasts, or Buzzsprout episode URL. Provider
+       *  auto-detected at render so URL changes are friction-free. */
+      url: string;
+      /** Eyebrow above the heading — e.g. "Saint Helen Podcast". */
+      showLabel?: string;
+      /** Intro paragraph rendered above the player. */
+      description?: string;
+      /** Optional CTA below the player — "Subscribe to the show" or similar. */
+      subscribeLabel?: string;
+      subscribeHref?: string;
     };
 
 /** Top-level block — leaves plus the Columns wrapper. */

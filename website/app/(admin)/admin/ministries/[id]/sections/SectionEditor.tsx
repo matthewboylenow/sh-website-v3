@@ -1083,6 +1083,70 @@ function BlockEditor({
         </div>
       );
 
+    case "podcast_episode":
+      return (
+        <div className="space-y-3">
+          <HeaderEditor
+            header={payload.header}
+            onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
+          />
+          <input
+            type="url"
+            value={payload.url}
+            maxLength={1000}
+            placeholder="Spotify or Apple Podcasts episode URL"
+            onChange={(e) => onUpdate(() => ({ ...payload, url: e.target.value }))}
+            className="form-input font-mono text-sm"
+          />
+          <p className="text-xs text-ink-3">
+            Paste the episode URL — provider auto-detects (Spotify, Apple Podcasts).
+            Switch episodes any time by editing this field.
+          </p>
+          <input
+            type="text"
+            value={payload.showLabel ?? ""}
+            maxLength={60}
+            placeholder='Show label / eyebrow — e.g. "Saint Helen Podcast"'
+            onChange={(e) =>
+              onUpdate(() => ({ ...payload, showLabel: e.target.value }))
+            }
+            className="form-input"
+          />
+          <textarea
+            value={payload.description ?? ""}
+            maxLength={1000}
+            rows={3}
+            placeholder="Intro paragraph (optional) — what's this episode about?"
+            onChange={(e) =>
+              onUpdate(() => ({ ...payload, description: e.target.value }))
+            }
+            className="form-input"
+          />
+          <div className="grid gap-2 sm:grid-cols-[1fr_2fr]">
+            <input
+              type="text"
+              value={payload.subscribeLabel ?? ""}
+              maxLength={40}
+              placeholder="Subscribe CTA label"
+              onChange={(e) =>
+                onUpdate(() => ({ ...payload, subscribeLabel: e.target.value }))
+              }
+              className="form-input"
+            />
+            <input
+              type="text"
+              value={payload.subscribeHref ?? ""}
+              maxLength={1000}
+              placeholder="Subscribe URL — link to the show on Spotify/Apple"
+              onChange={(e) =>
+                onUpdate(() => ({ ...payload, subscribeHref: e.target.value }))
+              }
+              className="form-input font-mono text-sm"
+            />
+          </div>
+        </div>
+      );
+
     case "columns":
       return (
         <ColumnsEditor
@@ -1500,6 +1564,7 @@ const LEAF_KINDS: [PageLeafBlock["kind"], string][] = [
   ["callout_banner", "Callout"],
   ["featured_ministries", "Ministries"],
   ["featured_events", "Events"],
+  ["podcast_episode", "Podcast"],
 ];
 
 function blankLeafBlock(kind: PageLeafBlock["kind"]): PageLeafBlock {
@@ -1540,6 +1605,8 @@ function blankLeafBlock(kind: PageLeafBlock["kind"]): PageLeafBlock {
       };
     case "featured_events":
       return { kind: "featured_events", count: 4 };
+    case "podcast_episode":
+      return { kind: "podcast_episode", url: "" };
   }
 }
 
@@ -1570,6 +1637,7 @@ function AddBlockMenu({
             ["callout_banner", "Callout banner"],
             ["featured_ministries", "Featured ministries"],
             ["featured_events", "Featured events"],
+            ["podcast_episode", "Podcast episode"],
             ["columns", "Columns"],
           ] as const
         ).map(([k, label]) => (
@@ -1629,6 +1697,8 @@ function blankBlock(kind: PageSectionPayload["kind"]): PageSectionPayload {
       };
     case "featured_events":
       return { kind: "featured_events", count: 4 };
+    case "podcast_episode":
+      return { kind: "podcast_episode", url: "" };
     case "columns":
       return {
         kind: "columns",
@@ -1653,6 +1723,7 @@ function prettyKind(k: PageSectionPayload["kind"]): string {
     callout_banner: "Callout banner",
     featured_ministries: "Featured ministries",
     featured_events: "Featured events",
+    podcast_episode: "Podcast episode",
     columns: "Columns",
   }[k];
 }

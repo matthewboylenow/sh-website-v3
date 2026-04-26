@@ -71,7 +71,9 @@ const LeafPayloadSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("image"),
     header: HeaderSchema.optional(),
-    blobKey: z.string().min(1).max(500),
+    // Allow empty during in-progress edits — public renderer hides the block
+    // when no image is bound. Pre-cap at 500 chars when present.
+    blobKey: z.string().max(500),
     alt: z.string().max(200).optional(),
     caption: z.string().max(300).optional(),
     href: z.string().max(1000).optional(),
@@ -79,7 +81,8 @@ const LeafPayloadSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("image_text"),
     header: HeaderSchema.optional(),
-    blobKey: z.string().min(1).max(500),
+    // Optional in-progress; renderer collapses to single column when missing.
+    blobKey: z.string().max(500),
     alt: z.string().max(200).optional(),
     html: z.string().max(20000),
     imageSide: z.enum(["left", "right"]).optional(),
@@ -90,12 +93,12 @@ const LeafPayloadSchema = z.discriminatedUnion("kind", [
     images: z
       .array(
         z.object({
-          blobKey: z.string().min(1).max(500),
+          // Empty rows skipped at render — let admins build incrementally.
+          blobKey: z.string().max(500),
           alt: z.string().max(200).optional(),
           caption: z.string().max(300).optional(),
         }),
       )
-      .min(1)
       .max(20),
     columns: z.union([z.literal(2), z.literal(3)]).optional(),
   }),
@@ -162,6 +165,15 @@ const LeafPayloadSchema = z.discriminatedUnion("kind", [
     category: z.string().max(60).optional(),
     ctaLabel: z.string().max(40).optional(),
     ctaHref: z.string().max(1000).optional(),
+  }),
+  z.object({
+    kind: z.literal("podcast_episode"),
+    header: HeaderSchema.optional(),
+    url: z.string().url().max(1000),
+    showLabel: z.string().max(60).optional(),
+    description: z.string().max(1000).optional(),
+    subscribeLabel: z.string().max(40).optional(),
+    subscribeHref: z.string().max(1000).optional(),
   }),
 ]);
 

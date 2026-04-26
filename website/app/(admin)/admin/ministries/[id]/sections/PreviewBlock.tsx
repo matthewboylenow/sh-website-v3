@@ -379,6 +379,26 @@ function renderInner(
         </>
       );
 
+    case "podcast_episode":
+      return (
+        <>
+          <HeaderEl header={p.header} />
+          {p.showLabel && (
+            <span className="sh-eyebrow">{p.showLabel}</span>
+          )}
+          <div className="rounded-md border border-dashed border-rule bg-cream/40 p-4 text-xs text-ink-3">
+            <strong className="text-navy">Podcast episode</strong>
+            {p.description && <p className="mt-2 text-ink-2">{p.description}</p>}
+            {p.url ? (
+              <p className="mt-1 break-all font-mono text-[11px]">{p.url}</p>
+            ) : (
+              <p className="mt-1 text-[11px]">No URL set yet.</p>
+            )}
+            <p className="mt-1 text-[11px]">Player iframe renders on the public site.</p>
+          </div>
+        </>
+      );
+
     case "columns": {
       const ratio =
         p.ratio === "60-40"
