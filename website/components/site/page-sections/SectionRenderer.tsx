@@ -58,6 +58,9 @@ export type RenderContext = {
   featuredMinistries?: FeaturedMinistriesData;
   /** Optional — only resolved when at least one featured_events block exists. */
   featuredEvents?: FeaturedEventsData;
+  /** Polymorphic parent so blocks can self-scope (e.g. featured_events
+   *  on a ministry page auto-filtering to that ministry's events). */
+  parent?: { kind: "ministry" | "formation" | "homepage" | "page"; id: string };
 };
 
 export function SectionRenderer({
@@ -532,11 +535,17 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
     case "featured_events": {
       const data = ctx.featuredEvents;
       if (!data) return null;
-      const filtered = p.category
-        ? data.instances.filter((e) =>
-            (e.categories ?? []).includes(p.category as string),
-          )
-        : data.instances;
+      // Resolve ministry filter: explicit > auto-scope-to-parent.
+      const resolvedMinistryId =
+        p.ministryId ??
+        (p.autoScopeToParent && ctx.parent?.kind === "ministry"
+          ? ctx.parent.id
+          : undefined);
+      const filtered = data.instances.filter((e) => {
+        if (p.category && !(e.categories ?? []).includes(p.category)) return false;
+        if (resolvedMinistryId && e.ministryId !== resolvedMinistryId) return false;
+        return true;
+      });
       const picks = filtered.slice(0, p.count);
       return (
         <>

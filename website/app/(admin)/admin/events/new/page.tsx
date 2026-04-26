@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { asc } from "drizzle-orm";
+import { db } from "@/db";
+import { ministries } from "@/db/schema";
 import { getSiteSettings } from "@/lib/queries/site-settings.query";
 import { EventForm } from "../EventForm";
 
@@ -11,6 +14,11 @@ export default async function NewEventPage() {
     eventAudiences: [],
     ministryAudiences: [],
   };
+
+  const ministryOptions = await db
+    .select({ id: ministries.id, name: ministries.name })
+    .from(ministries)
+    .orderBy(asc(ministries.name));
 
   // Default the start/end to "today at 6 PM" / "today at 8 PM" — most events
   // are evenings; editor adjusts as needed.
@@ -37,6 +45,7 @@ export default async function NewEventPage() {
           mode="create"
           audienceOptions={tax.eventAudiences}
           categoryOptions={tax.eventCategories}
+          ministryOptions={ministryOptions}
           defaultValues={{
             slug: "",
             title: "",

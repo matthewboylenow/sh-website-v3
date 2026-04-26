@@ -177,6 +177,8 @@ const LeafPayloadSchema = z.discriminatedUnion("kind", [
     header: HeaderSchema.optional(),
     count: z.coerce.number().int().min(1).max(12),
     category: z.string().max(60).optional(),
+    ministryId: z.string().uuid().optional(),
+    autoScopeToParent: z.boolean().optional(),
     ctaLabel: z.string().max(40).optional(),
     ctaHref: z.string().max(1000).optional(),
   }),

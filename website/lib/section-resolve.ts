@@ -81,6 +81,7 @@ function walk(payload: PageSectionPayload, acc: WalkAcc): void {
 
 export async function buildSectionContext(
   payloads: PageSectionPayload[],
+  parent?: RenderContext["parent"],
 ): Promise<RenderContext> {
   const acc: WalkAcc = {
     blobKeys: new Set<string>(),
@@ -158,5 +159,6 @@ export async function buildSectionContext(
     staff: staffMap,
     featuredMinistries,
     featuredEvents,
+    parent,
   };
 }

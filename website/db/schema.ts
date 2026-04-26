@@ -417,6 +417,13 @@ export type PageLeafBlock =
       count: number;
       /** Filter to a specific event category (taxonomy value). */
       category?: string;
+      /** Filter to events tagged with this ministry. When unset and the
+       *  block is rendered on a ministry page, falls back to the parent
+       *  ministry id automatically. */
+      ministryId?: string;
+      /** When true on a ministry page, scope to the parent ministry. The
+       *  renderer resolves the parent id from RenderContext. */
+      autoScopeToParent?: boolean;
       ctaLabel?: string;
       ctaHref?: string;
     }
@@ -747,6 +754,11 @@ export const events = pgTable(
     registerUrl: text("register_url"),
     /** Custom CTA label for the register button. Falls back to "Sign Up". */
     registerCtaLabel: text("register_cta_label"),
+    /** Optional ministry this event belongs to. Surfaces on the ministry's
+     *  page when a featured_events block is configured to filter by it. */
+    ministryId: uuid("ministry_id").references(() => ministries.id, {
+      onDelete: "set null",
+    }),
     /** Recurrence rule. Null for one-off events. */
     recurrence: jsonb("recurrence").$type<Recurrence>(),
     /** ISO timestamps to skip when expanding the recurrence — cancellations. */
@@ -767,6 +779,7 @@ export const events = pgTable(
   (t) => [
     uniqueIndex("events_slug_uq").on(t.slug),
     index("events_starts_at_idx").on(t.startsAt),
+    index("events_ministry_id_idx").on(t.ministryId),
     index("events_status_idx").on(t.status),
   ],
 );

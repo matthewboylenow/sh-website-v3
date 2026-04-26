@@ -22,7 +22,10 @@ export default async function HomePage() {
 
   const hero = settings?.homepageHero ?? DEFAULT_HOMEPAGE_HERO;
   const sections = sectionRows.map((r) => r.payload as PageSectionPayload);
-  const sectionCtx = await buildSectionContext(sections);
+  const sectionCtx = await buildSectionContext(sections, {
+    kind: "homepage",
+    id: HOMEPAGE_PARENT_ID,
+  });
 
   // Mass-times peek — auto-pulled from the schedule, only if hero opted in.
   const sundayMasses = weeklyMassTimes.filter((m) => m.dayOfWeek === 0);

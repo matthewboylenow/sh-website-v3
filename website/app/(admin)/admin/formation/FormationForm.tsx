@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
-import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { TagPicker } from "@/components/admin/TagPicker";
 import { FORMATION_CATEGORIES, type FormationCategory } from "@/db/schema";
 import {
@@ -144,14 +143,11 @@ export function FormationForm({
           />
         </AdminField>
 
-        <AdminField name="description" label="Description" errors={errors.description}>
-          <RichTextEditor
-            name="description"
-            initialHtml={defaultValues.description ?? ""}
-            pathPrefix={`formation/${pageId ?? "new"}`}
-            placeholder="Describe the program, who it's for, when it meets…"
-          />
-        </AdminField>
+        <p className="rounded-md border border-dashed border-rule bg-cream/40 px-4 py-3 text-xs text-ink-3">
+          Long-form content lives in <strong>Sections</strong> — save the
+          page, then click <em>Sections</em> to add rich text, images,
+          embeds, card grids, etc. The description field has been retired.
+        </p>
 
         <AdminField name="contactEmail" label="Contact email" errors={errors.contactEmail}>
           <input

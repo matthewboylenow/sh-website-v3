@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/site/Container";
 import { PhotoPlaceholder } from "@/components/site/PhotoPlaceholder";
-import { RichTextRenderer } from "@/components/site/RichTextRenderer";
 import { SectionRenderer } from "@/components/site/page-sections/SectionRenderer";
 import { assetUrl } from "@/lib/blob";
 import { getFormationBySlug } from "@/lib/queries/formation.query";
@@ -48,7 +47,10 @@ export default async function FormationDetailPage({
     getPageSections("formation", p.id),
   ]);
   const sections = sectionRows.map((r) => r.payload as PageSectionPayload);
-  const sectionCtx = await buildSectionContext(sections);
+  const sectionCtx = await buildSectionContext(sections, {
+    kind: "formation",
+    id: p.id,
+  });
 
   return (
     <>
@@ -88,14 +90,15 @@ export default async function FormationDetailPage({
       <section className="bg-white py-16">
         <Container width="wide">
           <div className="grid gap-12 md:grid-cols-[2fr_1fr]">
-            <article className="prose prose-navy max-w-none">
-              {p.description ? (
-                <RichTextRenderer
-                  html={p.description}
-                  className="text-[17px] leading-[1.7]"
-                />
+            <article className="max-w-none">
+              {sections.length > 0 ? (
+                <div className="space-y-12">
+                  {sections.map((s, i) => (
+                    <SectionRenderer key={i} payload={s} ctx={sectionCtx} />
+                  ))}
+                </div>
               ) : (
-                <p className="text-ink-3">Description coming soon.</p>
+                <p className="text-ink-3">Content coming soon.</p>
               )}
             </article>
 
@@ -131,13 +134,6 @@ export default async function FormationDetailPage({
             </aside>
           </div>
 
-          {sections.length > 0 && (
-            <div className="mt-16 space-y-12">
-              {sections.map((s, i) => (
-                <SectionRenderer key={i} payload={s} ctx={sectionCtx} />
-              ))}
-            </div>
-          )}
         </Container>
       </section>
     </>

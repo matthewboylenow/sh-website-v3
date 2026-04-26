@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { events } from "@/db/schema";
+import { events, ministries } from "@/db/schema";
 import { assetUrl } from "@/lib/blob";
 import { getSiteSettings } from "@/lib/queries/site-settings.query";
 import { EventForm } from "../EventForm";
@@ -22,9 +22,13 @@ export default async function EditEventPage({
   const [row] = await db.select().from(events).where(eq(events.id, id)).limit(1);
   if (!row) notFound();
 
-  const [photoPreviewUrl, settings] = await Promise.all([
+  const [photoPreviewUrl, settings, ministryOptions] = await Promise.all([
     assetUrl(row.photoBlobKey),
     getSiteSettings(),
+    db
+      .select({ id: ministries.id, name: ministries.name })
+      .from(ministries)
+      .orderBy(asc(ministries.name)),
   ]);
   const tax = settings?.taxonomies ?? {
     eventCategories: [],
@@ -65,6 +69,7 @@ export default async function EditEventPage({
           photoPreviewUrl={photoPreviewUrl}
           audienceOptions={tax.eventAudiences}
           categoryOptions={tax.eventCategories}
+          ministryOptions={ministryOptions}
         />
       </div>
     </div>

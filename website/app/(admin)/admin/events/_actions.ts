@@ -88,6 +88,7 @@ function parseEventForm(formData: FormData) {
     status: (get("status") || "draft") as "draft" | "published" | "archived",
     recurrence,
     exceptionDates,
+    ministryId: get("ministryId") || null,
   };
 }
 

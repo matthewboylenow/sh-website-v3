@@ -57,6 +57,11 @@ const baseFields = {
     .array(z.string().datetime({ offset: true }))
     .max(200)
     .default([]),
+  ministryId: z
+    .preprocess(
+      (v) => (v === "" || v === undefined ? null : v),
+      z.string().uuid().nullable(),
+    ),
 };
 
 export const EventCreateSchema = z

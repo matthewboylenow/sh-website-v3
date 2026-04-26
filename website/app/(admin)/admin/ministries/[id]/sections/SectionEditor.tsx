@@ -1160,6 +1160,48 @@ function BlockEditor({
               </select>
             </div>
           </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+                Filter by ministry (optional)
+              </label>
+              <select
+                value={payload.ministryId ?? ""}
+                onChange={(e) =>
+                  onUpdate(() => ({
+                    ...payload,
+                    ministryId: e.target.value || undefined,
+                  }))
+                }
+                className="form-input"
+                disabled={payload.autoScopeToParent}
+              >
+                <option value="">— All ministries —</option>
+                {ministryOptions.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <label className="flex items-end gap-2 pb-1 text-xs text-ink-2">
+              <input
+                type="checkbox"
+                checked={payload.autoScopeToParent ?? false}
+                onChange={(e) =>
+                  onUpdate(() => ({
+                    ...payload,
+                    autoScopeToParent: e.target.checked || undefined,
+                  }))
+                }
+                className="size-4"
+              />
+              <span>
+                <strong>Auto-scope to this page&rsquo;s ministry.</strong>{" "}
+                Drop on a ministry page → shows that ministry&rsquo;s events.
+              </span>
+            </label>
+          </div>
           <div className="grid gap-2 sm:grid-cols-[1fr_2fr]">
             <input
               type="text"

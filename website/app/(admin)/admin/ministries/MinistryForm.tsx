@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
-import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { TagPicker } from "@/components/admin/TagPicker";
 import type {
   CustomFieldType,
@@ -179,18 +178,11 @@ export function MinistryForm({
           />
         </AdminField>
 
-        <AdminField
-          name="description"
-          label="Description"
-          errors={errors.description}
-        >
-          <RichTextEditor
-            name="description"
-            initialHtml={defaultValues.description ?? ""}
-            pathPrefix={`ministries/${ministryId ?? "new"}`}
-            placeholder="Describe the ministry, who's a fit, and how to get involved…"
-          />
-        </AdminField>
+        <p className="rounded-md border border-dashed border-rule bg-cream/40 px-4 py-3 text-xs text-ink-3">
+          Long-form content lives in <strong>Sections</strong> — open the
+          ministry, then click <em>Sections</em> to add rich text, images,
+          embeds, card grids, etc. The description field has been retired.
+        </p>
 
         <div className="grid gap-5 sm:grid-cols-2">
           <AdminField name="meetingCadence" label="Meeting cadence" errors={errors.meetingCadence}>

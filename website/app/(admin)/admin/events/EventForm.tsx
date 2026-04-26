@@ -30,6 +30,7 @@ type EventFormValues = {
   status: "draft" | "published" | "archived";
   recurrence: Recurrence | null;
   exceptionDates: string[] | null;
+  ministryId: string | null;
 };
 
 /** Convert a Date | ISO string to the "YYYY-MM-DDThh:mm" shape the
@@ -48,6 +49,7 @@ export function EventForm({
   photoPreviewUrl,
   audienceOptions,
   categoryOptions,
+  ministryOptions,
 }: {
   mode: "create" | "edit";
   eventId?: string;
@@ -56,6 +58,7 @@ export function EventForm({
   photoPreviewUrl?: string | null;
   audienceOptions: readonly string[];
   categoryOptions: readonly string[];
+  ministryOptions: readonly { id: string; name: string }[];
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -224,6 +227,27 @@ export function EventForm({
             options={categoryOptions}
             defaultValue={defaultValues.categories ?? []}
           />
+        </Field>
+
+        <Field
+          name="ministryId"
+          label="Ministry"
+          hint="Optional — when set, this event surfaces on the ministry's page (drop a Featured events block there)."
+          errors={errors.ministryId}
+        >
+          <select
+            id="ministryId-input"
+            name="ministryId"
+            defaultValue={defaultValues.ministryId ?? ""}
+            className="form-input"
+          >
+            <option value="">— No ministry (parish-wide) —</option>
+            {ministryOptions.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <RecurrenceEditor
