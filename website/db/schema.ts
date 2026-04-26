@@ -833,7 +833,14 @@ export const siteSettings = pgTable(
       .$type<Redirect[]>()
       .notNull()
       .default([]),
+    /** Logo shown in the masthead pill. PNG/SVG with transparent bg
+     *  reads best on the navy/85 backdrop. */
+    logoBlobKey: text("logo_blob_key").references(() => blobAssets.key),
+    logoAlt: text("logo_alt"),
     footerCopy: text("footer_copy"),
+    /** Sanitized HTML rendered in the thin bar below the main footer —
+     *  copyright, privacy/terms links, etc. */
+    bottomBarHtml: text("bottom_bar_html"),
     densityScale: numeric("density_scale", { precision: 3, scale: 2 })
       .default("1.00")
       .notNull(),

@@ -47,7 +47,10 @@ function parseGeneralForm(formData: FormData) {
       instagram: get("socialLinks.instagram") || null,
     },
     welcomeFormRecipients: recipients,
+    logoBlobKey: get("logoBlobKey") || null,
+    logoAlt: get("logoAlt") || null,
     footerCopy: get("footerCopy") || null,
+    bottomBarHtml: get("bottomBarHtml") || null,
     densityScale: get("densityScale") || "1.00",
   };
 }
@@ -79,7 +82,10 @@ export async function updateSiteSettingsGeneralAction(
           instagram: parsed.data.socialLinks.instagram || undefined,
         },
         welcomeFormRecipients: parsed.data.welcomeFormRecipients,
+        logoBlobKey: parsed.data.logoBlobKey,
+        logoAlt: parsed.data.logoAlt,
         footerCopy: parsed.data.footerCopy,
+        bottomBarHtml: parsed.data.bottomBarHtml,
         densityScale: parsed.data.densityScale,
         updatedAt: new Date(),
       })

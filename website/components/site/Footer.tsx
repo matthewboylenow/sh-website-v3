@@ -1,8 +1,17 @@
 import Link from "next/link";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { Container } from "./Container";
 
-export function Footer() {
+export function Footer({
+  copy,
+  bottomBarHtml,
+}: {
+  copy?: string | null;
+  bottomBarHtml?: string | null;
+}) {
   const year = new Date().getFullYear();
+  const safeBottom = bottomBarHtml ? sanitizeHtml(bottomBarHtml) : null;
+
   return (
     <footer className="sh-on-dark mt-24 bg-navy-dark text-white">
       <Container width="wide">
@@ -16,6 +25,11 @@ export function Footer() {
               <br />
               Westfield, NJ 07090
             </p>
+            {copy && (
+              <p className="mt-4 max-w-prose whitespace-pre-line text-sm text-white/85">
+                {copy}
+              </p>
+            )}
           </div>
 
           <FooterColumn
@@ -30,6 +44,7 @@ export function Footer() {
             title="Connect"
             links={[
               { label: "Ministries", href: "/ministries" },
+              { label: "Formation", href: "/formation" },
               { label: "Events", href: "/events" },
               { label: "Bulletin", href: "/bulletin" },
               { label: "Contact", href: "/contact" },
@@ -43,12 +58,26 @@ export function Footer() {
             ]}
           />
         </div>
-
-        <div className="border-t border-white/15 py-6 text-xs text-white/85">
-          &copy; {year} Saint Helen Parish &middot; A Roman Catholic parish in
-          the Archdiocese of Newark.
-        </div>
       </Container>
+
+      {/* Bottom bar — admin-editable HTML, falls back to a default copyright */}
+      <div className="border-t border-white/10 bg-black/20">
+        <Container width="wide">
+          <div className="flex flex-wrap items-center justify-between gap-3 py-4 text-xs text-white/75">
+            {safeBottom ? (
+              <div
+                className="sh-prose-tight"
+                dangerouslySetInnerHTML={{ __html: safeBottom }}
+              />
+            ) : (
+              <p>
+                &copy; {year} Saint Helen Parish &middot; A Roman Catholic parish
+                in the Archdiocese of Newark.
+              </p>
+            )}
+          </div>
+        </Container>
+      </div>
     </footer>
   );
 }

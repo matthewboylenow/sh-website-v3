@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
 import { siteSettings } from "@/db/schema";
+import { assetUrl } from "@/lib/blob";
 import { SettingsForm } from "./SettingsForm";
 
 export const metadata = { title: "Site settings · Admin" };
@@ -14,6 +15,7 @@ export default async function AdminSiteSettingsPage() {
     .where(eq(siteSettings.id, 1))
     .limit(1);
   if (!row) notFound();
+  const logoPreviewUrl = await assetUrl(row.logoBlobKey);
 
   return (
     <div>
@@ -32,7 +34,7 @@ export default async function AdminSiteSettingsPage() {
       </header>
 
       <div className="mt-8">
-        <SettingsForm initial={row} />
+        <SettingsForm initial={row} logoPreviewUrl={logoPreviewUrl} />
       </div>
     </div>
   );

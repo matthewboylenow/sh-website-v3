@@ -19,7 +19,10 @@ export const SiteSettingsGeneralSchema = z.object({
   address: Address,
   socialLinks: SocialLinks,
   welcomeFormRecipients: z.array(z.email()).default([]),
-  footerCopy: z.string().max(500).optional().nullable(),
+  logoBlobKey: z.string().max(500).optional().nullable(),
+  logoAlt: z.string().max(120).optional().nullable(),
+  footerCopy: z.string().max(1000).optional().nullable(),
+  bottomBarHtml: z.string().max(1000).optional().nullable(),
   densityScale: z
     .string()
     .regex(/^\d+(?:\.\d{1,2})?$/, "Number with up to 2 decimals")

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
+import { PhotoUploader } from "@/components/admin/PhotoUploader";
 import {
   type SiteAddress,
   type SiteSettings,
@@ -10,7 +11,13 @@ import {
 } from "@/db/schema";
 import { updateSiteSettingsGeneralAction } from "./_actions";
 
-export function SettingsForm({ initial }: { initial: SiteSettings }) {
+export function SettingsForm({
+  initial,
+  logoPreviewUrl,
+}: {
+  initial: SiteSettings;
+  logoPreviewUrl?: string | null;
+}) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [errors, setErrors] = useState<Record<string, string[]>>({});
@@ -53,6 +60,38 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
           Saved.
         </div>
       )}
+
+      <Section title="Branding">
+        <AdminField
+          name="logoBlobKey"
+          label="Logo"
+          hint="PNG or SVG with a transparent background works best — the masthead pill is dark navy. Max-height in the header is 36 px (auto-scaled)."
+          errors={errors.logoBlobKey}
+        >
+          <PhotoUploader
+            name="logoBlobKey"
+            initialKey={initial.logoBlobKey ?? null}
+            initialPreviewUrl={logoPreviewUrl}
+            initialAlt={initial.logoAlt ?? ""}
+            pathPrefix="site/branding"
+          />
+        </AdminField>
+        <AdminField
+          name="logoAlt"
+          label="Logo alt text"
+          hint="What screen readers announce in place of the logo."
+          errors={errors.logoAlt}
+        >
+          <input
+            id="logoAlt-input"
+            name="logoAlt"
+            type="text"
+            defaultValue={initial.logoAlt ?? "Saint Helen"}
+            maxLength={120}
+            className="form-input"
+          />
+        </AdminField>
+      </Section>
 
       <Section title="Contact">
         <div className="grid gap-5 sm:grid-cols-2">
@@ -171,14 +210,34 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
             className="form-input"
           />
         </AdminField>
-        <AdminField name="footerCopy" label="Footer copy" errors={errors.footerCopy}>
-          <input
+        <AdminField
+          name="footerCopy"
+          label="Footer copy"
+          hint="Short paragraph shown in the main footer next to contact info."
+          errors={errors.footerCopy}
+        >
+          <textarea
             id="footerCopy-input"
             name="footerCopy"
-            type="text"
             defaultValue={initial.footerCopy ?? ""}
-            maxLength={500}
+            maxLength={1000}
+            rows={3}
             className="form-input"
+          />
+        </AdminField>
+        <AdminField
+          name="bottomBarHtml"
+          label="Bottom bar"
+          hint='Tiny strip below the main footer. HTML allowed — e.g. © 2026 Saint Helen · <a href="/privacy">Privacy</a>'
+          errors={errors.bottomBarHtml}
+        >
+          <textarea
+            id="bottomBarHtml-input"
+            name="bottomBarHtml"
+            defaultValue={initial.bottomBarHtml ?? ""}
+            maxLength={1000}
+            rows={2}
+            className="form-input font-mono text-sm"
           />
         </AdminField>
         <AdminField

@@ -8,14 +8,30 @@ import { DEFAULT_NAV_MANIFEST, type NavItem, type NavManifest } from "@/db/schem
 const SCROLL_TIGHTEN = 80;
 
 /**
- * Floating frosted pill — always visible, fixed at the top with breathing
- * room. Reads NavManifest from siteSettings (passed in from the server
- * layout) so admins can edit nav items + mega-menus at
- * /admin/settings/navigation without a deploy.
+ * Floating frosted pill — fixed at the top with breathing room. Reads
+ * NavManifest from siteSettings (passed in from the server layout) so
+ * admins can edit nav items + mega-menus at /admin/settings/navigation.
+ *
+ * Logo: when siteSettings.logoBlobKey is set, the brand slot renders an
+ * <img> auto-scaled to ~32-36px tall. Otherwise falls back to the
+ * "Saint Helen" wordmark.
+ *
+ * Mobile (< md): the desktop nav hides, a hamburger button appears, and
+ * tapping it opens a slide-in drawer with all nav items (mega-menu
+ * sections flattened into single-level link groups).
  */
-export function Header({ nav }: { nav?: NavManifest }) {
+export function Header({
+  nav,
+  logoUrl,
+  logoAlt = "Saint Helen",
+}: {
+  nav?: NavManifest;
+  logoUrl?: string | null;
+  logoAlt?: string;
+}) {
   const pathname = usePathname();
   const [docked, setDocked] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setDocked(window.scrollY > SCROLL_TIGHTEN);
@@ -24,39 +40,86 @@ export function Header({ nav }: { nav?: NavManifest }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Close the mobile drawer on route change.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   const items = nav?.items?.length ? nav.items : DEFAULT_NAV_MANIFEST.items;
 
   return (
-    <header
-      className={
-        "fixed inset-x-0 z-40 px-4 transition-[top] duration-300 ease-out sm:px-6 " +
-        (docked ? "top-2" : "top-4")
-      }
-    >
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-full border border-white/15 bg-navy/85 px-4 py-2 shadow-lg backdrop-blur-md backdrop-saturate-150 supports-[backdrop-filter]:bg-navy/70 sm:px-5">
-        <Link
-          href="/"
-          className="font-serif text-base font-bold tracking-tight text-white hover:text-gold sm:text-lg"
-        >
-          Saint Helen
-        </Link>
+    <>
+      <header
+        className={
+          "fixed inset-x-0 z-40 px-4 transition-[top] duration-300 ease-out sm:px-6 " +
+          (docked ? "top-2" : "top-4")
+        }
+      >
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-full border border-white/15 bg-navy/85 px-4 py-2 shadow-lg backdrop-blur-md backdrop-saturate-150 supports-[backdrop-filter]:bg-navy/70 sm:px-5">
+          <Link href="/" className="flex items-center gap-2 text-white hover:text-gold">
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- header logo, sized below LCP threshold
+              <img
+                src={logoUrl}
+                alt={logoAlt}
+                className="block h-8 w-auto sm:h-9"
+              />
+            ) : (
+              <span className="font-serif text-base font-bold tracking-tight sm:text-lg">
+                Saint Helen
+              </span>
+            )}
+          </Link>
 
-        <nav className="hidden md:block">
-          <ul className="flex items-center gap-1">
-            {items.map((item, idx) => (
-              <NavTopItem key={`${item.href}-${idx}`} item={item} pathname={pathname} />
-            ))}
-          </ul>
-        </nav>
+          <nav className="hidden md:block">
+            <ul className="flex items-center gap-1">
+              {items.map((item, idx) => (
+                <NavTopItem key={`${item.href}-${idx}`} item={item} pathname={pathname} />
+              ))}
+            </ul>
+          </nav>
 
-        <Link
-          href="/give"
-          className="inline-flex items-center rounded-full bg-rust px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rust-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:px-5 sm:py-2"
-        >
-          Give
-        </Link>
-      </div>
-    </header>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/give"
+              className="inline-flex items-center rounded-full bg-rust px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rust-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:px-5 sm:py-2"
+            >
+              Give
+            </Link>
+            <button
+              type="button"
+              aria-label="Open menu"
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-nav"
+              onClick={() => setMobileOpen(true)}
+              className="inline-flex size-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white hover:bg-white/20 md:hidden"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <MobileDrawer
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        items={items}
+        pathname={pathname}
+        logoUrl={logoUrl}
+        logoAlt={logoAlt}
+      />
+    </>
   );
 }
 
@@ -69,7 +132,6 @@ function NavTopItem({ item, pathname }: { item: NavItem; pathname: string }) {
     pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"));
   const hasMega = !!item.mega && item.mega.sections.length > 0;
 
-  // Close on Escape + click-outside.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -235,6 +297,161 @@ function MegaPanel({
             </div>
           </Link>
         )}
+      </div>
+    </div>
+  );
+}
+
+function MobileDrawer({
+  open,
+  onClose,
+  items,
+  pathname,
+  logoUrl,
+  logoAlt,
+}: {
+  open: boolean;
+  onClose: () => void;
+  items: NavItem[];
+  pathname: string;
+  logoUrl?: string | null;
+  logoAlt: string;
+}) {
+  // Lock body scroll while open; trap focus on the close button initially.
+  const closeRef = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const isActive = (href: string) =>
+    pathname === href || (href !== "/" && pathname.startsWith(href + "/"));
+
+  return (
+    <div
+      id="mobile-nav"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Site navigation"
+      className="fixed inset-0 z-50 md:hidden"
+    >
+      <button
+        type="button"
+        aria-label="Close menu"
+        onClick={onClose}
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+      />
+      <div className="absolute inset-y-0 right-0 flex w-full max-w-sm flex-col overflow-y-auto bg-navy text-white shadow-2xl sh-on-dark">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-navy/95 px-5 py-4 backdrop-blur">
+          <Link
+            href="/"
+            onClick={onClose}
+            className="flex items-center gap-2 hover:text-gold"
+          >
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- mobile drawer logo
+              <img src={logoUrl} alt={logoAlt} className="h-8 w-auto" />
+            ) : (
+              <span className="font-serif text-base font-bold">Saint Helen</span>
+            )}
+          </Link>
+          <button
+            ref={closeRef}
+            type="button"
+            onClick={onClose}
+            aria-label="Close menu"
+            className="inline-flex size-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white hover:bg-white/20"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </div>
+
+        <nav className="flex-1 px-5 py-6">
+          <ul className="space-y-2">
+            {items.map((item, i) => (
+              <li key={`${item.href}-${i}`}>
+                <Link
+                  href={item.href}
+                  onClick={onClose}
+                  aria-current={isActive(item.href) ? "page" : undefined}
+                  className={
+                    "block rounded-lg px-3 py-2 font-serif text-lg font-bold transition-colors " +
+                    (isActive(item.href)
+                      ? "bg-white/15 text-white"
+                      : "text-white hover:bg-white/10")
+                  }
+                >
+                  {item.label}
+                </Link>
+
+                {item.mega && item.mega.sections.length > 0 && (
+                  <div className="mt-1 space-y-3 border-l border-white/15 pl-4">
+                    {item.mega.sections.map((s, si) => (
+                      <div key={`${s.heading}-${si}`}>
+                        <h6 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold">
+                          {s.heading}
+                        </h6>
+                        <ul className="mt-1.5 space-y-0.5">
+                          {s.links.map((l, li) => (
+                            <li key={`${l.href}-${li}`}>
+                              <Link
+                                href={l.href}
+                                onClick={onClose}
+                                className="block rounded-md px-2 py-1 text-sm text-white/85 hover:bg-white/10 hover:text-white"
+                              >
+                                {l.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                    {item.mega.feature && (
+                      <Link
+                        href={item.mega.feature.ctaHref}
+                        onClick={onClose}
+                        className="block rounded-md px-2 py-1.5 text-sm font-semibold text-gold hover:bg-white/10"
+                      >
+                        {item.mega.feature.ctaLabel} →
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          <Link
+            href="/give"
+            onClick={onClose}
+            className="mt-8 inline-flex w-full items-center justify-center rounded-pill bg-rust px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-rust-dark"
+          >
+            Give
+          </Link>
+        </nav>
       </div>
     </div>
   );
