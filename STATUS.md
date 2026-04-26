@@ -2,7 +2,7 @@
 
 > **Read this first, every session.** This is the running log of what's shipped, what's in flight, what's queued, and what's broken. It pairs with `CLAUDE.md` (rules) and `/design-ref/` (specs). Update it after every meaningful step.
 
-Last updated: **2026-04-25**
+Last updated: **2026-04-26**
 
 ---
 
@@ -21,9 +21,19 @@ Last updated: **2026-04-25**
 | 8 | External integrations (Resend / Twilio / Fathom / Subsplash) | ⬜ Queued |
 | 9 | Polish — contrast, summary rename, ministry hides, mass simplification, taxonomies, media library | ✅ Done |
 | 10 | Rich text editor (TipTap) | ✅ Done — TipTap in events / ministries / staff; sanitize-html on render |
-| 11 | Per-ministry forms + leads dashboard | ⬜ Queued |
-| 12 | Blog + megamenu + nav editor | ⬜ Queued |
-| 13 | Sections + embed allowlist + matchmaker skip-rules | ⬜ Queued |
+| 11 | Per-ministry forms + leads dashboard | ✅ Done (Waves 11.0–11.7.1 — multi-lead, custom form fields, magic-link actions) |
+| 11.5 | Frosted-pill header + video hero | ✅ Done |
+| 11.6 | Site-wide CSS layering + on-dark variants | ✅ Done |
+| 12 | Blog + megamenu + nav editor | ✅ Done (12.A nav editor, 12.B blog) |
+| 13 | Sections + embed allowlist + matchmaker skip-rules | 🟡 Mostly done — sections + embeds shipped; matchmaker rules remain |
+| 13.E | Recurring events + custom CTA + event detail page | ✅ Done |
+| 13.F | Vanity-URL redirects (admin-managed) | ✅ Done |
+| 13.G | Polymorphic page_sections + inline preview + Formation pages | ✅ Done |
+| 13.H | Editable logo + footer copy + bottom bar | ✅ Done |
+| 13.I | Hamburger menu + mobile drawer | ✅ Done |
+| 13.J | Announcements (slide-in + modal popup) | ✅ Done |
+| 14 | Homepage CMS — hero settings + sections + 3 specialized blocks | ✅ Done (14.A–14.H — covers podcast, bento, overlay cards) |
+| 14.G | Media library picker on every upload surface | ✅ Done |
 
 Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).
 
@@ -317,9 +327,69 @@ Public visitors can submit Join / Inquire / Volunteer requests on every publishe
 ## ✅ Shipped — Wave 11.5 visual polish
 
 - **Frosted-pill header.** `<Header>` is a sticky pill at the top of every public page — `bg-navy/55 backdrop-blur-md` with rounded-full container. Inner nav links pick up subtle `hover:bg-white/10` chips. Reads on photo + cream + navy backgrounds equally.
-- **Full-bleed video hero.** New `<HeroVideo>` client component drives the homepage hero. Reads `NEXT_PUBLIC_HERO_VIDEO_URL` (and `NEXT_PUBLIC_HERO_VIDEO_POSTER`) — autoplay/muted/loop/playsinline with navy-to-black gradient overlay. Falls back to poster-only when video URL unset, falls further back to a navy gradient when neither is set. Honors `prefers-reduced-motion` (motion-reduce hides the video, shows the poster). Hero copy restyled to white-on-dark with gold eyebrow accents. **Swap point:** set `NEXT_PUBLIC_HERO_VIDEO_URL` in Vercel env vars when you have footage; ideal source is Mux/Cloudflare Stream over direct Vercel Blob for a looping background.
+- **Full-bleed video hero.** New `<HeroVideo>` client component drives the homepage hero. Reads `NEXT_PUBLIC_HERO_VIDEO_URL` (and `NEXT_PUBLIC_HERO_VIDEO_POSTER`) — autoplay/muted/loop/playsinline with navy-to-black gradient overlay. Falls back to poster-only when video URL unset, falls further back to a navy gradient when neither is set. Honors `prefers-reduced-motion` (motion-reduce hides the video, shows the poster). Hero copy restyled to white-on-dark with gold eyebrow accents. *Note: Wave 14.B replaced the env-var hero with admin-editable settings; env vars still work as fallback.*
 
 Build green. SMS auth re-aligned with the new schema (no longer references the dropped `users.ministry_id`).
+
+## ✅ Shipped — Wave 11.6 / 11.6.1 site-wide CSS layering
+
+Root-cause fix for "h2 invisible on dark backgrounds." Tailwind 4 utilities sit in `@layer utilities`; anything outside any layer landed in the implicit anonymous layer that sits above utilities. Wrapped base element rules (body, h1-5, p, a) in `@layer base` and helper classes (.sh-display, .sh-prose, .form-input, etc.) in `@layer components`. `text-white` on dark sections now actually wins. Added `.sh-on-dark` defensive scope used on every dark public surface (Find your place, Support, Footer, all dark cards) to flip headings + body to white-on-dark by default. Header reshaped to absolute-over-hero → fixed-frosted-on-scroll per `kit.css §MASTHEAD`.
+
+## ✅ Shipped — Wave 11.7 + 11.7.1 inquiry form builder
+
+Per-ministry form is now fully customizable. Unified `inquiryConfig.fields[]` (replacing the half-built `customFields[]`) — discriminated union of `system` (name/email/phone/message; label-editable, hide-able for phone+message; name+email forced) and `custom` (text/textarea/select/radio/checkboxes with a per-block options sub-editor). Submissions still post `name/email/phone/message` plus `customAnswers` keyed by question label; checkbox answers join with " · " into a single string for the email + admin display.
+
+## ✅ Shipped — Wave 12 navigation + blog
+
+- **12.A — Mega-menu + nav editor.** New `siteSettings.nav` jsonb (migration 0004) holds `NavManifest = { items: NavItem[] }`. Each item is either a plain link or a 3-column mega-menu with link sections + optional gradient feature card. Public Header reads the manifest and renders flyout panels per `kit.css §63-96` with hover-intent + Escape close. Admin editor at `/admin/settings/navigation` (admin-only) — add/remove/reorder up to 8 top-level items, attach mega-menu, configure 1-4 sections with up to 12 links each.
+- **12.B — Blog.** New `posts` table (migration 0005). Two categories: `pastor` letters + `stewardship` updates. Admin CRUD at `/admin/posts` mirrors the events editor; public `/blog` index with category-chip filter + `/blog/[slug]` detail. Body via TipTap, sanitized on render.
+
+## ✅ Shipped — Wave 13.E recurring events + custom CTA
+
+Migration 0006 adds three columns: `recurrence` jsonb (discriminated union — weekly + interval + multi-weekday picker, OR "nth weekday of the month" with `nth: 1|2|3|4|5|"last"`), `exceptionDates` jsonb (ISO timestamp array for cancellations / holiday weeks), `registerCtaLabel` text (falls back to "Sign Up" when null). New `lib/recurrence.ts`: pure helpers `expandEvent`, `expandEvents`, `summarizeRecurrence`. Public `/events` expands instances over a 6-month horizon and groups by occurrence date. Admin EventForm gains a RecurrenceEditor block. Detail page `/events/[slug]` ships in 13.E.4 — hero snaps to next occurrence, sidebar shows recurrence summary, "Upcoming dates" panel lists next 12.
+
+## ✅ Shipped — Wave 13.F vanity-URL redirects
+
+Admin-managed redirects in `siteSettings.redirects` jsonb (migration 0007). `/admin/settings/redirects` editor: add `from /youth → to /ministries/youth-ministry`, mark permanent (308) vs. temporary (307 default), unique-from + no-loop validation. Middleware looks up the manifest via Next's data-cached fetch (`/api/redirects` route, Node runtime, `unstable_cache` backed by the `redirects` tag). Skipped on `/admin/*`, `/api/*`, and Next internals.
+
+## ✅ Shipped — Wave 13.A–13.D ministry sections + 13 blocks
+
+Block-based content rendered below the description on `/ministries/[slug]`. New `ministry_sections` table (migration 0008, later renamed to `page_sections` in 0009 — see Wave 13.G). Discriminated-union `MinistrySectionPayload` covers the full v1 menu:
+
+> heading · rich text · image · image+text · image gallery · link list · button group · video (MP4/HLS via Bunny — hls.js dynamic-imported only on .m3u8) · embed (allowlist: YouTube, Vimeo, Bunny, Google Forms, Eventbrite, SignUpGenius, Touchpoint, generic iframe) · card grid · staff card (references staff records) · callout banner · columns (recursive, one nesting level)
+
+Each block has an optional shared header (heading, subheading, anchor id). Image-bearing blocks fan out via `lib/section-resolve.ts` — one DB roundtrip resolves every blob URL + every referenced staff row. Single admin editor at `/admin/ministries/[id]/sections`; replace-set save semantics. Embed editor parses pasted URLs against the allowlist; video block auto-detects MP4/HLS/YouTube/Vimeo. RichTextEditor gained an optional `onChange` callback so controlled-state consumers (this editor) don't need a hidden form input.
+
+## ✅ Shipped — Wave 13.G polymorphic refactor + preview + formation
+
+Three pieces:
+
+1. **Polymorphic refactor** (migration 0009): renamed `ministry_sections` → `page_sections` with a `parent_kind` discriminator (`ministry` | `formation` | `homepage` after 14.A). Dropped the FK to ministries — `parent_id` is now polymorphic; app code handles cascade on parent delete. `lib/server/page-sections-actions.ts` holds the shared replace-set saver.
+2. **Inline preview toggle.** Each section editor row gets an Edit/Preview switch + a "Preview all" master toggle at the top. `PreviewBlock` is a parallel client renderer (plain `<img>` instead of `next/image`, sanitized HTML via `dangerouslySetInnerHTML` for rich text + image+text, embedded VideoBlock + iframe markup for video/embed, gradient placeholders for empty blocks).
+3. **Formation pages.** New `formation_pages` table (migration 0010) — slug, name, summary, description, category (kids/youth/adults/families), audiences, photoBlobKey, contactEmail, leadStaffId. Admin CRUD at `/admin/formation` plus `/admin/formation/[id]/sections` reusing the same SectionEditor with `parent_kind="formation"`. Public `/formation` index with category-chip filter + `/formation/[slug]` detail.
+
+## ✅ Shipped — Wave 13.H–13.J brand + announcements
+
+- **13.H — Logo + footer.** Migration 0011 adds `siteSettings.logoBlobKey` + `logoAlt` + `bottomBarHtml`. Header swaps the "Saint Helen" wordmark for the uploaded logo (max-height 36 px, also used in mobile drawer header). Footer accepts `footerCopy` (multi-line paragraph) + `bottomBarHtml` (sanitized HTML thin strip). New "Branding" section in `/admin/settings`.
+- **13.I — Hamburger + mobile.** Right-side slide-in drawer with body-scroll lock, Escape close, click-outside close, route-change auto-close. All nav items + flattened mega-menu sections. Logo + Give CTA persist in the drawer header.
+- **13.J — Announcements.** Migration 0012 — slide-in (bottom-right) and full-screen modal popups. Schema: `kind`, `priority`, `startsAt/endsAt` window, ribbon/title/body/image/dateRows/CTA, `showDelaySeconds`, `dismissDays` (localStorage TTL keyed by announcement id), accent (navy/rust/gold). Tailwind-based, no `!important`. Admin editor at `/admin/settings/announcements`. Public layout picks the highest-priority active announcement and renders the slide-in or modal based on `kind`.
+
+## ✅ Shipped — Wave 14 homepage CMS
+
+Hero stays structurally hardcoded (full-bleed video, fixed-top placement) but its **content** is admin-editable:
+
+- **14.B** (migration 0013) — `siteSettings.homepageHero` jsonb. Editable: video URL, poster URL, eyebrow, title, lede, repeatable CTAs (0–6, label + URL + variant primary/secondary, reorderable), Mass-times peek (toggle + customize eyebrow / link label / link href; times themselves auto-pull from `mass_times`).
+- **14.A** — Two new specialized blocks: `featured_ministries` (mode: spotlight | random | manual; count 1-8; tone default | navy; manual chip-pick; CTA) and `featured_events` (count 1-12; optional category filter; auto-expands recurring events). Embed allowlist gains Spotify + Apple Podcasts.
+- **14.C** — `/admin/homepage` page combines `<HeroEditor>` + `<SectionEditor>` (parent_kind=homepage). Public `/(site)/page.tsx` refactored to read hero from settings + sections from page_sections — ~280 lines of hardcoded JSX replaced with CMS rows. Migration 0014 seeds the existing layout into `page_sections` so production stays identical-looking on deploy.
+- **14.D** — Dedicated `podcast_episode` block: showLabel (eyebrow), header, description, URL (Spotify/Apple — provider auto-detected, embed iframe at correct height), optional subscribe CTA. Same commit relaxed image_text/image/image_gallery validators to allow empty `blobKey` during in-progress edits — public renderer hides image-only blocks with no image and collapses image+text to single-column when missing.
+- **14.E** (migration 0015) — `card_grid.layout: "uniform" | "bento"`. Bento renders first 2 cards as large 16:9 feature cards + remaining cards as a compact 4-up tile row with alternating navy accents. Migration flips the seeded "How can we serve you today?" block to bento mode.
+- **14.F** — Dropped `db.transaction(...)` in two server actions (`page-sections-actions.ts`, `approvals/_actions.ts`) — Neon HTTP driver doesn't support transactions. Refactored to sequential queries; failure mode is recoverable retry, not data corruption.
+- **14.G — Media library picker.** Reusable `<MediaPickerModal>` + `lib/server/media-list.ts` (paginated keyset cursor on `uploadedAt`, search across key + alt + caption). Wired into `<PhotoUploader>` (used by every form's cover photo + the site logo), `<SectionImagePicker>` (every block-editor image slot), and `<RichTextEditor>` toolbar. WordPress-style "pick from library" everywhere — no more re-uploading the same file.
+- **14.H — Card overlay style + per-card CTA.** `card_grid.cardStyle: "stacked" | "overlay"`. Overlay = full-bleed image + dark gradient + text/CTA on top. Applies to uniform-layout cards and bento heroes; bento tiles stay stacked. Per-card `ctaLabel` renders as a frosted pill on overlay cards or a small text-link on stacked.
+
+Build green throughout. ~70+ routes. Migrations applied through 0015.
+
+## 🛑 Paused — end-to-end testing in progress
 
 ## 🛑 Paused — end-to-end testing in progress
 
@@ -386,8 +456,24 @@ Build paused after Step 6. Step 7 deferred. Step 8 (Fathom + Subsplash) queued. 
 
 ### Known things that are expected NOT to work
 
-- USCCB scraper returns null right now → the readings card shows the outbound link instead of inline citations. This is graceful degradation, not a bug.
+- USCCB scraper returns null right now → the readings card shows the outbound link instead of inline citations. Graceful degradation, not a bug.
 - `/give` and `/contact` routes don't exist yet — links land on the branded `/(site)` 404. Defer until pre-launch polish.
-- `/events/[slug]` detail pages don't exist yet — clicking an event card from the public list lands on the 404. Same.
 - Subsplash livestream slot on `/mass` shows "Subsplash embed lands in Step 8 — Matthew will supply the widget."
 - Bulletins are empty until you upload one in admin.
+- `NEXT_PUBLIC_HERO_VIDEO_URL` env var path is still wired as a fallback for the homepage hero, but Wave 14.B made it admin-editable via `/admin/homepage`. Once you set the URL there, the env-var fallback never reads.
+
+### Resolved (used to be on the broken list)
+
+- ~~`/events/[slug]` detail pages~~ — built in Wave 13.E.4 with recurrence summary + upcoming-dates panel.
+- ~~Homepage is hardcoded~~ — Wave 14 made it fully CMS-editable at `/admin/homepage`.
+
+## What's left before launch
+
+Ordered by what unblocks the most:
+
+1. **Step 8 — External integrations** (queued). Fathom analytics + Subsplash livestream embed. Resend domain + Twilio Verify already wired; just env-var hookup remains.
+2. **Pre-launch sitemap audit.** Memory note `project_pre_launch_sitemap_audit.md` — walk live sainthelen.org sitemap.xml, port content into the new CMS.
+3. **Wave 13 matchmaker skip-when rules.** Resolved scope memory has this; not yet built. Less critical than launch-blocking items.
+4. **Step 7 — Backups + staging branch.** Deferred indefinitely per Matthew; revisit before DNS flip.
+5. **Mobile real-device testing.** Hamburger menu + touch interactions on real iPad / iPhone (DevTools mobile mode is OK for layout, not for touch).
+6. **Eventually: side-by-side preview pane, drag-drop reordering, block presets** — see `project_future_upgrades.md` memory note.
