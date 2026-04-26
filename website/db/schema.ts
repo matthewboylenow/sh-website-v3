@@ -339,7 +339,17 @@ export type PageLeafBlock =
       posterBlobKey?: string | null;
       caption?: string;
     }
-  | { kind: "card_grid"; header?: SectionHeader; cards: CardGridCard[]; columns?: 2 | 3 }
+  | {
+      kind: "card_grid";
+      header?: SectionHeader;
+      cards: CardGridCard[];
+      /** "uniform" = all cards same size, N-up grid (existing behavior).
+       *  "bento" = first 2 cards render large with prominent images, rest
+       *  drop into a compact 4-up tile row below — homepage "How can we
+       *  serve you" pattern. */
+      layout?: "uniform" | "bento";
+      columns?: 2 | 3;
+    }
   | { kind: "embed"; header?: SectionHeader; embed: EmbedPayload }
   | {
       kind: "staff_card";

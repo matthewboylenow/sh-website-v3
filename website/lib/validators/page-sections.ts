@@ -124,6 +124,7 @@ const LeafPayloadSchema = z.discriminatedUnion("kind", [
     kind: z.literal("card_grid"),
     header: HeaderSchema.optional(),
     cards: z.array(CardGridCardSchema).min(1).max(12),
+    layout: z.enum(["uniform", "bento"]).optional(),
     columns: z.union([z.literal(2), z.literal(3)]).optional(),
   }),
   z.object({

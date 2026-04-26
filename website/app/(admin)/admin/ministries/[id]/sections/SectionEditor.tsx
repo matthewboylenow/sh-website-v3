@@ -677,16 +677,49 @@ function BlockEditor({
             header={payload.header}
             onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
           />
-          <select
-            value={payload.columns ?? 3}
-            onChange={(e) =>
-              onUpdate(() => ({ ...payload, columns: Number(e.target.value) === 2 ? 2 : 3 }))
-            }
-            className="form-input w-32"
-          >
-            <option value={2}>2 columns</option>
-            <option value={3}>3 columns</option>
-          </select>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+                Layout
+              </label>
+              <select
+                value={payload.layout ?? "uniform"}
+                onChange={(e) =>
+                  onUpdate(() => ({
+                    ...payload,
+                    layout: e.target.value as "uniform" | "bento",
+                  }))
+                }
+                className="form-input"
+              >
+                <option value="uniform">Uniform grid</option>
+                <option value="bento">Bento (2 large + tiles)</option>
+              </select>
+              <p className="mt-1 text-[11px] text-ink-3">
+                Bento: first 2 cards render large with prominent images;
+                rest drop into a compact 4-up tile row underneath.
+              </p>
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">
+                Columns (uniform layout)
+              </label>
+              <select
+                value={payload.columns ?? 3}
+                disabled={payload.layout === "bento"}
+                onChange={(e) =>
+                  onUpdate(() => ({
+                    ...payload,
+                    columns: Number(e.target.value) === 2 ? 2 : 3,
+                  }))
+                }
+                className="form-input"
+              >
+                <option value={2}>2 columns</option>
+                <option value={3}>3 columns</option>
+              </select>
+            </div>
+          </div>
           <ul className="space-y-2">
             {payload.cards.map((c, i) => (
               <li key={i} className="space-y-2 rounded-md border border-rule bg-cream/40 p-3">

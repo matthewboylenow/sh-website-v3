@@ -287,6 +287,45 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
     }
 
     case "card_grid": {
+      // Bento: first 2 cards = large image-prominent, rest = compact 4-up.
+      // Falls back to uniform when fewer than 3 cards (no compact tier
+      // would render anyway).
+      if (p.layout === "bento" && p.cards.length >= 3) {
+        const heroes = p.cards.slice(0, 2);
+        const tiles = p.cards.slice(2);
+        const tileCols =
+          tiles.length >= 4
+            ? "sm:grid-cols-2 lg:grid-cols-4"
+            : `sm:grid-cols-${Math.min(tiles.length, 3)}`;
+        return (
+          <>
+            <HeaderEl header={p.header} />
+            <ul className="grid gap-5 md:grid-cols-2">
+              {heroes.map((c, i) => (
+                <li key={`hero-${i}`}>
+                  <BentoHeroCard
+                    card={c}
+                    imageUrl={c.imageBlobKey ? ctx.images.get(c.imageBlobKey) ?? null : null}
+                  />
+                </li>
+              ))}
+            </ul>
+            <ul className={`mt-5 grid gap-4 ${tileCols}`}>
+              {tiles.map((c, i) => (
+                <li key={`tile-${i}`}>
+                  <BentoTileCard
+                    card={c}
+                    imageUrl={c.imageBlobKey ? ctx.images.get(c.imageBlobKey) ?? null : null}
+                    /* Alternate accent so the row has visual rhythm. */
+                    accent={i % 4 === 2 ? "navy" : "default"}
+                  />
+                </li>
+              ))}
+            </ul>
+          </>
+        );
+      }
+
       const cols = p.columns === 2 ? "sm:grid-cols-2" : "sm:grid-cols-2 md:grid-cols-3";
       return (
         <>
@@ -648,6 +687,130 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       );
     }
   }
+}
+
+function BentoHeroCard({
+  card,
+  imageUrl,
+}: {
+  card: { title: string; summary?: string; href?: string; imageBlobKey?: string | null };
+  imageUrl: string | null;
+}) {
+  const inner = (
+    <article className="group block h-full overflow-hidden rounded-lg border border-rule bg-white transition-all hover:-translate-y-1 hover:shadow-hover">
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt={card.title}
+          width={1200}
+          height={675}
+          className="aspect-[16/9] w-full object-cover"
+        />
+      ) : (
+        <div className="aspect-[16/9] w-full bg-gradient-to-br from-navy to-navy-dark" />
+      )}
+      <div className="p-7 md:p-8">
+        <h3 className="font-serif text-2xl font-bold text-navy group-hover:text-rust-dark">
+          {card.title}
+        </h3>
+        {card.summary && <p className="mt-2 text-ink-2">{card.summary}</p>}
+      </div>
+    </article>
+  );
+  return card.href ? (
+    <a
+      href={card.href}
+      target={isExternal(card.href) ? "_blank" : undefined}
+      rel={isExternal(card.href) ? "noopener noreferrer" : undefined}
+      className="block h-full"
+    >
+      {inner}
+    </a>
+  ) : (
+    inner
+  );
+}
+
+function BentoTileCard({
+  card,
+  imageUrl,
+  accent,
+}: {
+  card: { title: string; summary?: string; href?: string; imageBlobKey?: string | null };
+  imageUrl: string | null;
+  accent: "default" | "navy";
+}) {
+  const wrapClass =
+    accent === "navy"
+      ? "sh-on-dark group block h-full rounded-lg border border-navy/15 bg-navy p-5 text-white transition-all hover:-translate-y-1 hover:shadow-hover"
+      : "group block h-full rounded-lg border border-rule bg-white p-5 transition-all hover:-translate-y-1 hover:shadow-hover";
+  const inner = (
+    <article className={wrapClass}>
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt=""
+          width={120}
+          height={120}
+          className="mb-3 size-12 rounded-md object-cover"
+        />
+      ) : (
+        <div
+          className={
+            "mb-3 flex size-12 items-center justify-center rounded-md " +
+            (accent === "navy"
+              ? "bg-white/10 text-gold"
+              : "bg-navy-pale text-navy")
+          }
+          aria-hidden="true"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </div>
+      )}
+      <h4
+        className={
+          "font-serif text-base font-bold " +
+          (accent === "navy"
+            ? "text-white group-hover:text-gold"
+            : "text-navy group-hover:text-rust-dark")
+        }
+      >
+        {card.title}
+      </h4>
+      {card.summary && (
+        <p
+          className={
+            "mt-1 text-sm " +
+            (accent === "navy" ? "text-white/80" : "text-ink-3")
+          }
+        >
+          {card.summary}
+        </p>
+      )}
+    </article>
+  );
+  return card.href ? (
+    <a
+      href={card.href}
+      target={isExternal(card.href) ? "_blank" : undefined}
+      rel={isExternal(card.href) ? "noopener noreferrer" : undefined}
+      className="block h-full"
+    >
+      {inner}
+    </a>
+  ) : (
+    inner
+  );
 }
 
 function detectPodcastProvider(url: string): "spotify" | "apple" | "other" {
