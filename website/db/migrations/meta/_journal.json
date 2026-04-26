@@ -92,6 +92,20 @@
       "when": 1777185000000,
       "tag": "0012_announcements",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1777190000000,
+      "tag": "0013_homepage_hero",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1777195000000,
+      "tag": "0014_seed_homepage_sections",
+      "breakpoints": true
     }
   ]
 }

@@ -869,6 +869,50 @@ export type NavManifest = {
   items: NavItem[];
 };
 
+/** Hero CTA — small typed shape, repeatable inside the hero settings. */
+export type HomepageHeroCta = {
+  label: string;
+  href: string;
+  variant?: "primary" | "secondary";
+};
+
+/** Homepage hero — the structurally-special full-bleed video stage on /
+ *  Lives in siteSettings rather than as a page_sections block because
+ *  it bleeds out of the page container and has Mass-times sub-config. */
+export type HomepageHero = {
+  videoUrl?: string;
+  posterUrl?: string;
+  eyebrow?: string;
+  title: string;
+  lede?: string;
+  ctas: HomepageHeroCta[];
+  massPeek: {
+    enabled: boolean;
+    eyebrow?: string;
+    linkLabel?: string;
+    linkHref?: string;
+  };
+};
+
+export const DEFAULT_HOMEPAGE_HERO: HomepageHero = {
+  videoUrl: undefined,
+  posterUrl: undefined,
+  eyebrow: "We're glad you're here",
+  title: "Welcome home.",
+  lede:
+    "Whether it's your first time or your hundredth, there's a seat saved for you at Saint Helen. Mass times, what to expect on Sunday, and the people who make this parish feel like home.",
+  ctas: [
+    { label: "Plan your visit", href: "/im-new", variant: "primary" },
+    { label: "Watch Sunday's Mass", href: "/mass", variant: "secondary" },
+  ],
+  massPeek: {
+    enabled: true,
+    eyebrow: "This Sunday",
+    linkLabel: "Full schedule →",
+    linkHref: "/mass",
+  },
+};
+
 /** Vanity-URL redirects edited from /admin/settings/redirects.
  *  Matched in middleware before any auth gate. `permanent` flips to a
  *  308; default is 307 so search engines don't memoize a wrong target. */
@@ -916,6 +960,10 @@ export const siteSettings = pgTable(
       .$type<NavManifest>()
       .notNull()
       .default(DEFAULT_NAV_MANIFEST),
+    homepageHero: jsonb("homepage_hero")
+      .$type<HomepageHero>()
+      .notNull()
+      .default(DEFAULT_HOMEPAGE_HERO),
     redirects: jsonb("redirects")
       .$type<Redirect[]>()
       .notNull()

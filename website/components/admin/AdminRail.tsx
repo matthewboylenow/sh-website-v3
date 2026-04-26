@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { type Role } from "@/auth.config";
 
 const CONTENT_ADMIN = [
+  { href: "/admin/homepage", label: "Homepage" },
   { href: "/admin/events", label: "Events" },
   { href: "/admin/posts", label: "Posts" },
   { href: "/admin/mass-times", label: "Mass times" },
