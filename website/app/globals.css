@@ -168,9 +168,10 @@
   --shadow-lg:    var(--shadow-lg);
   --shadow-hover: var(--shadow-hover);
 
-  /* fonts */
-  --font-serif: var(--font-serif);
-  --font-sans:  var(--font-sans);
+  /* fonts — explicit stacks so the Tailwind utilities (font-serif,
+     font-sans) inline the next/font CSS-var refs directly. */
+  --font-serif: var(--font-libre-baskerville), 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --font-sans:  var(--font-libre-franklin), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   /* containers */
   --container-narrow: var(--container-narrow);
