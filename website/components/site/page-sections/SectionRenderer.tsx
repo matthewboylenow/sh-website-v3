@@ -483,20 +483,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
           : "md:grid-cols-2";
       return (
         <div className={onNavy ? "sh-on-dark -mx-4 rounded-xl bg-navy px-6 py-12 sm:-mx-6 sm:px-10 sm:py-16" : ""}>
-          {p.header && (p.header.heading || p.header.subheading) ? (
-            <header className="mb-8 max-w-[60ch]">
-              {p.header.heading && (
-                <h2 className="font-serif text-2xl font-bold text-navy [.sh-on-dark_&]:text-white">
-                  {p.header.heading}
-                </h2>
-              )}
-              {p.header.subheading && (
-                <p className="mt-2 text-sm text-ink-2 [.sh-on-dark_&]:text-white/85">
-                  {p.header.subheading}
-                </p>
-              )}
-            </header>
-          ) : null}
+          <HeaderEl header={p.header} />
           {picks.length === 0 ? (
             <p className="text-sm text-ink-3">No ministries to feature.</p>
           ) : (
@@ -550,18 +537,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       const picks = filtered.slice(0, p.count);
       return (
         <>
-          {p.header && (p.header.heading || p.header.subheading) ? (
-            <header className="mb-8 max-w-[60ch]">
-              {p.header.heading && (
-                <h2 className="font-serif text-2xl font-bold text-navy">
-                  {p.header.heading}
-                </h2>
-              )}
-              {p.header.subheading && (
-                <p className="mt-2 text-sm text-ink-2">{p.header.subheading}</p>
-              )}
-            </header>
-          ) : null}
+          <HeaderEl header={p.header} />
           {picks.length === 0 ? (
             <p className="text-sm text-ink-3">No upcoming events.</p>
           ) : (

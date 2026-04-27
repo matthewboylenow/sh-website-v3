@@ -49,16 +49,34 @@ export async function PodcastEpisodeBlock({
 
   return (
     <div className="rounded-2xl border border-rule bg-cream/40 p-6 md:p-8">
-      {eyebrow && <span className="sh-eyebrow">{eyebrow}</span>}
-      {header && (header.heading || header.subheading) ? (
-        <header className="mt-2 mb-4">
-          {header.heading && (
-            <h2 className="font-serif text-2xl font-bold text-navy">
-              {header.heading}
-            </h2>
-          )}
+      {(header?.eyebrow || eyebrow) && (
+        <span
+          className={
+            "mb-1 block font-sans text-xs font-semibold uppercase tracking-[0.14em] text-rust [.sh-on-dark_&]:text-gold " +
+            (header?.align === "center" ? "text-center" : "")
+          }
+        >
+          {header?.eyebrow ?? eyebrow}
+        </span>
+      )}
+      {header?.heading ? (
+        <header
+          className={
+            "mb-6 max-w-[60ch] " +
+            (header.align === "center" ? "mx-auto text-center" : "")
+          }
+        >
+          <h2 className="font-serif font-bold leading-tight text-navy text-[clamp(28px,3.2vw,40px)] [.sh-on-dark_&]:text-white">
+            {header.heading}
+          </h2>
+          <span
+            className="mt-3 inline-block h-[3px] w-14 rounded-sm bg-rust [.sh-on-dark_&]:bg-gold"
+            aria-hidden="true"
+          />
           {header.subheading && (
-            <p className="mt-1 text-sm text-ink-2">{header.subheading}</p>
+            <p className="mt-3 text-[17px] leading-snug text-ink-2 [.sh-on-dark_&]:text-white/80">
+              {header.subheading}
+            </p>
           )}
         </header>
       ) : (
