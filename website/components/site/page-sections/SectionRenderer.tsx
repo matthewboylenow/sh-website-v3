@@ -12,6 +12,7 @@ import { MinistryCard } from "@/components/site/MinistryCard";
 import { RichTextRenderer } from "@/components/site/RichTextRenderer";
 import { IconRender } from "@/components/site/IconRender";
 import { VideoBlock } from "./VideoBlock";
+import { PodcastEpisodeBlock } from "./PodcastEpisodeBlock";
 
 /**
  * Server-side renderer for a ministry section payload. Every block kind
@@ -600,63 +601,16 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
     }
 
     case "podcast_episode": {
-      const provider = detectPodcastProvider(p.url);
-      const playerSrc =
-        provider === "spotify"
-          ? spotifyEmbedSrc(p.url)
-          : provider === "apple"
-            ? applePodcastsEmbedSrc(p.url)
-            : p.url;
-      const playerHeight = provider === "apple" ? 175 : 232;
-      const subscribeIsExternal =
-        !!p.subscribeHref && /^https?:\/\//.test(p.subscribeHref);
       return (
-        <div className="rounded-2xl border border-rule bg-cream/40 p-6 md:p-8">
-          {p.showLabel && (
-            <span className="sh-eyebrow">{p.showLabel}</span>
-          )}
-          {p.header && (p.header.heading || p.header.subheading) ? (
-            <header className="mt-2 mb-4">
-              {p.header.heading && (
-                <h2 className="font-serif text-2xl font-bold text-navy">
-                  {p.header.heading}
-                </h2>
-              )}
-              {p.header.subheading && (
-                <p className="mt-1 text-sm text-ink-2">{p.header.subheading}</p>
-              )}
-            </header>
-          ) : null}
-          {p.description && (
-            <p className="mb-4 max-w-[60ch] text-[15px] leading-relaxed text-ink-2">
-              {p.description}
-            </p>
-          )}
-          <div className="overflow-hidden rounded-xl border border-rule bg-white">
-            <iframe
-              src={playerSrc}
-              title={p.header?.heading ?? "Podcast episode"}
-              loading="lazy"
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              allowFullScreen
-              sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-              referrerPolicy="strict-origin-when-cross-origin"
-              style={{ width: "100%", height: `${playerHeight}px`, border: 0 }}
-            />
-          </div>
-          {p.subscribeLabel && p.subscribeHref && (
-            <div className="mt-5">
-              <a
-                href={p.subscribeHref}
-                target={subscribeIsExternal ? "_blank" : undefined}
-                rel={subscribeIsExternal ? "noopener noreferrer" : undefined}
-                className="inline-flex items-center gap-2 rounded-pill border border-rule bg-white px-5 py-2.5 text-sm font-semibold text-navy transition-colors hover:border-navy"
-              >
-                {p.subscribeLabel} <span aria-hidden="true">→</span>
-              </a>
-            </div>
-          )}
-        </div>
+        <PodcastEpisodeBlock
+          feedUrl={p.feedUrl}
+          episodeGuid={p.episodeGuid}
+          showLabel={p.showLabel}
+          description={p.description}
+          subscribeLabel={p.subscribeLabel}
+          subscribeHref={p.subscribeHref}
+          header={p.header}
+        />
       );
     }
 
@@ -1015,13 +969,6 @@ function BentoTileCard({
   ) : (
     inner
   );
-}
-
-function detectPodcastProvider(url: string): "spotify" | "apple" | "other" {
-  const lower = url.toLowerCase();
-  if (lower.includes("spotify.com")) return "spotify";
-  if (lower.includes("podcasts.apple.com")) return "apple";
-  return "other";
 }
 
 function spotifyEmbedSrc(url: string): string {

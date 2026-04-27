@@ -491,14 +491,18 @@ export type PageLeafBlock =
   | {
       kind: "podcast_episode";
       header?: SectionHeader;
-      /** Spotify, Apple Podcasts, or Buzzsprout episode URL. Provider
-       *  auto-detected at render so URL changes are friction-free. */
-      url: string;
+      /** RSS feed URL (Spotify-for-Podcasters, Apple-Podcasts-Connect,
+       *  Buzzsprout, libsyn, etc. all expose one). Server fetches,
+       *  caches, and parses. */
+      feedUrl: string;
+      /** Pin a specific episode by its `<guid>`; otherwise latest renders. */
+      episodeGuid?: string;
       /** Eyebrow above the heading — e.g. "Saint Helen Podcast". */
       showLabel?: string;
-      /** Intro paragraph rendered above the player. */
+      /** Intro paragraph rendered above the player. Overrides feed copy. */
       description?: string;
-      /** Optional CTA below the player — "Subscribe to the show" or similar. */
+      /** Optional CTA below the player. If unset, falls back to a Spotify
+       *  or Apple Podcasts link auto-detected from the feed. */
       subscribeLabel?: string;
       subscribeHref?: string;
     };

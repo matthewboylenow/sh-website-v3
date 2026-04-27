@@ -1235,22 +1235,39 @@ function BlockEditor({
             onUpdate={(h) => onUpdate(() => ({ ...payload, header: h }))}
           />
           <input
-            type="url"
-            value={payload.url}
+            type="text"
+            value={payload.feedUrl}
             maxLength={1000}
-            placeholder="Spotify or Apple Podcasts episode URL"
-            onChange={(e) => onUpdate(() => ({ ...payload, url: e.target.value }))}
+            placeholder="https://feeds.buzzsprout.com/123456.rss"
+            onChange={(e) =>
+              onUpdate(() => ({ ...payload, feedUrl: e.target.value }))
+            }
             className="form-input font-mono text-sm"
           />
           <p className="text-xs text-ink-3">
-            Paste the episode URL — provider auto-detects (Spotify, Apple Podcasts).
-            Switch episodes any time by editing this field.
+            Paste the show&rsquo;s <strong>RSS feed URL</strong> (every podcast
+            host exposes one — Buzzsprout, Spotify-for-Podcasters,
+            Apple-Podcasts-Connect, libsyn). The block auto-pulls the latest
+            episode and updates whenever you publish a new one.
           </p>
+          <input
+            type="text"
+            value={payload.episodeGuid ?? ""}
+            maxLength={500}
+            placeholder='Pin a specific episode GUID (optional, leave blank for latest)'
+            onChange={(e) =>
+              onUpdate(() => ({
+                ...payload,
+                episodeGuid: e.target.value || undefined,
+              }))
+            }
+            className="form-input font-mono text-xs"
+          />
           <input
             type="text"
             value={payload.showLabel ?? ""}
             maxLength={60}
-            placeholder='Show label / eyebrow — e.g. "Saint Helen Podcast"'
+            placeholder='Show label / eyebrow — defaults to feed title'
             onChange={(e) =>
               onUpdate(() => ({ ...payload, showLabel: e.target.value }))
             }
@@ -1260,7 +1277,7 @@ function BlockEditor({
             value={payload.description ?? ""}
             maxLength={1000}
             rows={3}
-            placeholder="Intro paragraph (optional) — what's this episode about?"
+            placeholder="Intro paragraph (optional) — overrides the feed description for this block"
             onChange={(e) =>
               onUpdate(() => ({ ...payload, description: e.target.value }))
             }
@@ -1271,7 +1288,7 @@ function BlockEditor({
               type="text"
               value={payload.subscribeLabel ?? ""}
               maxLength={40}
-              placeholder="Subscribe CTA label"
+              placeholder="Subscribe CTA label (optional)"
               onChange={(e) =>
                 onUpdate(() => ({ ...payload, subscribeLabel: e.target.value }))
               }
@@ -1281,7 +1298,7 @@ function BlockEditor({
               type="text"
               value={payload.subscribeHref ?? ""}
               maxLength={1000}
-              placeholder="Subscribe URL — link to the show on Spotify/Apple"
+              placeholder="Subscribe URL — falls back to feed-detected Spotify/Apple"
               onChange={(e) =>
                 onUpdate(() => ({ ...payload, subscribeHref: e.target.value }))
               }
@@ -1846,7 +1863,7 @@ function blankLeafBlock(kind: PageLeafBlock["kind"]): PageLeafBlock {
     case "featured_events":
       return { kind: "featured_events", count: 4 };
     case "podcast_episode":
-      return { kind: "podcast_episode", url: "" };
+      return { kind: "podcast_episode", feedUrl: "" };
     case "pastor_welcome":
       return { kind: "pastor_welcome", html: "" };
   }
@@ -1941,7 +1958,7 @@ function blankBlock(kind: PageSectionPayload["kind"]): PageSectionPayload {
     case "featured_events":
       return { kind: "featured_events", count: 4 };
     case "podcast_episode":
-      return { kind: "podcast_episode", url: "" };
+      return { kind: "podcast_episode", feedUrl: "" };
     case "pastor_welcome":
       return { kind: "pastor_welcome", html: "" };
     case "columns":

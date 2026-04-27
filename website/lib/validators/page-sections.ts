@@ -185,7 +185,12 @@ const LeafPayloadSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("podcast_episode"),
     header: HeaderSchema.optional(),
-    url: z.string().url().max(1000),
+    // Loose URL — iTunes/RSS feed URLs can include odd query strings.
+    // We just need a non-empty string; fetch will fail at render time
+    // if it's truly broken.
+    feedUrl: z.string().min(1).max(1000),
+    /** When set, render this episode by GUID; otherwise the latest. */
+    episodeGuid: z.string().max(500).optional(),
     showLabel: z.string().max(60).optional(),
     description: z.string().max(1000).optional(),
     subscribeLabel: z.string().max(40).optional(),
