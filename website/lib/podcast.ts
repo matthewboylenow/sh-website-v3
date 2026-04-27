@@ -174,10 +174,44 @@ function parsePubDate(v: string | undefined): string | null {
 
 function stripHtml(s: string): string {
   if (!s) return "";
-  return s
-    .replace(/<\/?[^>]+>/g, " ")
+  return decodeEntities(s.replace(/<\/?[^>]+>/g, " "))
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * RSS feeds frequently double-encode (e.g. `&amp;#39;`) or land HTML
+ * entities inside CDATA. Decode the common named entities + every
+ * numeric entity (decimal + hex) in one pass.
+ */
+function decodeEntities(s: string): string {
+  const named: Record<string, string> = {
+    amp: "&",
+    lt: "<",
+    gt: ">",
+    quot: '"',
+    apos: "'",
+    nbsp: " ",
+    hellip: "…",
+    mdash: "—",
+    ndash: "–",
+    lsquo: "‘",
+    rsquo: "’",
+    ldquo: "“",
+    rdquo: "”",
+    copy: "©",
+    reg: "®",
+    trade: "™",
+  };
+  // Run twice to undo accidental double-encoding (`&amp;#39;` → `&#39;` → `'`).
+  const decode = (raw: string) =>
+    raw
+      .replace(/&#x([0-9a-fA-F]+);/g, (_, h) =>
+        String.fromCodePoint(parseInt(h, 16)),
+      )
+      .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(parseInt(n, 10)))
+      .replace(/&([a-zA-Z]+);/g, (m, name) => named[name] ?? m);
+  return decode(decode(s));
 }
 
 function detectSpotifyShow(channel: ParsedChannel): string | null {
