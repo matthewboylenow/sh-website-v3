@@ -6,6 +6,7 @@ import { RichTextRenderer } from "@/components/site/RichTextRenderer";
 import { assetUrl } from "@/lib/blob";
 import { toDate } from "@/lib/dates";
 import { getPostBySlug } from "@/lib/queries/posts.query";
+import { buildSeoMetadata } from "@/lib/seo";
 import type { PostCategory } from "@/db/schema";
 
 export const revalidate = 600;
@@ -23,10 +24,13 @@ export async function generateMetadata({
   const { slug } = await params;
   const data = await getPostBySlug(slug);
   if (!data) return { title: "Post not found" };
-  return {
-    title: data.post.title,
-    description: data.post.summary ?? undefined,
-  };
+  return buildSeoMetadata({
+    row: data.post,
+    fallbackTitle: data.post.title,
+    fallbackDescription: data.post.summary ?? data.post.body ?? null,
+    fallbackOgBlobKey: data.post.photoBlobKey,
+    path: `/blog/${data.post.slug}`,
+  });
 }
 
 export default async function BlogPostPage({

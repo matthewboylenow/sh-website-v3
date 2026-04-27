@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
+import { SeoPanel } from "@/components/admin/SeoPanel";
 import { TagPicker } from "@/components/admin/TagPicker";
 import { FORMATION_CATEGORIES, type FormationCategory } from "@/db/schema";
 import {
@@ -24,6 +25,11 @@ type Values = {
   leadStaffId: string | null;
   orderingPriority: number;
   status: "draft" | "published" | "archived";
+  metaTitle: string | null;
+  metaDescription: string | null;
+  ogImageBlobKey: string | null;
+  noindex: boolean;
+  canonicalUrl: string | null;
 };
 
 const CATEGORY_LABEL: Record<FormationCategory, string> = {
@@ -40,6 +46,7 @@ export function FormationForm({
   staffOptions,
   audienceOptions,
   photoPreviewUrl,
+  ogImagePreviewUrl,
 }: {
   mode: "create" | "edit";
   pageId?: string;
@@ -47,6 +54,7 @@ export function FormationForm({
   staffOptions: { id: string; name: string }[];
   audienceOptions: readonly string[];
   photoPreviewUrl?: string | null;
+  ogImagePreviewUrl?: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -250,6 +258,19 @@ export function FormationForm({
             />
           </div>
         </div>
+
+        <SeoPanel
+          pathPrefix={`formation/${pageId ?? "new"}/og`}
+          initial={{
+            metaTitle: defaultValues.metaTitle,
+            metaDescription: defaultValues.metaDescription,
+            ogImageBlobKey: defaultValues.ogImageBlobKey,
+            noindex: defaultValues.noindex,
+            canonicalUrl: defaultValues.canonicalUrl,
+          }}
+          ogImagePreviewUrl={ogImagePreviewUrl}
+          publicPath={defaultValues.slug ? `/formation/${defaultValues.slug}` : undefined}
+        />
 
         <div className="space-y-2">
           <button

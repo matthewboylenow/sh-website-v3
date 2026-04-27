@@ -202,6 +202,11 @@ export const ministries = pgTable(
       .$type<MinistryInquiryConfig>()
       .notNull()
       .default({ enabled: true, buttons: [{ kind: "inquire", label: "Inquire about this ministry", enabled: true }] }),
+    metaTitle: text("meta_title"),
+    metaDescription: text("meta_description"),
+    ogImageBlobKey: text("og_image_blob_key").references(() => blobAssets.key),
+    noindex: boolean("noindex").default(false).notNull(),
+    canonicalUrl: text("canonical_url"),
     lastEditedBy: uuid("last_edited_by").references(() => users.id),
     lastEditedAt: timestamp("last_edited_at"),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -242,6 +247,11 @@ export const formationPages = pgTable(
     status: text("status", { enum: ["draft", "published", "archived"] })
       .notNull()
       .default("draft"),
+    metaTitle: text("meta_title"),
+    metaDescription: text("meta_description"),
+    ogImageBlobKey: text("og_image_blob_key").references(() => blobAssets.key),
+    noindex: boolean("noindex").default(false).notNull(),
+    canonicalUrl: text("canonical_url"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     lastEditedBy: uuid("last_edited_by").references(() => users.id),
     lastEditedAt: timestamp("last_edited_at"),
@@ -269,6 +279,11 @@ export const pages = pgTable(
     status: text("status", { enum: ["draft", "published", "archived"] })
       .notNull()
       .default("draft"),
+    metaTitle: text("meta_title"),
+    metaDescription: text("meta_description"),
+    ogImageBlobKey: text("og_image_blob_key").references(() => blobAssets.key),
+    noindex: boolean("noindex").default(false).notNull(),
+    canonicalUrl: text("canonical_url"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     lastEditedBy: uuid("last_edited_by").references(() => users.id),
     lastEditedAt: timestamp("last_edited_at"),
@@ -715,6 +730,11 @@ export const posts = pgTable(
       .notNull()
       .default("draft"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    metaTitle: text("meta_title"),
+    metaDescription: text("meta_description"),
+    ogImageBlobKey: text("og_image_blob_key").references(() => blobAssets.key),
+    noindex: boolean("noindex").default(false).notNull(),
+    canonicalUrl: text("canonical_url"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     lastEditedBy: uuid("last_edited_by").references(() => users.id),
     lastEditedAt: timestamp("last_edited_at"),
@@ -797,6 +817,11 @@ export const events = pgTable(
       .notNull()
       .default("draft"),
     createdBy: uuid("created_by").references(() => users.id),
+    metaTitle: text("meta_title"),
+    metaDescription: text("meta_description"),
+    ogImageBlobKey: text("og_image_blob_key").references(() => blobAssets.key),
+    noindex: boolean("noindex").default(false).notNull(),
+    canonicalUrl: text("canonical_url"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     lastEditedBy: uuid("last_edited_by").references(() => users.id),
     lastEditedAt: timestamp("last_edited_at"),

@@ -22,7 +22,10 @@ export default async function EditPagePage({
   const [row] = await db.select().from(pages).where(eq(pages.id, id)).limit(1);
   if (!row) notFound();
 
-  const photoPreviewUrl = await assetUrl(row.photoBlobKey);
+  const [photoPreviewUrl, ogImagePreviewUrl] = await Promise.all([
+    assetUrl(row.photoBlobKey),
+    assetUrl(row.ogImageBlobKey),
+  ]);
 
   return (
     <div>
@@ -63,6 +66,7 @@ export default async function EditPagePage({
           pageId={row.id}
           defaultValues={row}
           photoPreviewUrl={photoPreviewUrl}
+          ogImagePreviewUrl={ogImagePreviewUrl}
         />
       </div>
       <div className="mt-8 border-t border-rule pt-6">

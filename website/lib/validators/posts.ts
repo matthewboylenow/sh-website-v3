@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { POST_CATEGORIES } from "@/db/schema";
+import { SeoFields } from "./seo";
 
 const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -17,6 +18,7 @@ const baseFields = {
   authorName: z.string().max(120).optional().nullable(),
   status: z.enum(["draft", "published", "archived"]).default("draft"),
   publishedAt: z.coerce.date().optional().nullable(),
+  ...SeoFields,
 };
 
 export const PostCreateSchema = z.object(baseFields);

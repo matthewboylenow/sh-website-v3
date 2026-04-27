@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { editorFields } from "@/lib/audit";
+import { parseSeoFromForm } from "@/lib/validators/seo";
 import { formationPages } from "@/db/schema";
 import {
   FormationCreateSchema,
@@ -52,6 +53,7 @@ function parseForm(formData: FormData) {
     leadStaffId: get("leadStaffId") || null,
     orderingPriority: get("orderingPriority") || "100",
     status: (get("status") || "draft") as "draft" | "published" | "archived",
+    ...parseSeoFromForm(formData),
   };
 }
 

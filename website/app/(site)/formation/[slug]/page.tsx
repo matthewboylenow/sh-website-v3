@@ -7,6 +7,7 @@ import { assetUrl } from "@/lib/blob";
 import { getFormationBySlug } from "@/lib/queries/formation.query";
 import { getPageSections } from "@/lib/queries/ministries.query";
 import { buildSectionContext } from "@/lib/section-resolve";
+import { buildSeoMetadata } from "@/lib/seo";
 import type { FormationCategory, PageSectionPayload } from "@/db/schema";
 
 export const revalidate = 600;
@@ -26,10 +27,13 @@ export async function generateMetadata({
   const { slug } = await params;
   const data = await getFormationBySlug(slug);
   if (!data) return { title: "Page not found" };
-  return {
-    title: data.page.name,
-    description: data.page.summary ?? undefined,
-  };
+  return buildSeoMetadata({
+    row: data.page,
+    fallbackTitle: data.page.name,
+    fallbackDescription: data.page.summary ?? null,
+    fallbackOgBlobKey: data.page.photoBlobKey,
+    path: `/formation/${data.page.slug}`,
+  });
 }
 
 export default async function FormationDetailPage({

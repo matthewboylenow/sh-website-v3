@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { WEEKDAYS } from "@/db/schema";
+import { SeoFields } from "@/lib/validators/seo";
 
 /**
  * Authoritative event validator. Used by the admin Server Actions
@@ -62,6 +63,7 @@ const baseFields = {
       (v) => (v === "" || v === undefined ? null : v),
       z.string().uuid().nullable(),
     ),
+  ...SeoFields,
 };
 
 export const EventCreateSchema = z

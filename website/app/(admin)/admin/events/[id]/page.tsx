@@ -22,14 +22,16 @@ export default async function EditEventPage({
   const [row] = await db.select().from(events).where(eq(events.id, id)).limit(1);
   if (!row) notFound();
 
-  const [photoPreviewUrl, settings, ministryOptions] = await Promise.all([
-    assetUrl(row.photoBlobKey),
-    getSiteSettings(),
-    db
-      .select({ id: ministries.id, name: ministries.name })
-      .from(ministries)
-      .orderBy(asc(ministries.name)),
-  ]);
+  const [photoPreviewUrl, ogImagePreviewUrl, settings, ministryOptions] =
+    await Promise.all([
+      assetUrl(row.photoBlobKey),
+      assetUrl(row.ogImageBlobKey),
+      getSiteSettings(),
+      db
+        .select({ id: ministries.id, name: ministries.name })
+        .from(ministries)
+        .orderBy(asc(ministries.name)),
+    ]);
   const tax = settings?.taxonomies ?? {
     eventCategories: [],
     eventAudiences: [],
@@ -67,6 +69,7 @@ export default async function EditEventPage({
           eventId={row.id}
           defaultValues={row}
           photoPreviewUrl={photoPreviewUrl}
+          ogImagePreviewUrl={ogImagePreviewUrl}
           audienceOptions={tax.eventAudiences}
           categoryOptions={tax.eventCategories}
           ministryOptions={ministryOptions}

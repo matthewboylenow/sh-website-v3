@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { pages, pageSections } from "@/db/schema";
 import { editorFields } from "@/lib/audit";
+import { parseSeoFromForm } from "@/lib/validators/seo";
 import { PageCreateSchema, PageUpdateSchema } from "@/lib/validators/pages";
 
 type ActionResult =
@@ -33,6 +34,7 @@ function parseForm(formData: FormData) {
     summary: get("summary") || null,
     photoBlobKey: get("photoBlobKey") || null,
     status: (get("status") || "draft") as "draft" | "published" | "archived",
+    ...parseSeoFromForm(formData),
   };
 }
 

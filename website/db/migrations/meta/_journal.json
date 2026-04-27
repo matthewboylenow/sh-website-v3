@@ -141,6 +141,13 @@
       "when": 1777220000000,
       "tag": "0019_pages_table",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1777225000000,
+      "tag": "0020_seo_fields",
+      "breakpoints": true
     }
   ]
 }

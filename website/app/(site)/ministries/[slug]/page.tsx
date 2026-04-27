@@ -9,6 +9,7 @@ import {
   getMinistrySections,
 } from "@/lib/queries/ministries.query";
 import { buildSectionContext } from "@/lib/section-resolve";
+import { buildSeoMetadata } from "@/lib/seo";
 import type { PageSectionPayload } from "@/db/schema";
 import { MinistryInquiryForm } from "./MinistryInquiryForm";
 
@@ -22,10 +23,13 @@ export async function generateMetadata({
   const { slug } = await params;
   const data = await getMinistryBySlug(slug);
   if (!data) return { title: "Ministry not found" };
-  return {
-    title: data.ministry.name,
-    description: data.ministry.tagline ?? undefined,
-  };
+  return buildSeoMetadata({
+    row: data.ministry,
+    fallbackTitle: data.ministry.name,
+    fallbackDescription: data.ministry.tagline ?? null,
+    fallbackOgBlobKey: data.ministry.photoBlobKey,
+    path: `/ministries/${data.ministry.slug}`,
+  });
 }
 
 export default async function MinistryDetailPage({

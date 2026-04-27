@@ -11,6 +11,7 @@ import {
   toDate,
 } from "@/lib/dates";
 import { getEventBySlug } from "@/lib/queries/events.query";
+import { buildSeoMetadata } from "@/lib/seo";
 import {
   DEFAULT_HORIZON_MONTHS,
   expandEvent,
@@ -27,10 +28,13 @@ export async function generateMetadata({
   const { slug } = await params;
   const event = await getEventBySlug(slug);
   if (!event) return { title: "Event not found" };
-  return {
-    title: event.title,
-    description: event.lede ?? undefined,
-  };
+  return buildSeoMetadata({
+    row: event,
+    fallbackTitle: event.title,
+    fallbackDescription: event.lede ?? event.body ?? null,
+    fallbackOgBlobKey: event.photoBlobKey,
+    path: `/events/${event.slug}`,
+  });
 }
 
 export default async function EventDetailPage({

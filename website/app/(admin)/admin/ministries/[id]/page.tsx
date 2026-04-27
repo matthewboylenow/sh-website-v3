@@ -22,14 +22,16 @@ export default async function EditMinistryPage({
   const [row] = await db.select().from(ministries).where(eq(ministries.id, id)).limit(1);
   if (!row) notFound();
 
-  const [staffOptions, photoPreviewUrl, settings] = await Promise.all([
-    db
-      .select({ id: staff.id, name: staff.name })
-      .from(staff)
-      .orderBy(asc(staff.orderingPriority), asc(staff.name)),
-    assetUrl(row.photoBlobKey),
-    getSiteSettings(),
-  ]);
+  const [staffOptions, photoPreviewUrl, ogImagePreviewUrl, settings] =
+    await Promise.all([
+      db
+        .select({ id: staff.id, name: staff.name })
+        .from(staff)
+        .orderBy(asc(staff.orderingPriority), asc(staff.name)),
+      assetUrl(row.photoBlobKey),
+      assetUrl(row.ogImageBlobKey),
+      getSiteSettings(),
+    ]);
   const tax = settings?.taxonomies ?? {
     eventCategories: [],
     eventAudiences: [],
@@ -75,6 +77,7 @@ export default async function EditMinistryPage({
           audienceOptions={tax.ministryAudiences}
           defaultValues={row}
           photoPreviewUrl={photoPreviewUrl}
+          ogImagePreviewUrl={ogImagePreviewUrl}
         />
       </div>
     </div>

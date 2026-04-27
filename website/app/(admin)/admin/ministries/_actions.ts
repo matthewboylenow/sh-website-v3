@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { editorFields } from "@/lib/audit";
+import { parseSeoFromForm } from "@/lib/validators/seo";
 import { ministries } from "@/db/schema";
 import {
   MINISTRY_CATEGORIES,
@@ -65,6 +66,7 @@ function parseForm(formData: FormData) {
     orderingPriority: get("orderingPriority") || "0",
     status: (get("status") || "draft") as "draft" | "published" | "archived",
     inquiryConfig,
+    ...parseSeoFromForm(formData),
   };
 }
 

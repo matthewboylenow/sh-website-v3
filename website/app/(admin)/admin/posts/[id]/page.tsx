@@ -21,7 +21,10 @@ export default async function EditPostPage({
   const [row] = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
   if (!row) notFound();
 
-  const photoPreviewUrl = await assetUrl(row.photoBlobKey);
+  const [photoPreviewUrl, ogImagePreviewUrl] = await Promise.all([
+    assetUrl(row.photoBlobKey),
+    assetUrl(row.ogImageBlobKey),
+  ]);
 
   return (
     <div>
@@ -54,6 +57,7 @@ export default async function EditPostPage({
           postId={row.id}
           defaultValues={row}
           photoPreviewUrl={photoPreviewUrl}
+          ogImagePreviewUrl={ogImagePreviewUrl}
         />
       </div>
     </div>

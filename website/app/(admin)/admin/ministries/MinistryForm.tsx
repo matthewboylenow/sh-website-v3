@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
+import { SeoPanel } from "@/components/admin/SeoPanel";
 import { TagPicker } from "@/components/admin/TagPicker";
 import type {
   CustomFieldType,
@@ -39,6 +40,11 @@ type Values = {
   orderingPriority: number;
   status: "draft" | "published" | "archived";
   inquiryConfig: MinistryInquiryConfig | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  ogImageBlobKey: string | null;
+  noindex: boolean;
+  canonicalUrl: string | null;
 };
 
 const DEFAULT_BUTTONS: MinistryInquiryConfig["buttons"] = [
@@ -71,6 +77,7 @@ export function MinistryForm({
   defaultValues,
   staffOptions,
   photoPreviewUrl,
+  ogImagePreviewUrl,
   audienceOptions,
 }: {
   mode: "create" | "edit";
@@ -78,6 +85,7 @@ export function MinistryForm({
   defaultValues: Partial<Values>;
   staffOptions: { id: string; name: string }[];
   photoPreviewUrl?: string | null;
+  ogImagePreviewUrl?: string | null;
   audienceOptions: readonly string[];
 }) {
   const router = useRouter();
@@ -334,6 +342,19 @@ export function MinistryForm({
             />
           </div>
         </div>
+
+        <SeoPanel
+          pathPrefix={`ministries/${ministryId ?? "new"}/og`}
+          initial={{
+            metaTitle: defaultValues.metaTitle,
+            metaDescription: defaultValues.metaDescription,
+            ogImageBlobKey: defaultValues.ogImageBlobKey,
+            noindex: defaultValues.noindex,
+            canonicalUrl: defaultValues.canonicalUrl,
+          }}
+          ogImagePreviewUrl={ogImagePreviewUrl}
+          publicPath={defaultValues.slug ? `/ministries/${defaultValues.slug}` : undefined}
+        />
 
         <div className="space-y-2">
           <button

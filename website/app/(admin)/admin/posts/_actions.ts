@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { editorFields } from "@/lib/audit";
+import { parseSeoFromForm } from "@/lib/validators/seo";
 import { posts } from "@/db/schema";
 import { PostCreateSchema, PostUpdateSchema } from "@/lib/validators/posts";
 
@@ -39,6 +40,7 @@ function parseForm(formData: FormData) {
     authorName: get("authorName") || null,
     status,
     publishedAt: publishedAtRaw ? publishedAtRaw : null,
+    ...parseSeoFromForm(formData),
   };
 }
 

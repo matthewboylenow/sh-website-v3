@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SeoFields } from "./seo";
 
 const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -12,6 +13,7 @@ const baseFields = {
   summary: z.string().max(500).optional().nullable(),
   photoBlobKey: z.string().max(500).optional().nullable(),
   status: z.enum(["draft", "published", "archived"]).default("draft"),
+  ...SeoFields,
 };
 
 export const PageCreateSchema = z.object(baseFields);

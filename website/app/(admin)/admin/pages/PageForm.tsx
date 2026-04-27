@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
+import { SeoPanel } from "@/components/admin/SeoPanel";
 import { createPageAction, updatePageAction } from "./_actions";
 
 type PageFormValues = {
@@ -12,6 +13,11 @@ type PageFormValues = {
   summary: string | null;
   photoBlobKey: string | null;
   status: "draft" | "published" | "archived";
+  metaTitle: string | null;
+  metaDescription: string | null;
+  ogImageBlobKey: string | null;
+  noindex: boolean;
+  canonicalUrl: string | null;
 };
 
 export function PageForm({
@@ -19,11 +25,13 @@ export function PageForm({
   pageId,
   defaultValues,
   photoPreviewUrl,
+  ogImagePreviewUrl,
 }: {
   mode: "create" | "edit";
   pageId?: string;
   defaultValues: Partial<PageFormValues>;
   photoPreviewUrl?: string | null;
+  ogImagePreviewUrl?: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -144,6 +152,19 @@ export function PageForm({
             />
           </div>
         </div>
+
+        <SeoPanel
+          pathPrefix={`pages/${pageId ?? "new"}/og`}
+          initial={{
+            metaTitle: defaultValues.metaTitle,
+            metaDescription: defaultValues.metaDescription,
+            ogImageBlobKey: defaultValues.ogImageBlobKey,
+            noindex: defaultValues.noindex,
+            canonicalUrl: defaultValues.canonicalUrl,
+          }}
+          ogImagePreviewUrl={ogImagePreviewUrl}
+          publicPath={defaultValues.slug ? `/p/${defaultValues.slug}` : undefined}
+        />
 
         <button
           type="submit"

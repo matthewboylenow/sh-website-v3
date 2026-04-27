@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { FORMATION_CATEGORIES } from "@/db/schema";
+import { SeoFields } from "./seo";
 
 const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -19,6 +20,7 @@ const baseFields = {
   leadStaffId: z.uuid().optional().nullable().or(z.literal("")),
   orderingPriority: z.coerce.number().int().min(0).max(9999).default(100),
   status: z.enum(["draft", "published", "archived"]).default("draft"),
+  ...SeoFields,
 };
 
 export const FormationCreateSchema = z.object(baseFields);

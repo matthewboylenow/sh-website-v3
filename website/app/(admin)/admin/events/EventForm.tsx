@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
+import { SeoPanel } from "@/components/admin/SeoPanel";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { TagPicker } from "@/components/admin/TagPicker";
 import type { Recurrence } from "@/db/schema";
@@ -31,6 +32,11 @@ type EventFormValues = {
   recurrence: Recurrence | null;
   exceptionDates: string[] | null;
   ministryId: string | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  ogImageBlobKey: string | null;
+  noindex: boolean;
+  canonicalUrl: string | null;
 };
 
 /** Convert a Date | ISO string to the "YYYY-MM-DDThh:mm" shape the
@@ -47,6 +53,7 @@ export function EventForm({
   eventId,
   defaultValues,
   photoPreviewUrl,
+  ogImagePreviewUrl,
   audienceOptions,
   categoryOptions,
   ministryOptions,
@@ -56,6 +63,7 @@ export function EventForm({
   defaultValues: Partial<EventFormValues>;
   /** Already-resolved image URL for the existing photoBlobKey. */
   photoPreviewUrl?: string | null;
+  ogImagePreviewUrl?: string | null;
   audienceOptions: readonly string[];
   categoryOptions: readonly string[];
   ministryOptions: readonly { id: string; name: string }[];
@@ -353,6 +361,19 @@ export function EventForm({
             />
           </div>
         </div>
+
+        <SeoPanel
+          pathPrefix={`events/${eventId ?? "new"}/og`}
+          initial={{
+            metaTitle: defaultValues.metaTitle,
+            metaDescription: defaultValues.metaDescription,
+            ogImageBlobKey: defaultValues.ogImageBlobKey,
+            noindex: defaultValues.noindex,
+            canonicalUrl: defaultValues.canonicalUrl,
+          }}
+          ogImagePreviewUrl={ogImagePreviewUrl}
+          publicPath={defaultValues.slug ? `/events/${defaultValues.slug}` : undefined}
+        />
 
         <div className="space-y-2">
           <button

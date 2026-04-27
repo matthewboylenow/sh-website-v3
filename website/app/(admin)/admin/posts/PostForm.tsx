@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
+import { SeoPanel } from "@/components/admin/SeoPanel";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { POST_CATEGORIES, type PostCategory } from "@/db/schema";
 import {
@@ -22,6 +23,11 @@ type Values = {
   authorName: string | null;
   status: "draft" | "published" | "archived";
   publishedAt: Date | string | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  ogImageBlobKey: string | null;
+  noindex: boolean;
+  canonicalUrl: string | null;
 };
 
 const CATEGORY_LABEL: Record<PostCategory, string> = {
@@ -43,11 +49,13 @@ export function PostForm({
   postId,
   defaultValues,
   photoPreviewUrl,
+  ogImagePreviewUrl,
 }: {
   mode: "create" | "edit";
   postId?: string;
   defaultValues: Partial<Values>;
   photoPreviewUrl?: string | null;
+  ogImagePreviewUrl?: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -229,6 +237,19 @@ export function PostForm({
             />
           </div>
         </div>
+
+        <SeoPanel
+          pathPrefix={`posts/${postId ?? "new"}/og`}
+          initial={{
+            metaTitle: defaultValues.metaTitle,
+            metaDescription: defaultValues.metaDescription,
+            ogImageBlobKey: defaultValues.ogImageBlobKey,
+            noindex: defaultValues.noindex,
+            canonicalUrl: defaultValues.canonicalUrl,
+          }}
+          ogImagePreviewUrl={ogImagePreviewUrl}
+          publicPath={defaultValues.slug ? `/blog/${defaultValues.slug}` : undefined}
+        />
 
         <div className="space-y-2">
           <button

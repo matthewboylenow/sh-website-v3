@@ -9,6 +9,7 @@ import { db } from "@/db";
 import { pages, pageSections, type PageSectionPayload } from "@/db/schema";
 import { assetUrl } from "@/lib/blob";
 import { buildSectionContext } from "@/lib/section-resolve";
+import { buildSeoMetadata } from "@/lib/seo";
 
 export const revalidate = 600;
 
@@ -47,10 +48,13 @@ export async function generateMetadata({
   const { slug } = await params;
   const data = await getPage(slug);
   if (!data) return { title: "Page not found" };
-  return {
-    title: data.page.title,
-    description: data.page.summary ?? undefined,
-  };
+  return buildSeoMetadata({
+    row: data.page,
+    fallbackTitle: data.page.title,
+    fallbackDescription: data.page.summary ?? null,
+    fallbackOgBlobKey: data.page.photoBlobKey,
+    path: `/p/${data.page.slug}`,
+  });
 }
 
 export default async function GenericCmsPage({

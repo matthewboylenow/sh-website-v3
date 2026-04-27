@@ -11,6 +11,7 @@ import {
   EventUpdateSchema,
 } from "@/lib/validators/events";
 import { editorFields } from "@/lib/audit";
+import { parseSeoFromForm } from "@/lib/validators/seo";
 
 /**
  * Server Actions for the events admin. All mutations end with
@@ -89,6 +90,7 @@ function parseEventForm(formData: FormData) {
     recurrence,
     exceptionDates,
     ministryId: get("ministryId") || null,
+    ...parseSeoFromForm(formData),
   };
 }
 
