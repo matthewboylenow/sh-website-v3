@@ -958,6 +958,13 @@ export type MatchmakerAnswer = {
    * Each match contributes 1 to the ministry's score.
    */
   tags: string[];
+  /**
+   * Question ids to skip downstream when this answer is chosen — used
+   * to build a branching quiz (e.g. "young adult" skips the empty-nester
+   * question). Skipping only goes forward; earlier questions are never
+   * hidden by a later answer.
+   */
+  skipQuestionIds?: string[];
 };
 
 export type MatchmakerQuestion = {

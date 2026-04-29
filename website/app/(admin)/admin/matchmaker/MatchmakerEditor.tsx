@@ -70,6 +70,10 @@ export function MatchmakerEditor({
           label: a.label.trim(),
           sublabel: a.sublabel?.trim() || undefined,
           tags: a.tags,
+          skipQuestionIds:
+            a.skipQuestionIds && a.skipQuestionIds.length > 0
+              ? a.skipQuestionIds
+              : undefined,
         })),
       })),
       fallbackTags: fallbackTags
@@ -200,6 +204,63 @@ export function MatchmakerEditor({
                       </span>
                     </p>
                   )}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-ink-3">
+                    Skip questions when this is chosen
+                  </label>
+                  {(() => {
+                    const downstream = questions
+                      .slice(qi + 1)
+                      .filter((dq) => dq.id.trim());
+                    if (downstream.length === 0) {
+                      return (
+                        <p className="mt-1 text-[11px] text-ink-3">
+                          No downstream questions yet — add another question
+                          (with an id) to enable skip rules.
+                        </p>
+                      );
+                    }
+                    const selected = a.skipQuestionIds ?? [];
+                    return (
+                      <ul className="mt-1 flex flex-wrap gap-2">
+                        {downstream.map((dq) => {
+                          const checked = selected.includes(dq.id);
+                          return (
+                            <li key={dq.id}>
+                              <label
+                                className={
+                                  "inline-flex cursor-pointer items-center gap-1.5 rounded-pill border px-3 py-1 text-xs " +
+                                  (checked
+                                    ? "border-rust bg-rust-pale text-rust-dark"
+                                    : "border-rule bg-white text-ink-2 hover:border-navy")
+                                }
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={(e) => {
+                                    const next = e.target.checked
+                                      ? [...selected, dq.id]
+                                      : selected.filter((x) => x !== dq.id);
+                                    setA(qi, ai, { skipQuestionIds: next });
+                                  }}
+                                  className="size-3"
+                                />
+                                <span className="font-mono">{dq.id}</span>
+                                {dq.prompt && (
+                                  <span className="text-ink-3">
+                                    — {dq.prompt.slice(0, 30)}
+                                    {dq.prompt.length > 30 ? "…" : ""}
+                                  </span>
+                                )}
+                              </label>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    );
+                  })()}
                 </div>
                 {q.answers.length > 2 && (
                   <button

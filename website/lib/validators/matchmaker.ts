@@ -7,6 +7,7 @@ const Answer = z.object({
   label: z.string().min(1).max(120),
   sublabel: z.string().max(120).optional(),
   tags: z.array(z.string().min(1).max(40)).default([]),
+  skipQuestionIds: z.array(z.string().regex(idRegex)).max(8).optional(),
 });
 
 const Question = z.object({

@@ -77,7 +77,23 @@ function MatchmakerModal({
   const titleId = useId();
 
   const questions = manifest.questions;
-  const onLastStep = step === questions.length - 1;
+  // Skip set: question ids that have been excluded by an earlier answer's
+  // skipQuestionIds. Recomputed from `answers` so back-button works.
+  const skipped = new Set<string>();
+  for (const q of questions) {
+    const aId = answers[q.id];
+    if (!aId) continue;
+    const ans = q.answers.find((a) => a.id === aId);
+    ans?.skipQuestionIds?.forEach((id) => skipped.add(id));
+  }
+  // Walk backward through `step`, returning the previous visible question
+  // index. -1 when this is the first visible step.
+  const findPrevStep = (from: number): number => {
+    for (let i = from - 1; i >= 0; i--) {
+      if (!skipped.has(questions[i]!.id)) return i;
+    }
+    return -1;
+  };
   const showingResults = results !== null;
 
   // Esc closes; lock body scroll while open.
@@ -94,11 +110,28 @@ function MatchmakerModal({
   }, [onClose]);
 
   const pick = (questionId: string, answerId: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: answerId }));
-    if (!onLastStep) {
-      setStep((s) => s + 1);
+    // Compute the new skip set including this fresh pick so we
+    // determine the next step against the latest state.
+    const nextAnswers = { ...answers, [questionId]: answerId };
+    const nextSkipped = new Set<string>();
+    for (const q of questions) {
+      const aId = nextAnswers[q.id];
+      if (!aId) continue;
+      const ans = q.answers.find((a) => a.id === aId);
+      ans?.skipQuestionIds?.forEach((id) => nextSkipped.add(id));
+    }
+    let next = -1;
+    for (let i = step + 1; i < questions.length; i++) {
+      if (!nextSkipped.has(questions[i]!.id)) {
+        next = i;
+        break;
+      }
+    }
+    setAnswers(nextAnswers);
+    if (next !== -1) {
+      setStep(next);
     } else {
-      void submit({ ...answers, [questionId]: answerId });
+      void submit(nextAnswers);
     }
   };
 
@@ -174,11 +207,22 @@ function MatchmakerModal({
         ) : (
           <Wizard
             question={questions[step]!}
-            stepNum={step + 1}
-            totalSteps={questions.length}
+            // Step number / total reflect VISIBLE questions only — skipped
+            // questions don't count toward the progress meter.
+            stepNum={
+              questions.slice(0, step + 1).filter((q) => !skipped.has(q.id))
+                .length
+            }
+            totalSteps={
+              questions.length - skipped.size || questions.length
+            }
             chosenId={answers[questions[step]!.id]}
             onPick={(answerId) => pick(questions[step]!.id, answerId)}
-            onBack={step > 0 ? () => setStep(step - 1) : undefined}
+            onBack={
+              findPrevStep(step) !== -1
+                ? () => setStep(findPrevStep(step))
+                : undefined
+            }
           />
         )}
       </div>
