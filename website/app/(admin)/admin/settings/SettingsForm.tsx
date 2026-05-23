@@ -228,7 +228,7 @@ export function SettingsForm({
         <AdminField
           name="welcomeFormRecipients"
           label="Welcome form recipients"
-          hint="Comma-separated emails. Where the I'm New form (Step 6 wiring) will relay submissions."
+          hint="Comma-separated emails. Where the I'm New form relays submissions."
           errors={errors.welcomeFormRecipients}
         >
           <input
@@ -236,6 +236,34 @@ export function SettingsForm({
             name="welcomeFormRecipients"
             type="text"
             defaultValue={(initial.welcomeFormRecipients ?? []).join(", ")}
+            className="form-input"
+          />
+        </AdminField>
+        <AdminField
+          name="funeralFormRecipients"
+          label="Funeral form recipients"
+          hint="Comma-separated emails. Receive the funeral intake PDF + summary."
+          errors={errors.funeralFormRecipients}
+        >
+          <input
+            id="funeralFormRecipients-input"
+            name="funeralFormRecipients"
+            type="text"
+            defaultValue={(initial.funeralFormRecipients ?? []).join(", ")}
+            className="form-input"
+          />
+        </AdminField>
+        <AdminField
+          name="baptismFormRecipients"
+          label="Baptism form recipients"
+          hint="Comma-separated emails. Receive the baptism intake PDF + summary."
+          errors={errors.baptismFormRecipients}
+        >
+          <input
+            id="baptismFormRecipients-input"
+            name="baptismFormRecipients"
+            type="text"
+            defaultValue={(initial.baptismFormRecipients ?? []).join(", ")}
             className="form-input"
           />
         </AdminField>

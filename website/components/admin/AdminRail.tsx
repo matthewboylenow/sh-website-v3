@@ -32,6 +32,7 @@ const SETTINGS = [
   { href: "/admin/matchmaker", label: "Matchmaker", role: "admin" as const },
   { href: "/admin/users", label: "Users & roles", role: "admin" as const },
   { href: "/admin/inquiries", label: "Inquiries" },
+  { href: "/admin/form-submissions", label: "Form submissions" },
   { href: "/admin/approvals", label: "Approvals", role: "admin" as const },
   { href: "/admin/media", label: "Media", role: "admin" as const },
   { href: "/admin/account", label: "My account" },

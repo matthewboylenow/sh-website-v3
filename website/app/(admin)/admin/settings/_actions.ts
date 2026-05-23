@@ -29,10 +29,14 @@ function parseGeneralForm(formData: FormData) {
     const v = formData.get(k);
     return typeof v === "string" ? v.trim() : "";
   };
-  const recipients = get("welcomeFormRecipients")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const splitEmails = (raw: string) =>
+    raw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  const recipients = splitEmails(get("welcomeFormRecipients"));
+  const funeralRecipients = splitEmails(get("funeralFormRecipients"));
+  const baptismRecipients = splitEmails(get("baptismFormRecipients"));
   return {
     contactEmail: get("contactEmail"),
     contactPhone: get("contactPhone") || null,
@@ -48,6 +52,8 @@ function parseGeneralForm(formData: FormData) {
       instagram: get("socialLinks.instagram") || null,
     },
     welcomeFormRecipients: recipients,
+    funeralFormRecipients: funeralRecipients,
+    baptismFormRecipients: baptismRecipients,
     logoBlobKey: get("logoBlobKey") || null,
     logoAlt: get("logoAlt") || null,
     faviconBlobKey: get("faviconBlobKey") || null,
@@ -85,6 +91,8 @@ export async function updateSiteSettingsGeneralAction(
           instagram: parsed.data.socialLinks.instagram || undefined,
         },
         welcomeFormRecipients: parsed.data.welcomeFormRecipients,
+        funeralFormRecipients: parsed.data.funeralFormRecipients,
+        baptismFormRecipients: parsed.data.baptismFormRecipients,
         logoBlobKey: parsed.data.logoBlobKey,
         logoAlt: parsed.data.logoAlt,
         faviconBlobKey: parsed.data.faviconBlobKey,

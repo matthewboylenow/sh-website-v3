@@ -649,6 +649,38 @@ export const inquiryEvents = pgTable(
 );
 
 /* ------------------------------------------------------------------ */
+/* Form submissions — sacramental intake forms (funeral, baptism)      */
+/* ------------------------------------------------------------------ */
+
+export const FORM_SUBMISSION_KINDS = ["funeral", "baptism"] as const;
+
+/**
+ * Sacramental intake submissions from the public site. Each row holds
+ * the full validated payload + the generated PDF (in Vercel Blob).
+ * Recipients are configured per-kind in siteSettings.
+ */
+export const formSubmissions = pgTable(
+  "form_submissions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    kind: text("kind", { enum: FORM_SUBMISSION_KINDS }).notNull(),
+    payload: jsonb("payload").notNull(),
+    submitterName: text("submitter_name").notNull(),
+    submitterEmail: text("submitter_email").notNull(),
+    /** Deceased name (funeral) / child's name (baptism). For list scanning. */
+    subjectName: text("subject_name"),
+    /** Mass date / Baptism date as ISO YYYY-MM-DD. */
+    subjectDate: text("subject_date"),
+    pdfBlobKey: text("pdf_blob_key").references(() => blobAssets.key),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("form_submissions_kind_idx").on(t.kind),
+    index("form_submissions_created_idx").on(t.createdAt),
+  ],
+);
+
+/* ------------------------------------------------------------------ */
 /* Announcements — slide-ins + modal popups (e.g. closures)            */
 /* ------------------------------------------------------------------ */
 
@@ -1103,6 +1135,14 @@ export const siteSettings = pgTable(
       .array()
       .default(sql`'{}'`)
       .notNull(),
+    funeralFormRecipients: text("funeral_form_recipients")
+      .array()
+      .default(sql`'{}'`)
+      .notNull(),
+    baptismFormRecipients: text("baptism_form_recipients")
+      .array()
+      .default(sql`'{}'`)
+      .notNull(),
     giving: jsonb("giving")
       .$type<GivingSettings>()
       .notNull()
@@ -1216,3 +1256,5 @@ export type MinistryLead = typeof ministryLeads.$inferSelect;
 export type Inquiry = typeof inquiries.$inferSelect;
 export type InquiryEvent = typeof inquiryEvents.$inferSelect;
 export type InquiryStatus = (typeof INQUIRY_STATUSES)[number];
+export type FormSubmission = typeof formSubmissions.$inferSelect;
+export type FormSubmissionKind = (typeof FORM_SUBMISSION_KINDS)[number];

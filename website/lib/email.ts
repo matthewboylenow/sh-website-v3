@@ -15,6 +15,12 @@ function getResend(): Resend | null {
  * Falls back to console.log when RESEND_API_KEY is missing — same
  * dev-mode pattern as sendMagicLink.
  */
+export type TransactionalAttachment = {
+  filename: string;
+  content: Buffer;
+  contentType?: string;
+};
+
 export async function sendTransactional(args: {
   to: string | string[];
   subject: string;
@@ -22,16 +28,23 @@ export async function sendTransactional(args: {
   text: string;
   replyTo?: string;
   tags?: { name: string; value: string }[];
+  attachments?: TransactionalAttachment[];
 }): Promise<void> {
   const resend = getResend();
   const from = process.env.EMAIL_FROM ?? FROM_DEFAULT;
   if (!resend) {
+    const attachLine =
+      args.attachments && args.attachments.length > 0
+        ? `\nattachments: ${args.attachments
+            .map((a) => `${a.filename} (${a.content.length} bytes)`)
+            .join(", ")}\n`
+        : "";
     console.log(
       `\n${"=".repeat(70)}\n` +
         `📧  DEV TRANSACTIONAL EMAIL — RESEND_API_KEY not set\n` +
         `${"=".repeat(70)}\n` +
         `to:      ${Array.isArray(args.to) ? args.to.join(", ") : args.to}\n` +
-        `subject: ${args.subject}\n` +
+        `subject: ${args.subject}${attachLine}\n` +
         `${"=".repeat(70)}\n` +
         `${args.text}\n` +
         `${"=".repeat(70)}\n`,
@@ -46,6 +59,11 @@ export async function sendTransactional(args: {
     text: args.text,
     replyTo: args.replyTo ?? process.env.EMAIL_REPLY_TO,
     tags: args.tags,
+    attachments: args.attachments?.map((a) => ({
+      filename: a.filename,
+      content: a.content,
+      content_type: a.contentType ?? "application/pdf",
+    })),
   });
   if (result.error) {
     throw new Error(`Resend error: ${result.error.message}`);

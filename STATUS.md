@@ -2,7 +2,7 @@
 
 > **Read this first, every session.** This is the running log of what's shipped, what's in flight, what's queued, and what's broken. It pairs with `CLAUDE.md` (rules) and `/design-ref/` (specs). Update it after every meaningful step.
 
-Last updated: **2026-04-27**
+Last updated: **2026-05-19**
 
 ---
 
@@ -25,7 +25,7 @@ Last updated: **2026-04-27**
 | 11.5 | Frosted-pill header + video hero | ✅ Done |
 | 11.6 | Site-wide CSS layering + on-dark variants | ✅ Done |
 | 12 | Blog + megamenu + nav editor | ✅ Done (12.A nav editor, 12.B blog) |
-| 13 | Sections + embed allowlist + matchmaker skip-rules | 🟡 Mostly done — sections + embeds shipped; matchmaker rules remain |
+| 13 | Sections + embed allowlist + matchmaker skip-rules | ✅ Done (13.K closed Wave 13) |
 | 13.E | Recurring events + custom CTA + event detail page | ✅ Done |
 | 13.F | Vanity-URL redirects (admin-managed) | ✅ Done |
 | 13.G | Polymorphic page_sections + inline preview + Formation pages | ✅ Done |
@@ -36,6 +36,7 @@ Last updated: **2026-04-27**
 | 14.G | Media library picker on every upload surface | ✅ Done |
 | 14.I | Bento icons + display headings + pastor_welcome block | ✅ Done |
 | 14.J | Favicon CMS + last-edited-by + content-editor playbook + logo-upload fix | ✅ Done |
+| 15 | Sacramental intake forms — funeral + baptism (PDF + email + admin) | ✅ Done |
 
 Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).
 
@@ -406,6 +407,86 @@ Build green throughout. ~70+ routes. Migrations applied through 0015.
 - **Give-section CTA color fix.** `callout_banner` block's CTA anchor inherited the base anchor color (rust) on navy/warm tones because `.sh-on-dark` flips headings + p but not anchors. CTA now sets `text-white hover:text-white` explicitly on dark tones; `bg-navy text-white` on the gold tone for contrast.
 
 Build green. Migrations applied through 0017. ~75 routes.
+
+## ✅ Shipped — Wave 15 sacramental intake forms
+
+Funeral + baptism intake forms ported from the legacy FluentForms pages
+on the current sainthelen.org. Replaces the WordPress dependency with a
+fully in-house pipeline that generates branded PDFs, attaches them to
+the notification email, AND saves every submission to the database.
+
+- **Schema** (migration 0022). New `form_submissions` table: `id`,
+  `kind` (`funeral` | `baptism`), `payload` jsonb, `submitter_name`,
+  `submitter_email`, `subject_name` (deceased / child), `subject_date`
+  (Mass / baptism date), `pdf_blob_key` → `blob_assets.key`,
+  `created_at`. Two new columns on `site_settings`:
+  `funeral_form_recipients` + `baptism_form_recipients` (text[]),
+  parallel to the existing `welcome_form_recipients`.
+- **Validators** in `lib/validators/funeral.ts` +
+  `lib/validators/baptism.ts`. Tight on required fields (filer
+  identity, Mass date/time for funeral; child + parents + godparents
+  for baptism), loose on the long-form prose fields. Reading + hymn
+  options are validated as free strings — the music director sometimes
+  accommodates one-offs.
+- **Hardcoded option lists** in `lib/funeral-options.ts` — readings
+  codes (OT-1..OT-9, NT-1..NT-19, Easter), six music slots with the
+  standard Catholic funeral repertoire. Per-file comment marks these
+  as edit-in-place. No DB editor in v1 (user choice).
+- **PDF generation** with `@react-pdf/renderer`. `lib/pdf/intake.tsx`
+  is the shared layout (navy header bar, gold eyebrow, alternating row
+  tint, rust section rules, page x/y footer). Per-form section
+  builders in `lib/pdf/funeral.ts` + `lib/pdf/baptism.ts` map the
+  validated payload to a `PdfSection[]` shape — exported separately so
+  the admin detail page can re-render the same structure as HTML
+  without pulling react-pdf into the Server Component. Types live in
+  `lib/pdf/intake-types.ts`; the heavy `renderIntakePdf` is dynamic-
+  imported inside the renderXxxPdf wrappers.
+- **Public routes** `/funerals` + `/baptism`. Match the legacy URL
+  shape exactly so DNS-flip redirects are trivial. Funeral form has 11
+  anchored sections with a sticky sidebar nav at desktop; conditional
+  fields driven by `useForm.watch` (spouse block only if Married;
+  readings dropdown only if family chooses; reader names only if Yes;
+  Words-of-Remembrance person only if Yes). Baptism is a single column
+  — child / mother / father / family / godmother / godfather. Form
+  atoms in `components/forms/atoms.tsx`: `TextField`, `TextareaField`,
+  `SelectField`, `RadioField`, `AddressBlock`, `FormSection`.
+- **API routes** `/api/funerals` + `/api/baptism`. Rate-limited 3/hour
+  per IP. Pattern: Zod-validate → render PDF buffer → `lib/intake-
+  submission.ts` handles `put()` to Vercel Blob → insert `blob_assets`
+  row → insert `form_submissions` row → call `sendTransactional` with
+  the PDF attached + Blob URL in the email body. Dev-mode fallback
+  (when `BLOB_READ_WRITE_TOKEN` is unset) still records the submission
+  + logs the email, just without the Blob upload.
+- **Email** picks up `lib/email.ts → sendTransactional` extended with
+  an `attachments` array (Buffer-based; mapped to Resend's
+  `content_type` API). Console-log dev fallback unchanged. Reply-To is
+  the submitter's email so a parish staffer can hit Reply.
+- **Admin recipient editor.** Two new comma-separated inputs in
+  `/admin/settings → Forms & footer`, next to the existing welcome
+  recipients. Wired through `SiteSettingsGeneralSchema` + the
+  `updateSiteSettingsGeneralAction` server action.
+- **Admin submissions dashboard** at `/admin/form-submissions`. List
+  view: filter by form kind, free-text search across name / email /
+  subject, sort by newest. Detail at `/admin/form-submissions/[id]`
+  reuses the PDF section builders to render every answer in the same
+  layout as the PDF — bonus: "Download PDF" button at top resolves
+  via `assetUrl(pdfBlobKey)`. Admin + editor roles see it;
+  ministry-lead role redirected to `/admin`.
+- Build green throughout. Typecheck + lint + build all clean. ~77 routes.
+
+### Known caveats
+
+- **PDF fonts** use react-pdf's built-in Helvetica + Times for fast
+  cold starts. If the parish wants Libre Baskerville / Libre Franklin
+  in the PDF, register the fonts via `Font.register()` against the
+  Google Fonts CDN URL — adds ~150ms to first render. Defer until
+  someone asks.
+- **Country dropdown** — dropped from both forms (the legacy form had
+  249 options; this is a single NJ parish). USA is implicit.
+- **Inquiry config** — none. These submit to email + DB; there's no
+  status workflow ("scheduled / cancelled") because the parish staff
+  manages those in their calendar, not in the website. Trivial to add
+  a `status` column later if needed.
 
 ## 🛑 Paused — end-to-end testing in progress
 

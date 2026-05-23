@@ -19,6 +19,8 @@ export const SiteSettingsGeneralSchema = z.object({
   address: Address,
   socialLinks: SocialLinks,
   welcomeFormRecipients: z.array(z.email()).default([]),
+  funeralFormRecipients: z.array(z.email()).default([]),
+  baptismFormRecipients: z.array(z.email()).default([]),
   logoBlobKey: z.string().max(500).optional().nullable(),
   logoAlt: z.string().max(120).optional().nullable(),
   faviconBlobKey: z.string().max(500).optional().nullable(),
