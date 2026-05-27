@@ -37,6 +37,7 @@ import { db } from "../db";
 import { ministries, pageSections, type MinistryInquiryConfig } from "../db/schema";
 import { auditMinistries } from "./_audit-ministries-seed";
 import type { PageSectionPayload } from "../db/schema";
+import { htmlToBlocks } from "./_html-to-blocks";
 
 const AUDIT_ROOT =
   process.env.AUDIT_ROOT ??
@@ -166,6 +167,10 @@ function preprocessMarkdown(md: string): string {
   // line, before the real body kicks in with "## About This Ministry".
   out = out.replace(/^\s*\[\s*All Ministries\s*\]\([^)]+\)\s*\n+/i, "");
   out = out.replace(/^(Support\s*&\s*Outreach|Worshipping God|Making Disciples)\s*\n+/im, "");
+  // Drop the scraped site's "also interested in" related-ministries
+  // widget that appears at the end of every legacy ministry page. Our
+  // own featured-ministries block handles this cross-link far better.
+  out = out.replace(/\n#{1,6}\s+You Might Also Be Interested In[\s\S]*$/i, "");
   return out.trim();
 }
 
@@ -408,14 +413,21 @@ async function main() {
     let position = 0;
 
     if (bodyHtml) {
-      sectionRows.push({
-        kind: "rich_text",
-        position: position++,
-        payload: { kind: "rich_text", html: bodyHtml } as PageSectionPayload,
-      });
+      const blocks = htmlToBlocks(bodyHtml);
+      for (const block of blocks) {
+        sectionRows.push({
+          kind: block.kind,
+          position: position++,
+          payload: block,
+        });
+      }
     }
 
     if (content?.action === "standalone-intro" && content.standaloneUrl) {
+      // After Phase 4 lands the 12 standalone pages, the button points at
+      // /p/<slug>. Until then, point at the legacy URL so the link still
+      // works during the redirect-window.
+      const localHref = `/p/${slug}`;
       sectionRows.push({
         kind: "button_group",
         position: position++,
@@ -424,7 +436,7 @@ async function main() {
           items: [
             {
               label: "Learn more on the full page",
-              href: content.standaloneUrl,
+              href: localHref,
               variant: "primary",
             },
           ],
