@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { and, asc, eq, inArray, like } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { Container } from "@/components/site/Container";
 import { PhotoPlaceholder } from "@/components/site/PhotoPlaceholder";
