@@ -262,13 +262,17 @@ async function loadContent(slug: string): Promise<LoadedContent | null> {
       auditNote: (parsed.data.audit_note as string) || undefined,
       legacyUrl: (parsed.data.url as string) || undefined,
     };
-    if (action === "approved-as-is" && (await fileExists(legacy))) {
+    // For both approved-as-is AND action=edit, fall back to the legacy
+    // scraped page body if it exists. The action=edit ministries had
+    // audit-team guidance ("Adrian will update with Matt") — that
+    // guidance lives in `description` separately. The page itself
+    // should still render real content rather than "Content coming soon".
+    if ((action === "approved-as-is" || action === "edit") && (await fileExists(legacy))) {
       const legacyParsed = matter(await readFile(legacy, "utf8"));
       out.bodyMd = legacyParsed.content;
     } else {
-      // For action=edit we still want guidance to land somewhere
-      // human-visible. Stash the audit guidance prose so we can render
-      // it as an admin-only nudge in the description.
+      // Last resort: surface the audit guidance prose so admins can see
+      // it in the editor.
       out.bodyMd = parsed.content;
     }
     return out;
@@ -312,6 +316,14 @@ function deriveTagline(html: string): string | null {
   return final.length > 120 ? `${final.slice(0, 117)}…` : final;
 }
 
+/**
+ * Ministries whose blocks are hand-templated and should not be
+ * overwritten by re-running this auto-import. Their layouts use
+ * bespoke image_text / callout_banner / card_grid choices the
+ * heuristic converter wouldn't reproduce.
+ */
+const HAND_TEMPLATED = new Set(["wedding-ministry", "mental-health-ministry"]);
+
 async function main() {
   console.log(`Loading images.csv …`);
   const csv = parseCsv(await readFile(path.join(AUDIT_ROOT, "manifests/images.csv"), "utf8"));
@@ -320,10 +332,16 @@ async function main() {
   let upserted = 0;
   let sectionsInserted = 0;
   let heroAssigned = 0;
+  let handTemplatedSkipped = 0;
   const noHero: string[] = [];
 
   for (const seed of auditMinistries) {
     const slug = seed.slug;
+    if (HAND_TEMPLATED.has(slug)) {
+      handTemplatedSkipped++;
+      console.log(`  ~ hand-templated, skipped: ${slug}`);
+      continue;
+    }
     const content = await loadContent(slug);
 
     // ---- 1. Hero photo ---------------------------------------- //
@@ -334,16 +352,15 @@ async function main() {
 
     // ---- 2. Body HTML (markdown → sanitized HTML) ------------- //
     let bodyHtml: string | null = null;
-    // For action=edit the body file contains only the audit team's
-    // guidance (e.g. "Adrian will update with Matt"), which is staff-
-    // facing, not page content. Description already captures it.
-    const skipBody = content?.action === "edit";
-    if (content?.bodyMd && !skipBody) {
+    // loadContent now falls back to legacy scraped content for both
+    // approved-as-is and action=edit, so action=edit ministries get
+    // real body content (their audit guidance still lives separately
+    // in the description field).
+    if (content?.bodyMd) {
       bodyHtml = mdToSafeHtml(content.bodyMd);
       const plain = bodyHtml.replace(/<[^>]+>/g, "").trim();
-      // Drop empty result (e.g. an edits file with no body), and drop
-      // approval-only marker bodies like "Approved as is." that some
-      // standalone-intro entries use to signal "no copy changes needed".
+      // Drop empty result and approval-only marker bodies like
+      // "Approved as is." that signal "no copy changes needed".
       if (!plain || /^\s*Approved as is\.?\s*$/i.test(plain)) bodyHtml = null;
     }
 
@@ -465,6 +482,7 @@ async function main() {
   console.log(`\n✓ ministries upserted : ${upserted}`);
   console.log(`  page_sections rows  : ${sectionsInserted}`);
   console.log(`  hero photos assigned: ${heroAssigned}`);
+  console.log(`  hand-templated kept : ${handTemplatedSkipped}`);
   if (noHero.length) {
     console.log(`  no hero (${noHero.length}): ${noHero.join(", ")}`);
   }
