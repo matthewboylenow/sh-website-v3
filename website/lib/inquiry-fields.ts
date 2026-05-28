@@ -36,6 +36,39 @@ export function resolveFields(config: MinistryInquiryConfig): InquiryField[] {
   return DEFAULT_SYSTEM_FIELDS;
 }
 
+/**
+ * Minimal fields for the "Ask a Question" / inquire flow — always the
+ * same four system slots regardless of the ministry's custom field
+ * config. Questions are generic; volunteer-specific dropdowns or
+ * subcommittee checkboxes only get in the way. Message is required
+ * here (unlike the default) because a question with no body is noise.
+ */
+export const INQUIRE_QUESTION_FIELDS: InquiryField[] = [
+  { kind: "system", systemKey: "name", label: "Your name", required: true, shown: true },
+  { kind: "system", systemKey: "email", label: "Email", required: true, shown: true },
+  { kind: "system", systemKey: "phone", label: "Phone (optional)", required: false, shown: true },
+  {
+    kind: "system",
+    systemKey: "message",
+    label: "What's your question?",
+    required: true,
+    shown: true,
+  },
+];
+
+/**
+ * Resolve fields for a given button kind. The "inquire" kind always
+ * gets the minimal question form; other kinds (volunteer/join) get
+ * the ministry's full configured fields.
+ */
+export function resolveFieldsForKind(
+  config: MinistryInquiryConfig,
+  kind: MinistryInquiryConfig["buttons"][number]["kind"],
+): InquiryField[] {
+  if (kind === "inquire") return INQUIRE_QUESTION_FIELDS;
+  return resolveFields(config);
+}
+
 /** Stable id-ish for a field — used as the React key + form name. */
 export function fieldKey(f: InquiryField): string {
   return f.kind === "system" ? `sys-${f.systemKey}` : `cf-${f.id}`;

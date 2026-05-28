@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import type { InquiryField, MinistryInquiryConfig } from "@/db/schema";
-import { fieldKey, resolveFields, SYSTEM_INPUT_TYPE } from "@/lib/inquiry-fields";
+import { fieldKey, resolveFieldsForKind, SYSTEM_INPUT_TYPE } from "@/lib/inquiry-fields";
 
 type Kind = MinistryInquiryConfig["buttons"][number]["kind"];
 
@@ -53,7 +53,7 @@ export function MinistryInquiryForm({
           kind={activeKind}
           kindLabel={enabledButtons.find((b) => b.kind === activeKind)?.label ?? ""}
           ministryName={ministryName}
-          fields={resolveFields(config)}
+          fields={resolveFieldsForKind(config, activeKind)}
           onClose={() => setActiveKind(null)}
         />
       )}
