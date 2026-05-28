@@ -87,6 +87,146 @@ const SEEDS: MiscPageSeed[] = [
     ],
     addRedirect: true,
   },
+  {
+    slug: "jubilee-2025",
+    legacySlug: "jubilee-2025",
+    title: "Jubilee 2025",
+    summary:
+      "Saint Helen is a designated Jubilee Pilgrimage Church in the Archdiocese of Newark — explore the indulgence, plan a visit, and walk this Holy Year with us.",
+    photoBlobKey: "audit/jubilee-2025-hero-st-peters-basilica-statues.jpg",
+    addRedirect: true,
+  },
+  {
+    slug: "divinemercy",
+    legacySlug: "divinemercy",
+    title: "Divine Mercy",
+    summary:
+      "Celebrating Divine Mercy Sunday and the wider Divine Mercy devotion at Saint Helen.",
+    photoBlobKey: "audit/divine-mercy-section-bg-jesus-image-shrine.jpg",
+    addRedirect: true,
+  },
+  {
+    slug: "hallow",
+    legacySlug: "hallow",
+    title: "Pray with Saint Helen on Hallow",
+    summary:
+      "Join the parish on the Hallow prayer app for Advent, Lent, and year-round Catholic prayer and reflection.",
+    photoBlobKey: "audit/hallow-section-bg-pray-every-day-graphic.png",
+    addRedirect: true,
+  },
+  {
+    slug: "heritage",
+    legacySlug: "heritage",
+    title: "Saint Helen Heritage Fund",
+    summary:
+      "A restricted fund supporting parish needs, improvements, and programs — and the legacy gifts of parishioners who came before us.",
+    photoBlobKey: "audit/heritage-section-bg-mass-congregation-sanctuary.jpg",
+    introBlocks: [
+      {
+        kind: "button_group",
+        items: [
+          {
+            label: "View Heritage Fund opportunities",
+            href: "https://my.sainthelen.org/OnlineReg/3130",
+            variant: "primary",
+          },
+        ],
+      },
+    ],
+    addRedirect: true,
+  },
+  {
+    slug: "parish-mission",
+    legacySlug: "parish-mission",
+    title: "Parish Mission",
+    summary:
+      "Annual mission events at Saint Helen — preaching, prayer, and renewed faith for the whole parish.",
+    photoBlobKey: "audit/parish-mission-section-bg-mountaintop-arms-open.jpg",
+    addRedirect: true,
+  },
+  {
+    slug: "manresa",
+    legacySlug: "manresa",
+    title: "Manresa Retreat",
+    summary:
+      "Ignatian-rooted retreats and mornings of reflection hosted at Saint Helen.",
+    photoBlobKey: null,
+    addRedirect: true,
+  },
+  {
+    slug: "become-catholic",
+    legacySlug: "become-catholic",
+    title: "Become Catholic — OCIA",
+    summary:
+      "The Order of Christian Initiation of Adults — a casual, conversational journey for anyone exploring the Catholic faith.",
+    photoBlobKey: "audit/become-catholic-bg-woman-reading-proverbs.jpg",
+    introBlocks: [
+      {
+        kind: "button_group",
+        items: [
+          {
+            label: "Sign up for OCIA",
+            href: "/p/ocia-form",
+            variant: "primary",
+          },
+        ],
+      },
+    ],
+    addRedirect: true,
+  },
+  {
+    slug: "attend-in-person",
+    legacySlug: "attend-in-person",
+    title: "Attend in Person",
+    summary:
+      "Welcome to Saint Helen — whether it's your first time or your fortieth, here's what to expect when you walk through our doors.",
+    photoBlobKey: "audit/attend-mass-section-bg-easter-sanctuary-baptismal-font.jpg",
+    introBlocks: [
+      {
+        kind: "button_group",
+        items: [
+          { label: "Mass schedule", href: "/mass", variant: "primary" },
+          { label: "I'm new", href: "/im-new", variant: "secondary" },
+        ],
+      },
+    ],
+    addRedirect: true,
+  },
+  {
+    slug: "live",
+    legacySlug: "live",
+    title: "Attend Online",
+    summary:
+      "Join us for Mass from wherever you are — livestream details, archived Masses, and how to participate fully from home.",
+    photoBlobKey: "audit/home-section-bg-livestream-control-booth.jpg",
+    introBlocks: [
+      {
+        kind: "button_group",
+        items: [
+          { label: "This Sunday's livestream", href: "/mass", variant: "primary" },
+        ],
+      },
+    ],
+    addRedirect: true,
+  },
+  {
+    slug: "app",
+    legacySlug: "app",
+    title: "Saint Helen Mobile App",
+    summary:
+      "Our parish app brings Mass readings, blogs, the calendar, livestreams, podcasts, and devotional content into one place.",
+    photoBlobKey: null,
+    addRedirect: true,
+  },
+  {
+    slug: "prayers",
+    legacySlug: "prayers",
+    title: "Prayer Requests",
+    summary:
+      "Submit a prayer request, ask for our prayers, or pray with us — your intentions, lifted up by our community.",
+    photoBlobKey: "audit/prayers-section-bg-hands-raised-worship.jpg",
+    addRedirect: true,
+  },
 ];
 
 function preprocessMarkdown(md: string): string {
