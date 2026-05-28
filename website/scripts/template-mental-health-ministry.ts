@@ -113,66 +113,23 @@ async function main() {
       html: `<p>One in four people will be affected by a mental health problem at some point in their lives, yet the stigma surrounding mental health silences many and prevents faith communities from responding compassionately and effectively.</p><p>This eight-session course — designed for small groups — explores the realities of mental health and illness, and the vital need for faith-based community conversations on these topics. Sessions are accompanied by films featuring the stories of Catholics living with mental health challenges, alongside insights from archbishops, theologians, and psychologists.</p><p>The coursebook defines key terms, presents relevant research, and explores important concepts from three perspectives: the psychological, the social, and the theological. The films elevate the voice of lived experience; mental health professionals, theologians, and church leaders contribute biblical integration and ideas for community support.</p><p>For more information about the Sanctuary Course, please contact <a href="mailto:lmigneco@sainthelen.org">Liz Migneco</a>.</p>`,
     },
 
-    // Bereavement groups card grid
+    // Bereavement groups as a flat link list to match the other resource sections
     {
       kind: "heading",
       level: 2,
       header: { heading: "Bereavement groups in our community" },
     },
     {
-      kind: "card_grid",
-      layout: "uniform",
-      columns: 2,
-      cardStyle: "stacked",
-      cards: [
-        {
-          title: "Journey Through Bereavement",
-          summary: "Support group at Church of the Little Flower in Berkeley Heights.",
-          href: "http://littleflowerbh.org",
-          ctaLabel: "Visit littleflowerbh.org",
-        },
-        {
-          title: "Eternal Bonds",
-          summary: "For those grieving the loss of a child. Church of the Little Flower, Berkeley Heights. Call Dan Grossano at 908-464-1585.",
-          href: "mailto:eternalbonds.lf@gmail.com",
-          ctaLabel: "Email organizers",
-        },
-        {
-          title: "Postpartum Mamas Support Group",
-          summary: "Third Thursday of every month, 12:00–1:00 pm. Westfield Memorial Library.",
-          href: "https://hopehealinghappinesscounseling.com",
-          ctaLabel: "Learn more",
-        },
-        {
-          title: "Seasons of Hope",
-          summary: "Bereavement support group at St. James in Springfield.",
-          href: "https://sainthelen.org/wp-content/uploads/2025/04/St_James_bereivement_group.pdf",
-          ctaLabel: "Download flyer",
-        },
-        {
-          title: "Bereavement Group at St. John the Apostle",
-          summary: "Support group at St. John the Apostle in Clark. Contact Deacon Mike at 732-288-1253.",
-          href: "mailto:myork@sjanj.net",
-          ctaLabel: "Email Deacon Mike",
-        },
-        {
-          title: "Bereavement Ministry of Holy Spirit Church",
-          summary: "Eight Thursdays from March 5, 2026 at 7:00–8:00 pm.",
-          href: "https://sainthelen.org/wp-content/uploads/2026/01/Spring2026HolySpiritUnionSupport_3-5-2026-1-scaled.jpg",
-          ctaLabel: "Download flyer",
-        },
-        {
-          title: "Bereavement Ministry at Our Lady of Sorrows",
-          summary: "South Orange, starting Sunday, January 18, 2026 from 1:00–2:30 pm.",
-          href: "https://sainthelen.org/wp-content/uploads/2026/01/southorange_our_lady_of_sorrows_1-18-2026-scaled.jpg",
-          ctaLabel: "Download flyer",
-        },
-        {
-          title: "H.O.P.E. Bereaved Parents Support Group",
-          summary: "An Archdiocesan program for bereaved parents — meets monthly at multiple parishes.",
-          href: "https://sainthelen.org/wp-content/uploads/2026/01/H.O.P.E_Bereaved_Parents_Support_Groups_monthly_2026-scaled.jpg",
-          ctaLabel: "View schedule",
-        },
+      kind: "link_list",
+      items: [
+        { label: "Journey Through Bereavement — Church of the Little Flower, Berkeley Heights", href: "http://littleflowerbh.org", iconHint: "external" },
+        { label: "Eternal Bonds — for those grieving the loss of a child (Dan Grossano, 908-464-1585)", href: "mailto:eternalbonds.lf@gmail.com", iconHint: "external" },
+        { label: "Postpartum Mamas Support Group — Westfield Memorial Library, 3rd Thursday monthly", href: "https://hopehealinghappinesscounseling.com", iconHint: "external" },
+        { label: "Seasons of Hope — St. James, Springfield (flyer)", href: "https://sainthelen.org/wp-content/uploads/2025/04/St_James_bereivement_group.pdf", iconHint: "pdf" },
+        { label: "Bereavement Group at St. John the Apostle, Clark (Deacon Mike, 732-288-1253)", href: "mailto:myork@sjanj.net", iconHint: "external" },
+        { label: "Bereavement Ministry of Holy Spirit Church — 8-week spring series (flyer)", href: "https://sainthelen.org/wp-content/uploads/2026/01/Spring2026HolySpiritUnionSupport_3-5-2026-1-scaled.jpg", iconHint: "external" },
+        { label: "Bereavement Ministry at Our Lady of Sorrows, South Orange (flyer)", href: "https://sainthelen.org/wp-content/uploads/2026/01/southorange_our_lady_of_sorrows_1-18-2026-scaled.jpg", iconHint: "external" },
+        { label: "H.O.P.E. Bereaved Parents Support Group — Archdiocesan, monthly (schedule)", href: "https://sainthelen.org/wp-content/uploads/2026/01/H.O.P.E_Bereaved_Parents_Support_Groups_monthly_2026-scaled.jpg", iconHint: "external" },
       ],
     },
 

@@ -114,7 +114,13 @@ export default async function MinistryDetailPage({
       {/* ---- Body + sidebar -------------------------------------- */}
       <section className="bg-white py-16">
         <Container width="wide">
-          <div className="grid gap-12 md:grid-cols-[2fr_1fr]">
+          <div
+            className={
+              m.meetingCadence
+                ? "grid gap-12 md:grid-cols-[2fr_1fr]"
+                : "max-w-3xl"
+            }
+          >
             <article className="max-w-none">
               {sections.length > 0 ? (
                 <div className="space-y-12">
@@ -127,8 +133,8 @@ export default async function MinistryDetailPage({
               )}
             </article>
 
-            <aside className="space-y-5 self-start rounded-lg border border-rule bg-cream p-6">
-              {m.meetingCadence && (
+            {m.meetingCadence && (
+              <aside className="space-y-5 self-start rounded-lg border border-rule bg-cream p-6">
                 <div>
                   <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
                     Meeting cadence
@@ -137,19 +143,8 @@ export default async function MinistryDetailPage({
                     {m.meetingCadence}
                   </p>
                 </div>
-              )}
-
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
-                  Status
-                </h3>
-                <p className="mt-1 text-sm text-ink-2">
-                  {m.isAcceptingNew
-                    ? "Welcoming new members"
-                    : "Not currently accepting new members"}
-                </p>
-              </div>
-            </aside>
+              </aside>
+            )}
           </div>
 
           {m.inquiryConfig?.enabled &&
