@@ -49,16 +49,16 @@ const NAV: NavManifest = {
     { label: "Bulletin", href: "/bulletin" },
     {
       label: "About",
-      href: "/p/pastoral-council",
+      href: "/p/our-team",
       mega: {
         sections: [
           {
             heading: "Our parish",
             links: [
+              { label: "Our Team", href: "/p/our-team" },
               { label: "Pastoral Council", href: "/p/pastoral-council" },
-              { label: "All In Report", href: "/p/allin" },
-              { label: "Heritage Fund", href: "/p/heritage" },
-              { label: "Jubilee 2025", href: "/p/jubilee-2025" },
+              { label: "Become Catholic", href: "/p/become-catholic" },
+              { label: "From Our Pastor", href: "/p/from-our-pastor" },
               { label: "Contact Us", href: "/contact" },
             ],
           },

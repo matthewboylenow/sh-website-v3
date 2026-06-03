@@ -590,7 +590,7 @@ export const auditMinistries: AuditMinistry[] = [
     },
     {
       slug: "family-support-for-persons-with-disabilities",
-      name: "Family Support for Persons with Disabiliites",
+      name: "Family Support for Persons with Disabilities",
       tagline: null, // TODO(audit): pull from page intro
       description: null, // TODO(audit): rich description goes into pageSections, not here
       audiences: ["adults", "families"],
@@ -606,7 +606,7 @@ export const auditMinistries: AuditMinistry[] = [
       inquiryConfig: {
         enabled: true,
         buttons: [
-          { kind: "volunteer", label: "Volunteer with Family Support for Persons with Disabiliites", enabled: true },
+          { kind: "volunteer", label: "Volunteer with Family Support for Persons with Disabilities", enabled: true },
           { kind: "inquire", label: "Ask a Question", enabled: true },
         ],
       },

@@ -18,19 +18,19 @@ const STEPS = [
     n: "01",
     title: "Pick a Mass",
     body:
-      "Saturday Vigil at 5 PM, and Sunday at 7:30, 9, 10:30 (Family), and 12. All Masses are welcome to everyone.",
+      "Saturday Vigil at 5 PM. Sunday Masses at 8 AM, 10 AM, 12 PM, and 6 PM. All are welcome.",
   },
   {
     n: "02",
     title: "Come as you are",
     body:
-      "No dress code. Arrive 10 minutes early and our greeters will show you around. Restrooms, cry room, and family seating are clearly marked.",
+      "Arrive a few minutes early and our greeters will show you around. Restrooms, cry room, and family seating are clearly marked.",
   },
   {
     n: "03",
-    title: "Stay for coffee",
+    title: "Say hello",
     body:
-      "After the 10:30 Family Mass, join us in the parish hall for coffee and donuts. No agenda — just a chance to say hello.",
+      "Introduce yourself to a greeter or one of our priests after Mass. We'd love to meet you — and we'll help you take a next step if you're ready.",
   },
 ];
 
@@ -122,7 +122,7 @@ export default async function ImNewPage() {
             <ServeTile
               href="/ministries"
               title="Kids are welcome"
-              description="Cry room off the narthex. Kids Corner during the 10:30 Mass. No shushing required."
+              description="Cry room off the narthex. Kids Corner runs during Sunday Mass. No shushing required."
               icon={<PersonIcon />}
               tone="navy"
             />
@@ -135,8 +135,8 @@ export default async function ImNewPage() {
               }
               description={
                 address
-                  ? `${address.city}, ${address.state} ${address.zip}. Ten minutes from the Westfield train station.`
-                  : "Westfield, NJ 07090. Ten minutes from the Westfield train station."
+                  ? `${address.city}, ${address.state} ${address.zip}`
+                  : "Westfield, NJ 07090"
               }
               icon={<MapPinIcon />}
             />

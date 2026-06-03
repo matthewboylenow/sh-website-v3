@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { inquiries, inquiryEvents, ministries, ministryLeads, users } from "@/db/schema";
+import { inquiries, inquiryEvents, ministries, ministryLeads, siteSettings, users } from "@/db/schema";
 import { sendTransactional } from "@/lib/email";
 import { signInquiryToken } from "@/lib/inquiry-tokens";
 import { InquirySubmitSchema } from "@/lib/validators/inquiries";
@@ -74,6 +74,7 @@ export async function POST(
       id: ministries.id,
       name: ministries.name,
       inquiryConfig: ministries.inquiryConfig,
+      contactEmail: ministries.contactEmail,
     })
     .from(ministries)
     .where(eq(ministries.slug, slug))
@@ -128,16 +129,32 @@ export async function POST(
     .innerJoin(users, eq(ministryLeads.userId, users.id))
     .where(eq(ministryLeads.ministryId, ministry.id));
 
-  const recipients = leadRows.map((r) => r.email);
+  let recipients = leadRows.map((r) => r.email);
   if (recipients.length === 0) {
-    // Fall back to siteSettings.welcomeFormRecipients so inquiries
-    // don't black-hole when no lead is assigned. We'd query that here,
-    // but for v1 we just log + return ok so the visitor never sees a
-    // failure if a ministry was misconfigured.
-    console.warn(
-      `[inquiry] no leads for ministry ${ministry.name} (${ministry.id}) — submission stored without email`,
-    );
-  } else {
+    // Fallback ladder so inquiries don't black-hole on a ministry with
+    // no lead assigned:
+    //   1. ministry.contactEmail (set by the WP audit contact map)
+    //   2. siteSettings.welcomeFormRecipients (parish staff catch-all)
+    // If both are empty we log + still return ok so the visitor never
+    // sees a failure on a misconfigured ministry.
+    if (ministry.contactEmail && ministry.contactEmail.trim()) {
+      recipients = [ministry.contactEmail.trim()];
+    } else {
+      const [settings] = await db
+        .select({ recipients: siteSettings.welcomeFormRecipients })
+        .from(siteSettings)
+        .where(eq(siteSettings.id, 1))
+        .limit(1);
+      const fallback = (settings?.recipients ?? []).filter((e): e is string => !!e && e.trim().length > 0);
+      if (fallback.length > 0) recipients = fallback;
+    }
+    if (recipients.length === 0) {
+      console.warn(
+        `[inquiry] no leads, contactEmail, or welcomeFormRecipients for ministry ${ministry.name} (${ministry.id}) — submission stored without email`,
+      );
+    }
+  }
+  if (recipients.length > 0) {
     try {
       await emailLeads({
         ministryName: ministry.name,

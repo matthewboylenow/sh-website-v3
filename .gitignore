@@ -1,2 +1,6 @@
 image*.png
 /tmp/
+
+# Reconciliation bundles — reference material, not tracked
+sh-nextjs-reconciliation.zip
+sh-nextjs-reconciliation/

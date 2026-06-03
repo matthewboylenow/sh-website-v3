@@ -2,7 +2,7 @@
 
 > **Read this first, every session.** This is the running log of what's shipped, what's in flight, what's queued, and what's broken. It pairs with `CLAUDE.md` (rules) and `/design-ref/` (specs). Update it after every meaningful step.
 
-Last updated: **2026-05-19**
+Last updated: **2026-06-03**
 
 ---
 
@@ -37,6 +37,7 @@ Last updated: **2026-05-19**
 | 14.I | Bento icons + display headings + pastor_welcome block | ✅ Done |
 | 14.J | Favicon CMS + last-edited-by + content-editor playbook + logo-upload fix | ✅ Done |
 | 15 | Sacramental intake forms — funeral + baptism (PDF + email + admin) | ✅ Done |
+| 16 | June reconciliation — 18 ministry bodies + 9 evergreen pages + standalone root URLs + redirects + inquiry fallback | ✅ Done |
 
 Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).
 
@@ -488,7 +489,110 @@ the notification email, AND saves every submission to the database.
   manages those in their calendar, not in the website. Trivial to add
   a `status` column later if needed.
 
-## 🛑 Paused — end-to-end testing in progress
+## ✅ Shipped — Wave 16 June reconciliation (2026-06-03)
+
+Applied the reconciliation bundle (`sh-nextjs-reconciliation.zip`) — the
+parallel WordPress audit's clean copy + URL plan + redirect manifests are
+now the source of truth on the Next.js side. Build green throughout.
+~90 routes; 12 new static prerenders for the standalone ministries.
+
+- **Ministry content reconciliation (Step 1).** Ran the bundle's
+  `import-reconciliation.ts` against 18 ministry slugs: adoration,
+  ageless, basketball, catholic-families-connect,
+  childrens-liturgy-of-the-word, christlife, contemplatives, cornerstone,
+  eft, kids-corner, media-ministry, music, prayer-shawl, pre-cana,
+  service-auction, sing-n-pray, twelve, youth-ministry. 18/18 updated;
+  42 page_sections rows written. Closes the leaked-import-artifact bugs
+  (ChristLife / Pre-Cana / Basketball editor instructions appearing as
+  live copy) plus the legacy "Adult Activities" / "Sunday Experience" /
+  scraped-footer placeholders. HAND_TEMPLATED ministries
+  (mental-health-ministry, wedding-ministry) auto-skipped.
+- **9 evergreen pages (Step 2).** New importer
+  `import-reconciliation-pages.ts` upserts into the `pages` table from
+  `pages-content/*.md` (YAML frontmatter + markdown body, same
+  marked → sanitize-html → htmlToBlocks pipeline). 6 inserted, 3 updated
+  (become-catholic, pastoral-council, prayers replaced their earlier
+  admin-built versions with the bundle's audited copy). Live at
+  `/p/<slug>`: our-team, pastoral-council, become-catholic,
+  mass-intentions, prayers, podcast, spiritual-direction,
+  privacy-policy, from-our-pastor.
+- **About-nav rewired.** `update-nav-manifest.ts` updated to point the
+  About mega at Our Team / Pastoral Council / Become Catholic / From
+  Our Pastor (+ Contact Us). The earlier seasonal/campaign links (All
+  In Report, Heritage Fund, Jubilee 2025) dropped from the nav —
+  redirects handle the old URLs.
+- **Footer Privacy Policy.** Default bottom-bar fallback now includes
+  a Privacy Policy link pointing at `/p/privacy-policy`. Admin-edited
+  `bottomBarHtml` still wins when set.
+- **12 standalones at root (URL model).** Per the bundle's
+  `redirects-nextjs.json`, the 12 standalones now render at root:
+  `/adoration`, `/basketball`, `/called`, `/christlife`, `/grow`,
+  `/lifelines`, `/music`, `/pre-cana`, `/vbs`, `/wwp`,
+  `/young-adult-ministry`, `/youth-ministry`. Extracted the shared
+  ministry-page renderer into `lib/ministry-route.tsx`
+  (`renderMinistryPage(slug, opts)`, `buildMinistryMetadata`,
+  `STANDALONE_SLUGS`). `/ministries/[slug]/page.tsx` reduced to a thin
+  wrapper. Each of the 12 root routes is a 12-line file that delegates
+  to the shared renderer. `canonicalUrl` updated on those 12 rows to
+  `https://sainthelen.org/<slug>`.
+- **Redirects (Step 4).** New
+  `import-reconciliation-redirects.ts` merges both bundle manifests
+  into `siteSettings.redirects`: `redirects-nextjs.json` (16 — the
+  12 `/ministries/<slug>→/<slug>` standalone moves + 4 retired/vanity)
+  and `redirects-legacy-fullsite.json` (48 legacy URL retirements).
+  Total in DB: 79. Two known-bad targets fixed after import:
+  `/from-our-pastor → /p/from-our-pastor` and `/ocia-form →
+  /p/become-catholic` (originally pointed at unbuilt routes; now land
+  on the new `/p/` pages). 37 entries remain marked **REVIEW** in
+  `_note` — they're live but need a parish/council call. Audit them in
+  `/admin/settings/redirects` before launch.
+- **Step 3 — Mass times correction (partial).** Authoritative schedule
+  Sat 5pm; Sun 8/10/12/6 is already correct in `mass_times` and on
+  `/mass`. The remaining fabrication was the hardcoded `STEPS`
+  constant on `/im-new/page.tsx`: "Sunday at 7:30, 9, 10:30 (Family),
+  and 12" → "Sunday Masses at 8 AM, 10 AM, 12 PM, and 6 PM". Also
+  removed the unverified train-station and coffee/donuts copy; Kids
+  Corner reference changed from "10:30 Mass" → "Sunday Mass".
+- **Step 5 — cross-cutting.** (1) Typo fix:
+  "Family Support for Persons with **Disabiliites**" →
+  "**Disabilities**" in both the live DB row and the source
+  `_audit-ministries-seed.ts`. (2) Inquiry-route fallback ladder in
+  `app/api/ministries/[slug]/inquire/route.ts`: when no
+  `ministryLeads` are assigned, fall back to `ministries.contactEmail`,
+  then `siteSettings.welcomeFormRecipients`, then log + still 200 so
+  the visitor never sees a failure on a misconfigured ministry.
+
+### June reconciliation — deliberately deferred
+
+- **Subsplash livestream embed** — still waiting on the widget code.
+- **`/give` content** — page is still gutted to Heritage Fund. Owner
+  needs to provide the canonical copy (Online Giving, Text-to-Give
+  GIVE→908-860-8444, Memorial / Restricted / Stock, envelopes/mail).
+- **Formation registration links + PDFs** — Religious Ed 2025-26
+  registration, 9th/10th schedules, Kids Corner session links, Empowering God's Children lesson PDFs. Owner needs to supply URLs.
+- **USCCB readings widget polish** — outbound-link fallback ships.
+- **Email/phone scrub across remaining pages** — Mental Health Ministry
+  still exposes `lmigneco@sainthelen.org` (HAND_TEMPLATED — must be
+  edited via admin). Other pages flagged by the bundle (`/give`,
+  `/bulletin`, formation) didn't have inline staff emails to scrub
+  after the importer + redirect work.
+- **Category taxonomy reconciliation** — kept Next.js's 6 categories
+  (worship / formation / fellowship / service / sacraments / music)
+  as canonical; WP's 3 mission categories will derive at launch via
+  the mapping in `NEXTJS-VS-WP-MINISTRY-AUDIT.md` if needed.
+- **37 REVIEW redirect targets** — imported live; need council review.
+
+### Files added this wave
+
+- `website/scripts/import-reconciliation.ts` (copied from bundle)
+- `website/scripts/import-reconciliation-pages.ts`
+- `website/scripts/import-reconciliation-redirects.ts`
+- `website/scripts/update-standalone-canonicals.ts`
+- `website/scripts/_fix-reconciliation-redirects.ts`
+- `website/scripts/_fix-disabilities-typo.ts`
+- `website/scripts/_inspect-pages.ts`, `_inspect-mass-times.ts`
+- `website/lib/ministry-route.tsx`
+- `website/app/(site)/<slug>/page.tsx` × 12 (standalone roots)
 
 ## 🛑 Paused — end-to-end testing in progress
 
