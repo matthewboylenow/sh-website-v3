@@ -32,7 +32,8 @@ export default async function HomePage() {
   const vigilMasses = weeklyMassTimes.filter(
     (m) => m.dayOfWeek === 6 && m.kind === "vigil",
   );
-  const heroMassPeek = [...vigilMasses, ...sundayMasses].slice(0, 3);
+  // All weekend Masses: Saturday vigil + every Sunday Mass (Sat 5pm; Sun 8/10/12/6).
+  const heroMassPeek = [...vigilMasses, ...sundayMasses];
 
   return (
     <>

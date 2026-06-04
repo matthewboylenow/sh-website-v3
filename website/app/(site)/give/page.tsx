@@ -178,16 +178,17 @@ export default async function GivePage() {
               Need help giving?
             </h2>
             <p className="mt-2 text-sm text-ink-2">
-              Reach Kent Diamond, our Business Manager, for help with online
-              giving, statements, planned gifts, or any giving question.
+              For help with online giving, statements, planned gifts, or any
+              giving question, send us a note and our Business Manager will get
+              back to you.
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <a
-                href="mailto:kdiamond@sainthelen.org"
+              <Link
+                href="/contact"
                 className="inline-flex items-center rounded-pill bg-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-dark hover:text-white"
               >
-                Email Kent Diamond
-              </a>
+                Contact us about giving
+              </Link>
               {settings?.contactPhone && (
                 <a
                   href={`tel:${settings.contactPhone.replace(/\D/g, "")}`}

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Container } from "@/components/site/Container";
 import { InteriorHero } from "@/components/site/InteriorHero";
 import { BulletinList, type BulletinRow } from "@/components/bulletins/BulletinList";
@@ -43,14 +44,14 @@ export default async function BulletinPage() {
         <Container width="default">
           <BulletinList bulletins={rows} />
           <p className="mt-6 text-xs text-ink-3">
-            Need a bulletin from before the digital archive? Email{" "}
-            <a
-              href="mailto:parish@sainthelen.org"
+            Need a bulletin from before the digital archive?{" "}
+            <Link
+              href="/contact"
               className="font-semibold text-rust-dark hover:text-rust"
             >
-              parish@sainthelen.org
-            </a>
-            .
+              Send us a note
+            </Link>{" "}
+            and we&rsquo;ll help.
           </p>
         </Container>
       </section>
