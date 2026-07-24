@@ -103,15 +103,27 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
   // --- #1–12 · ministries without their own legacy webpage ----------
   {
     slug: "art-environment-ministry",
+    // Also repairs the truncated "…congregants to fu…" tagline.
+    tagline:
+      "The Art and Environment Ministry serves the parish by creating an atmosphere that inspires congregants to full, conscious participation during worship.",
     leads: [{ name: "Jessica Nicolosi", email: "jessicaraemendoza@gmail.com" }],
     contactEmail: "arts@sainthelen.org",
     edits: [
-      // "Please remove the first sentence (it is not necessary)"
+      // "Please remove the first sentence (it is not necessary)".
+      // The body copy stores it as <em>…:</em> with a hard line break
+      // after "The Art and", so this must be a markup/whitespace-
+      // tolerant regex, not an exact-string replace.
+      {
+        op: "regex",
+        pattern: "(?:<em>)?The Purpose of the Art and Environment Ministry:(?:</em>)?\\s*",
+        replace: "",
+        note: "drop 'The Purpose of…' prefix (em-wrapped, newline-tolerant)",
+      },
       {
         op: "replace",
         find: "The Purpose of the Art and Environment Ministry: The Art and Environment Ministry serves",
         replace: "The Art and Environment Ministry serves",
-        note: "drop 'The Purpose of…' prefix",
+        note: "drop 'The Purpose of…' prefix (single-line variant)",
       },
       // Import defect: bolded subgroup names were lifted out of their
       // sentences ("Our is made up of…"). Restore the subject nouns.
@@ -234,12 +246,18 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
   },
   {
     slug: "altar-servers",
+    // Old tagline was the legacy "Sunday Experience" placeholder.
+    tagline:
+      "One of the oldest ministries in the Church — preparing for worship by setting the altar table and lighting the candles.",
     leads: [{ name: "Adrian Soltys", email: "asoltys@sainthelen.org" }],
     contactEmail: "asoltys@sainthelen.org",
     edits: [
       // Remove the email-contact line (its address is a broken
       // Cloudflare [email protected] artifact anyway).
       { op: "removeBlock", contains: "Contact Adrian Soltys at" },
+      // Stray legacy "Sunday Experience" placeholder shipped as body
+      // copy (same WP-scrape artifact class flagged in Wave 16).
+      { op: "removeBlock", contains: "Sunday Experience" },
     ],
   },
   {
@@ -273,6 +291,15 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
     edits: [
       { op: "replace", find: "7:30 PM in the Parish Library", replace: "7:30 PM in the Parish Center" },
       { op: "removeBlock", contains: "For information, please contact Cathy Colon" },
+      // The meeting sentence shared a paragraph with the Cathy Colon
+      // contact line, so the removeBlock above took both out. Restore
+      // the meeting details (with the staff-requested Parish Center).
+      {
+        op: "appendAfter",
+        anchor: "It is important to take care of yourself and to know that you are not alone.",
+        html: "<p>This group meets on the first Wednesday of every month (except July and August) at 7:30 PM in the Parish Center.</p>",
+        note: "restore meeting sentence lost to the contact-line removal",
+      },
     ],
     notes: "Name already reads 'Caregiver's Support Ministry' on staging.",
   },
@@ -419,6 +446,9 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
   },
   {
     slug: "hospitality-ministry",
+    // Old tagline was the legacy "Sunday Experience" placeholder.
+    tagline:
+      "Welcoming, helpful, and supportive ministers who enhance the Sunday Liturgy at Saint Helen.",
     leads: [
       { name: "Gail Laughlin", email: "glaughlin1@gmail.com" },
       { name: "Eileen Passananti", email: "epassananti@gmail.com" },
@@ -428,6 +458,10 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
       // Contact sentence carries broken Cloudflare email artifacts and
       // the form is the call to action — remove it.
       { op: "removeBlock", contains: "please contact Gail Laughlin at" },
+      // Stray legacy "Sunday Experience" placeholder inside the
+      // handshake image block — clears the text, keeps the image
+      // (image_text with empty html renders image-only).
+      { op: "removeBlock", contains: "Sunday Experience" },
     ],
   },
   {
@@ -504,6 +538,10 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
     contactEmail: "msoltys@sainthelen.org",
     edits: [
       { op: "removeBlock", contains: "Use the form below or the registration links on the parish site" },
+      // That line was the entire body under "How Do I Register?" —
+      // clear the now-dangling heading; the empty-section cleanup pass
+      // then deletes both empty sections.
+      { op: "removeBlock", contains: "How Do I Register?" },
     ],
   },
   {
@@ -1368,6 +1406,56 @@ async function removeDeadStandaloneButtons(): Promise<void> {
   if (touched === 0) log(`  ✓  no dead /p/ buttons found`);
 }
 
+/* -------------------- empty sections + leaked audit notes ------------- */
+
+/**
+ * Delete ministry sections left empty by block removals: rich_text
+ * whose html is blank, and heading sections whose heading is blank.
+ * (image_text with empty html is kept — it renders image-only.)
+ */
+async function cleanupEmptySections(): Promise<void> {
+  log(`\n### Empty leftover sections`);
+  const sections = await db
+    .select({ id: pageSections.id, kind: pageSections.kind, payload: pageSections.payload })
+    .from(pageSections)
+    .where(eq(pageSections.parentKind, "ministry"));
+  let removed = 0;
+  for (const s of sections) {
+    const p = s.payload as { html?: string; header?: { heading?: string } } & Record<string, unknown>;
+    const emptyRichText = s.kind === "rich_text" && !(p.html ?? "").replace(/<[^>]+>|&nbsp;|\s/g, "");
+    const emptyHeading = s.kind === "heading" && !(p.header?.heading ?? "").trim();
+    if (!emptyRichText && !emptyHeading) continue;
+    removed += 1;
+    if (!DRY_RUN) await db.delete(pageSections).where(eq(pageSections.id, s.id));
+    hit(`deleted empty ${s.kind} section${DRY_RUN ? "  (dry run)" : ""}`);
+  }
+  if (removed === 0) log(`  ✓  none found`);
+}
+
+/**
+ * The WP audit tool leaked "**Audit guidance:** …" notes into
+ * ministries.description on ~20 rows. MinistryCard falls back to
+ * description when tagline is empty, so these could render publicly —
+ * null them out (they carry no real content).
+ */
+async function cleanupAuditGuidanceDescriptions(): Promise<void> {
+  log(`\n### Leaked "Audit guidance" descriptions`);
+  const rows = await db
+    .select({ id: ministries.id, slug: ministries.slug, description: ministries.description })
+    .from(ministries);
+  let cleaned = 0;
+  for (const r of rows) {
+    const d = r.description ?? "";
+    if (!d.startsWith("**Audit guidance:**") || d.length > 300) continue;
+    cleaned += 1;
+    if (!DRY_RUN) {
+      await db.update(ministries).set({ description: null }).where(eq(ministries.id, r.id));
+    }
+    hit(`${r.slug}: cleared "${d.slice(0, 60)}"${DRY_RUN ? "  (dry run)" : ""}`);
+  }
+  if (cleaned === 0) log(`  ✓  none found`);
+}
+
 /* -------------------- main ------------------------------------------- */
 
 async function main() {
@@ -1380,6 +1468,8 @@ async function main() {
   for (const plan of PAGE_PLANS) await processPage(plan);
   await repairEmailArtifacts();
   await removeDeadStandaloneButtons();
+  await cleanupEmptySections();
+  await cleanupAuditGuidanceDescriptions();
   await ensureRedirects();
 
   console.log(`\n──────────────────────────────────────────`);
