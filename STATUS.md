@@ -617,9 +617,14 @@ can't prerender in the sandbox because the DB host is egress-blocked):**
   published ministry now render that ministry's inquiry form at the
   bottom (the "standalone page needs the volunteer form" items).
 
-**Data script — `website/scripts/staff-ministry-updates-2026-07.ts`.**
-Run `pnpm tsx --env-file=.env.local scripts/staff-ministry-updates-2026-07.ts --dry-run`
-then without the flag. Idempotent; logs every hit/miss. Covers:
+**Data script — `website/scripts/staff-ministry-updates-2026-07.ts` —
+✅ RUN AGAINST NEON 2026-07-24.** Dry-run previewed (117 planned
+changes, 5 expected no-ops), applied, then re-run to prove
+idempotency (0 changes). Verified in the DB afterwards
+(`scripts/_verify-staff-updates.ts`): all 9 renames, 49 lead links
+across 45 ministries, custom form fields, redirects, and zero leftover
+editor-note / broken-email artifacts. Re-running it any time is safe.
+It covers:
 
 - **Leads + recipients for ~40 ministries** — upserts `users` rows
   (role `ministry_lead`) and replace-sets `ministry_leads`; sets
@@ -640,9 +645,15 @@ then without the flag. Idempotent; logs every hit/miss. Covers:
   Prayer Cards), Everyday Contemplatives practice checkboxes
   (Contemplative Prayer / Lectio Divina), Garden availability textarea.
   Volunteer buttons ensured on the standalone ministries.
-- **Cleanups**: repairs Cloudflare `[email protected]` artifacts, removes
-  "Learn more on the full page" buttons that point at unpublished
-  `/p/…` pages, adds `/veg-garden` + `/kids-corner` legacy redirects.
+- **Cleanups**: repairs Cloudflare `[email protected]` artifacts (incl.
+  Family Support's Archdiocese contact — dead link dropped, phone
+  kept), removes "Learn more on the full page" buttons that point at
+  unpublished `/p/…` pages, removes the VBS leaked editor note, adds
+  `/veg-garden` + `/kids-corner` legacy redirects.
+- **Idempotency note:** two insertion-style edits (CLOW Protecting
+  God's Children link, Pre-Cana intro) originally re-applied on every
+  run; fixed with `skipIfContains` markers + self-healing repair
+  regexes that also cleaned up the double-application.
 
 **Verified before writing the plan:** fetched all ~45 affected staging
 pages via the Vercel API — many punch-list items were already fixed by

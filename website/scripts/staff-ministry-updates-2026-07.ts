@@ -41,8 +41,10 @@ const DRY_RUN = process.argv.includes("--dry-run");
 
 type TextEdit =
   /** Replace exact substring (entity/apostrophe tolerant) in any string
-   *  field of the description or section payloads. */
-  | { op: "replace"; find: string; replace: string; note?: string }
+   *  field of the description or section payloads. `skipIfContains` is
+   *  the idempotency marker — REQUIRED whenever `replace` still contains
+   *  `find` (an insertion), otherwise every run would re-apply it. */
+  | { op: "replace"; find: string; replace: string; skipIfContains?: string; note?: string }
   /** Regex replace across HTML strings (for spans that cross markup). */
   | { op: "regex"; pattern: string; replace: string; note?: string }
   /** Remove any block element (<p>/<li>/<h2-4>/<blockquote>) whose plain
@@ -287,12 +289,23 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
     leads: [{ name: "Nicole Murphy", email: "nmurphy@sainthelen.org" }],
     contactEmail: "nmurphy@sainthelen.org",
     edits: [
+      // Repair: collapse a double-wrapped anchor left by a re-run of the
+      // pre-idempotency version of this script. Only matches the broken
+      // nested state, so it's a no-op on healthy content.
+      {
+        op: "regex",
+        pattern:
+          '(<a href="https://www\\.virtusonline\\.org/virtus/"[^>]*>)\\s*<a href="https://www\\.virtusonline\\.org/virtus/"[^>]*>([^<]*)</a>\\s*</a>',
+        replace: "$1$2</a>",
+        note: "unwrap nested Protecting God's Children anchor",
+      },
       // Link the Protecting God's Children mention to the program page.
       {
         op: "replace",
         find: "Archdiocese of Newark's Protecting God's Children program",
         replace:
           '<a href="https://www.virtusonline.org/virtus/" target="_blank" rel="noopener noreferrer">Archdiocese of Newark’s Protecting God’s Children program</a>',
+        skipIfContains: "virtusonline.org",
       },
       // The form is the call to action.
       {
@@ -604,6 +617,16 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
     contactEmail: "boufalouf@gmail.com",
     ensureVolunteerButton: true,
     edits: [
+      // Repair: drop duplicated intro blocks left by a re-run of the
+      // pre-idempotency version of this script. Only matches when the
+      // block is immediately followed by another copy of itself.
+      {
+        op: "regex",
+        pattern:
+          "<h2>Preparing for a Lifetime of Love in Christ</h2><p>Congratulations[\\s\\S]*?908-232-1214\\.</p>\\s*(?=<h2>Preparing for a Lifetime of Love in Christ</h2>)",
+        replace: "",
+        note: "dedupe Preparing-for-a-Lifetime intro",
+      },
       // Restore the staff-provided "Preparing for a Lifetime of Love in
       // Christ" intro ahead of the current opening paragraph.
       {
@@ -611,6 +634,7 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
         find: "<p>Our Pre-Cana Marriage Preparation program is a warm, inviting",
         replace:
           "<h2>Preparing for a Lifetime of Love in Christ</h2><p>Congratulations on your engagement! At Saint Helen, we are honored to support you as you prepare for this sacred commitment through our Pre-Cana Marriage Preparation program. If you have not already reached out to the Parish office to secure your wedding date, please call Marielle Brown at 908-232-1214.</p><p>Our Pre-Cana Marriage Preparation program is a warm, inviting",
+        skipIfContains: "Preparing for a Lifetime of Love in Christ",
         note: "prepend Preparing-for-a-Lifetime intro",
       },
       // Staff-provided schedule copy (with its heading).
@@ -636,7 +660,35 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
       { op: "removeBlock", contains: "(button linking to standalone Walking With Purpose page)" },
     ],
   },
-  // music / vbs / youth-ministry — approved as is; no changes.
+  // Cleanups outside the punch list proper — same defect classes staff
+  // flagged on other pages (shipped editor notes / broken email links).
+  {
+    slug: "vbs",
+    edits: [
+      {
+        op: "removeBlock",
+        contains: "(button linking to standalone Vacation Bible School page)",
+        note: "editor note shipped as public copy",
+      },
+    ],
+    notes: "VBS is approved as-is otherwise; this only removes a leaked editor note.",
+  },
+  {
+    slug: "family-support-for-persons-with-disabilities",
+    edits: [
+      // The email link is a broken Cloudflare artifact and we don't have
+      // the real address — keep the phone, drop the dead link. Full page
+      // update is pending (Maria Auricchio will contact Matt directly).
+      {
+        op: "regex",
+        pattern:
+          ' or via email at <a href="/cdn-cgi/l/email-protection"[^>]*>\\[email(?:&#xA0;|\\s|&nbsp;)?protected\\]</a>',
+        replace: "",
+        note: "drop broken email link (phone remains)",
+      },
+    ],
+  },
+  // music / youth-ministry — approved as is; no changes.
 ];
 
 /** Page-table (/p/…) standalone twins. Filled in from the July review. */
@@ -766,12 +818,20 @@ async function applyEdits(
   for (const edit of edits) {
     if (!edit || !("op" in edit)) continue;
     let applied = 0;
+    let alreadyApplied = false;
     for (const target of targets) {
       const rows = await target.get();
       for (const row of rows) {
         let changed = false;
         const next = walkStrings(row.value, (s) => {
           if (edit.op === "replace") {
+            // Idempotency marker: when the replacement is an insertion
+            // (still contains the find text), its presence means the
+            // edit already ran — leave the string alone.
+            if (edit.skipIfContains && s.includes(edit.skipIfContains)) {
+              alreadyApplied = true;
+              return s;
+            }
             const { html, count } = tolerantReplace(s, edit.find, edit.replace);
             if (count > 0) changed = true;
             return html;
@@ -811,7 +871,11 @@ async function applyEdits(
       }
     }
     if (applied === 0) {
-      miss(`${describeEdit(edit)} — target text not found (may already be fixed)`);
+      if (alreadyApplied) {
+        log(`  ✓  ${describeEdit(edit)} — already applied`);
+      } else {
+        miss(`${describeEdit(edit)} — target text not found (may already be fixed)`);
+      }
     }
   }
 }
