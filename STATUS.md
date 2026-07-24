@@ -2,7 +2,7 @@
 
 > **Read this first, every session.** This is the running log of what's shipped, what's in flight, what's queued, and what's broken. It pairs with `CLAUDE.md` (rules) and `/design-ref/` (specs). Update it after every meaningful step.
 
-Last updated: **2026-06-03**
+Last updated: **2026-07-24**
 
 ---
 
@@ -593,6 +593,67 @@ now the source of truth on the Next.js side. Build green throughout.
 - `website/scripts/_inspect-pages.ts`, `_inspect-mass-times.ts`
 - `website/lib/ministry-route.tsx`
 - `website/app/(site)/<slug>/page.tsx` × 12 (standalone roots)
+
+## ✅ Shipped — Wave 17 · July staff ministry punch list (2026-07-24)
+
+Staff reviewed staging and filed a 51-item ministries punch list. Split
+into code changes (this commit) + a data script to run against Neon
+(this session's sandbox can't reach the DB — Neon host blocked by the
+remote environment's egress policy).
+
+**Code (committed, typecheck + lint green; `pnpm build` compiles but
+can't prerender in the sandbox because the DB host is egress-blocked):**
+
+- **/ministries search box.** New `MinistriesSearch` island + `?q=`
+  server filtering with loose normalization (`lib/search-normalize.ts`):
+  "&" ⇄ "and", "st"/"st." ⇄ "saint", hyphens/apostrophes ignored. Fixes
+  every "not searchable by …" item (Art & Environment, Called & Gifted,
+  Pre Cana, St. Joseph's, GAIM after rename).
+- **Ministry hero photo crop.** `PhotoPlaceholder` gained
+  `imagePosition`; ministry heroes use `center 22%` so portrait photos
+  keep faces in frame (Wedding Ministry torso complaint — the source
+  photo was fine, the 5/4 `object-cover` crop wasn't).
+- **/p/[slug] inquiry form.** Generic CMS pages that share a slug with a
+  published ministry now render that ministry's inquiry form at the
+  bottom (the "standalone page needs the volunteer form" items).
+
+**Data script — `website/scripts/staff-ministry-updates-2026-07.ts`.**
+Run `pnpm tsx --env-file=.env.local scripts/staff-ministry-updates-2026-07.ts --dry-run`
+then without the flag. Idempotent; logs every hit/miss. Covers:
+
+- **Leads + recipients for ~40 ministries** — upserts `users` rows
+  (role `ministry_lead`) and replace-sets `ministry_leads`; sets
+  `contactEmail` fallback. Inquiry emails go to the staff-specified
+  addresses (multi-lead where requested: Care, Hospitality, Wedding,
+  Adoration).
+- **Renames**: Lector Ministry, Sacristan Ministry, Saint Joseph's /
+  Saint Mary's Soup Kitchen, Sunday Gospel Alive in Me (GAIM),
+  Westfield Food Pantry Ministry, Kids Corner (Ages 2-5), Pre-Cana
+  Marriage Preparation, Abide Young Adult Ministry (Ages 21-35).
+- **Copy edits** per the punch list (ageless top-matter, contact-line
+  removals, "use the form below" removals, Parish Library→Center,
+  Helping Hands envelope sentence, counseling insurance sentence, 4C's
+  Hackensack Meridian addition, CLOW Protecting God's Children link,
+  Pre-Cana restored sections, Twelve lead-in, Art & Environment
+  import-defect repairs, em-dash artifacts).
+- **Form fields**: Baptism interest radios (Hospitality / Childcare /
+  Prayer Cards), Everyday Contemplatives practice checkboxes
+  (Contemplative Prayer / Lectio Divina), Garden availability textarea.
+  Volunteer buttons ensured on the standalone ministries.
+- **Cleanups**: repairs Cloudflare `[email protected]` artifacts, removes
+  "Learn more on the full page" buttons that point at unpublished
+  `/p/…` pages, adds `/veg-garden` + `/kids-corner` legacy redirects.
+
+**Verified before writing the plan:** fetched all ~45 affected staging
+pages via the Vercel API — many punch-list items were already fixed by
+the June reconciliation (Why It Matters heading, Wedding coordinators,
+respect-life dated events, ChristLife casing, CYO name, 21–35 ages);
+the script treats those as no-ops.
+
+**Still needs a human** (flagged to Matthew): Abide "Next Gathering"
+copy, ChristLife 2026 dates, Adoration volunteering description
+(Tracey), Respect Life IVF-talk video edit, Family Support updates
+(Maria → Matt), soup-kitchen naming confirmation from Marilyn.
 
 ## 🛑 Paused — end-to-end testing in progress
 

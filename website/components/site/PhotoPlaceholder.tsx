@@ -20,6 +20,7 @@ export function PhotoPlaceholder({
   aspect = "4/3",
   sizes = "(max-width: 768px) 100vw, 720px",
   priority = false,
+  imagePosition,
   children,
 }: {
   /** When provided, render this image instead of the placeholder. */
@@ -38,6 +39,9 @@ export function PhotoPlaceholder({
   sizes?: string;
   /** Hint to next/image for above-the-fold images. */
   priority?: boolean;
+  /** CSS object-position for the cover crop (e.g. "center 25%" to keep
+   *  faces in frame when a portrait photo fills a landscape slot). */
+  imagePosition?: string;
   className?: string;
   children?: ReactNode;
 }) {
@@ -54,6 +58,7 @@ export function PhotoPlaceholder({
           sizes={sizes}
           priority={priority}
           className="object-cover"
+          style={imagePosition ? { objectPosition: imagePosition } : undefined}
         />
         {children}
       </div>

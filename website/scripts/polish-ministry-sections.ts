@@ -24,7 +24,7 @@
  *   - ministries with no rich_text blocks (action=edit ones).
  */
 
-import { and, asc, eq, like, ne, sql } from "drizzle-orm";
+import { and, asc, eq, like, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
   ministries,

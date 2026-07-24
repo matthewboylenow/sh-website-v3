@@ -8,8 +8,10 @@ import { SectionRenderer } from "@/components/site/page-sections/SectionRenderer
 import { db } from "@/db";
 import { pages, pageSections, type PageSectionPayload } from "@/db/schema";
 import { assetUrl } from "@/lib/blob";
+import { getMinistryBySlug } from "@/lib/queries/ministries.query";
 import { buildSectionContext } from "@/lib/section-resolve";
 import { buildSeoMetadata } from "@/lib/seo";
+import { MinistryInquiryForm } from "@/app/(site)/ministries/[slug]/MinistryInquiryForm";
 
 export const revalidate = 600;
 
@@ -66,6 +68,13 @@ export default async function GenericCmsPage({
   const data = await getPage(slug);
   if (!data) notFound();
 
+  // Standalone ministry pages (e.g. /p/called, /p/young-adult-ministry)
+  // share their slug with a ministry row. When that ministry exists and
+  // accepts inquiries, render its volunteer/question form at the bottom
+  // of the page so the standalone page has the same call to action as
+  // /ministries/<slug> (staff request, July 2026).
+  const ministryTwin = await getMinistryBySlug(slug);
+
   const photoUrl = await assetUrl(data.page.photoBlobKey);
   const sections = data.sections.map(
     (r) => r.payload as PageSectionPayload,
@@ -120,6 +129,17 @@ export default async function GenericCmsPage({
           ) : (
             <p className="text-ink-3">Content coming soon.</p>
           )}
+
+          {ministryTwin?.ministry.inquiryConfig?.enabled &&
+            ministryTwin.ministry.inquiryConfig.buttons.some((b) => b.enabled) && (
+              <div id="get-involved" className="mt-16 scroll-mt-24">
+                <MinistryInquiryForm
+                  slug={ministryTwin.ministry.slug}
+                  ministryName={ministryTwin.ministry.name}
+                  config={ministryTwin.ministry.inquiryConfig}
+                />
+              </div>
+            )}
         </Container>
       </section>
     </>

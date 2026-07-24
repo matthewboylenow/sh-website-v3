@@ -105,6 +105,10 @@ export async function renderMinistryPage(slug: string, opts: {
               tone="warm"
               aspect="5/4"
               priority
+              // Bias the cover crop toward the top of the frame so faces
+              // stay visible when a portrait photo fills the 5/4 hero
+              // (staff report: Wedding Ministry hero showed torsos only).
+              imagePosition="center 22%"
             />
           </div>
         </Container>

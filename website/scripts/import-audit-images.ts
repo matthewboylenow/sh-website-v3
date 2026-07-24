@@ -138,7 +138,7 @@ async function main() {
 
   const keyMap: Record<string, { key: string; blobUrl: string; alt: string | null }> = {};
   let uploaded = 0;
-  let skipped = 0;
+  const skipped = 0;
   let failed = 0;
 
   for (const filename of files) {

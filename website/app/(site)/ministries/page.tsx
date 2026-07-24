@@ -2,9 +2,11 @@ import Link from "next/link";
 import { Container } from "@/components/site/Container";
 import { InteriorHero } from "@/components/site/InteriorHero";
 import { Matchmaker } from "@/components/ministries/Matchmaker";
+import { MinistriesSearch } from "@/components/ministries/MinistriesSearch";
 import { MinistryCard } from "@/components/site/MinistryCard";
 import { SectionHead } from "@/components/site/SectionHead";
 import { resolveKeys } from "@/lib/blob";
+import { matchesQuery } from "@/lib/search-normalize";
 import {
   getMinistryCategoriesInUse,
   getPublishedMinistries,
@@ -22,10 +24,11 @@ export const revalidate = 3600;
 export default async function MinistriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; q?: string }>;
 }) {
   const params = await searchParams;
   const filter = params.category && params.category !== "all" ? params.category : null;
+  const q = params.q?.trim() ?? "";
 
   const [all, categoriesInUse, settings] = await Promise.all([
     getPublishedMinistries(),
@@ -33,9 +36,9 @@ export default async function MinistriesPage({
     getSiteSettings(),
   ]);
 
-  const filtered = filter
-    ? all.filter((m) => m.category === filter)
-    : all;
+  const filtered = (filter ? all.filter((m) => m.category === filter) : all).filter(
+    (m) => matchesQuery(q, m.name, m.tagline),
+  );
 
   const photoUrls = await resolveKeys(filtered.map((m) => m.photoBlobKey));
 
@@ -74,13 +77,17 @@ export default async function MinistriesPage({
         <Container width="wide">
           <SectionHead eyebrow="Browse" title="All ministries" />
 
+          <div className="mt-8">
+            <MinistriesSearch q={q} />
+          </div>
+
           {categoriesInUse.length > 0 && (
             <nav
               aria-label="Filter by category"
-              className="mt-8 flex flex-wrap gap-2"
+              className="mt-6 flex flex-wrap gap-2"
             >
               <CategoryChip
-                href="/ministries"
+                href={q ? `/ministries?q=${encodeURIComponent(q)}` : "/ministries"}
                 label="All"
                 active={filter === null}
                 count={all.length}
@@ -88,7 +95,7 @@ export default async function MinistriesPage({
               {categoriesInUse.map((cat) => (
                 <CategoryChip
                   key={cat}
-                  href={`/ministries?category=${cat}`}
+                  href={`/ministries?category=${cat}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
                   label={cat}
                   active={filter === cat}
                   count={all.filter((m) => m.category === cat).length}
@@ -100,7 +107,7 @@ export default async function MinistriesPage({
           {filtered.length === 0 ? (
             <div className="mt-12 rounded-lg border border-dashed border-rule bg-white p-12 text-center">
               <p className="font-serif text-lg font-bold text-navy">
-                Nothing matches that filter.
+                {q ? <>Nothing matches &ldquo;{q}&rdquo;.</> : "Nothing matches that filter."}
               </p>
               <p className="mt-2 text-sm text-ink-2">
                 Try a different category, or{" "}

@@ -14,7 +14,7 @@
  * publishing one by one in admin.
  */
 
-import { eq, inArray, ne } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "../db";
 import { ministries } from "../db/schema";
 
