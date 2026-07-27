@@ -406,8 +406,17 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
   },
   {
     slug: "extraordinary-ministers-of-the-eucharist",
+    // Old tagline had the legacy "Sunday Experience" placeholder glued
+    // to the front (it leaked into the page's meta description).
+    tagline:
+      "Parishioners are trained and commissioned to distribute the Eucharist at all Masses.",
     leads: [{ name: "Marilyn Ryan", email: "mryan@sainthelen.org" }],
     contactEmail: "mryan@sainthelen.org",
+    edits: [
+      // Same legacy "Sunday Experience" placeholder stub as
+      // altar-servers / hospitality.
+      { op: "removeBlock", contains: "Sunday Experience" },
+    ],
   },
   {
     slug: "funeral-support",

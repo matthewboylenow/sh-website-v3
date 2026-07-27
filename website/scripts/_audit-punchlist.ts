@@ -114,9 +114,12 @@ const CHECKS: Check[] = [
   // --- legacy "Sunday Experience" placeholders
   { slug: "altar-servers", phrase: "sunday experience", expect: "gone" },
   { slug: "hospitality-ministry", phrase: "sunday experience", expect: "gone" },
+  { slug: "extraordinary-ministers-of-the-eucharist", phrase: "sunday experience", expect: "gone" },
+  { slug: "extraordinary-ministers-of-the-eucharist", phrase: "trained and commissioned to distribute the eucharist", expect: "present" },
   // --- global artifacts
   { slug: "*", phrase: "cdn-cgi/l/email-protection", expect: "gone" },
   { slug: "*", phrase: "audit guidance", expect: "gone" },
+  { slug: "*", phrase: "sunday experience", expect: "gone" },
 ];
 
 async function main() {
