@@ -120,6 +120,18 @@ const CHECKS: Check[] = [
   { slug: "*", phrase: "cdn-cgi/l/email-protection", expect: "gone" },
   { slug: "*", phrase: "audit guidance", expect: "gone" },
   { slug: "*", phrase: "sunday experience", expect: "gone" },
+  // --- red staff-facing pending flags (present until content lands)
+  { slug: "adoration", phrase: "pending: a description of what volunteering", expect: "present" },
+  { slug: "christlife", phrase: "pending: 2026 program dates", expect: "present" },
+  { slug: "young-adult-ministry", phrase: "next gathering", expect: "present" },
+  { slug: "called", phrase: "pending: dates for the next called & gifted workshop", expect: "present" },
+  { slug: "family-support-for-persons-with-disabilities", phrase: "pending: updated ministry information", expect: "present" },
+  // --- restored bodies (lost to shared-block removals)
+  { slug: "grow", phrase: "lively interactive experience", expect: "present" },
+  { slug: "lifelines", phrase: "small groups where people connect", expect: "present" },
+  { slug: "wwp", phrase: "journey through scripture together", expect: "present" },
+  { slug: "vbs", phrase: "unforgettable week of faith, fun, and friendship", expect: "present" },
+  { slug: "called", phrase: "gifts (charisms) in baptism and confirmation", expect: "present" },
 ];
 
 async function main() {

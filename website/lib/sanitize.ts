@@ -45,6 +45,14 @@ export function sanitizeHtml(html: string): string {
       a: ["href", "title", "target", "rel"],
       img: ["src", "alt", "title", "width", "height", "data-blob-key"],
     },
+    // Single allowlisted class: `sh-pending` marks staff-facing
+    // "content still needed here" notes (red bold italic via
+    // globals.css) so gaps stay visible during content review.
+    allowedClasses: {
+      p: ["sh-pending"],
+      em: ["sh-pending"],
+      strong: ["sh-pending"],
+    },
     allowedSchemes: ["http", "https", "mailto", "tel"],
     allowedSchemesAppliedToAttributes: ["href", "src"],
     allowProtocolRelative: false,

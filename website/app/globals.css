@@ -328,6 +328,17 @@
   .sh-prose h4 { font-size: var(--fs-h5); margin: 1em 0 0.3em; color: var(--sh-navy); }
   .sh-prose strong { font-weight: 700; color: var(--fg-1); }
   .sh-prose em     { font-style: italic; }
+  /* Staff-facing "content still needed here" flag — deliberately loud
+     (red, bold, italic) so gaps can't be missed during content review.
+     Remove the note in admin once the real content lands. */
+  .sh-pending,
+  .sh-prose .sh-pending,
+  .sh-prose .sh-pending strong,
+  .sh-prose .sh-pending em {
+    color: #b91c1c;
+    font-weight: 700;
+    font-style: italic;
+  }
   .sh-prose u      { text-decoration: underline; }
   .sh-prose s      { text-decoration: line-through; }
   .sh-prose code {

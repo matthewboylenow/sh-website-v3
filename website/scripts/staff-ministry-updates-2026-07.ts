@@ -81,6 +81,10 @@ type MinistryPlan = {
    *  (staff asked for a volunteer path on the standalone pages, which
    *  launched with Join + Ask-a-Question only). */
   ensureVolunteerButton?: boolean;
+  /** Restore/insert body sections. Skipped when any existing section
+   *  already contains `marker` (idempotency). `atStart` inserts before
+   *  the current first section, else appends after the last. */
+  ensureSections?: { marker: string; html: string; atStart?: boolean }[];
   /** Copy edits across description/tagline + page_sections. */
   edits?: TextEdit[];
   notes?: string;
@@ -601,6 +605,15 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
       // The form is the contact path now.
       { op: "removeBlock", contains: "please contact Young Adult Coordinator, Patricia Gomez" },
     ],
+    // The original body blocks shared markup with the removed editor
+    // notes and were lost — restore the overview + a red pending flag.
+    ensureSections: [
+      {
+        marker: "seeking authentic community, meaningful conversation",
+        atStart: true,
+        html: '<p>Abide is Saint Helen\u2019s Young Adult Ministry for adults ages 21\u201335 who are seeking authentic community, meaningful conversation, and a deeper relationship with Christ.</p><p class="sh-pending"><strong><em>Pending: current \u201cNext Gathering\u201d date and details \u2014 to be updated from the parish calendar.</em></strong></p>',
+      },
+    ],
   },
   {
     slug: "adoration",
@@ -610,8 +623,16 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
       { name: "Laura Caliguire", email: "lauracaliguire@gmail.com" },
     ],
     contactEmail: "tsowa@sainthelen.org",
+    edits: [
+      {
+        op: "appendAfter",
+        anchor: "one Sunday evening a month and one Tuesday afternoon a month",
+        html: '<p class="sh-pending"><strong><em>Pending: a description of what volunteering with the Adoration Ministry entails — awaiting details from Tracey Sowa.</em></strong></p>',
+        note: "red staff-facing flag for missing volunteering copy",
+      },
+    ],
     notes:
-      "Volunteer form already renders on /adoration. 'What volunteering entails' copy still owed by Tracey (flagged in run summary).",
+      "Volunteer form already renders on /adoration. 'What volunteering entails' copy still owed by Tracey — flagged in red on the page.",
   },
   {
     slug: "called",
@@ -622,6 +643,15 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
       { op: "removeBlock", contains: "Learn more (button linking to standalone C&G page)" },
       { op: "removeBlock", contains: "Learn more (button linking to standalone C&amp;G page)" },
     ],
+    // The discernment paragraph shared a blockquote with the removed
+    // editor note and was lost — restore it + a red pending flag.
+    ensureSections: [
+      {
+        marker: "come and begin to discern your unique mission in life",
+        atStart: true,
+        html: '<p>God calls each of us to a unique purpose, a work of love that only you can do. We all have a call to make disciples! You have received gifts (charisms) in Baptism and Confirmation through which God intends His love to reach others. If you wonder how you are called to be a channel of Christ\u2019s love at home, at work and in your community, come and begin to discern your unique mission in life.</p><p class="sh-pending"><strong><em>Pending: dates for the next Called &amp; Gifted workshop series \u2014 to be announced.</em></strong></p>',
+      },
+    ],
     notes:
       "'Called and Gifted' (spelled out) now matches via the /ministries search normalization (code change).",
   },
@@ -630,7 +660,15 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
     ensureVolunteerButton: true,
     leads: [{ name: "Patricia Gomez", email: "pgomez@sainthelen.org" }],
     contactEmail: "pgomez@sainthelen.org",
-    notes: "Casing is already 'ChristLife' everywhere on staging; no 2025 dates remain on the ministry page.",
+    edits: [
+      {
+        op: "appendAfter",
+        anchor: "Discovering Christ, Following Christ, and Sharing Christ",
+        html: '<p class="sh-pending"><strong><em>Pending: 2026 program dates — to be announced.</em></strong></p>',
+        note: "red staff-facing flag for missing 2026 dates",
+      },
+    ],
+    notes: "Casing is already 'ChristLife' everywhere on the ministry page; no 2025 dates remain.",
   },
   {
     slug: "basketball",
@@ -647,6 +685,13 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
     edits: [
       { op: "removeBlock", contains: "Learn more (button linking to standalone Growing in Faith page)" },
     ],
+    ensureSections: [
+      {
+        marker: "lively interactive experience",
+        atStart: true,
+        html: '<p>Growing in Faith is a lively interactive experience which aims to bring each participant to a new understanding of Jesus and His Church.</p>',
+      },
+    ],
   },
   {
     slug: "lifelines",
@@ -655,6 +700,13 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
     contactEmail: "mauricchio@sainthelen.org",
     edits: [
       { op: "removeBlock", contains: "Learn more (button linking to standalone" },
+    ],
+    ensureSections: [
+      {
+        marker: "LifeLines are small groups where people connect",
+        atStart: true,
+        html: '<p>At Saint Helen, we believe life is better in community. LifeLines are small groups where people connect through shared interests and activities while growing in faith together. Whether you enjoy hiking, book discussions, coffee meetups, or exploring scripture, there\u2019s a LifeLine for you.</p>',
+      },
     ],
   },
   {
@@ -706,11 +758,20 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
       { op: "removeBlock", contains: "Learn more (button linking to standalone Walking With Purpose page)" },
       { op: "removeBlock", contains: "(button linking to standalone Walking With Purpose page)" },
     ],
+    ensureSections: [
+      {
+        marker: "journey through Scripture together",
+        atStart: true,
+        html: '<p>Walking with Purpose invites all women to journey through Scripture together and build relationships that matter!</p>',
+      },
+    ],
   },
   // Cleanups outside the punch list proper — same defect classes staff
   // flagged on other pages (shipped editor notes / broken email links).
   {
     slug: "vbs",
+    tagline:
+      "An unforgettable week of faith, fun, and friendship for kids ages 4 through 5th grade.",
     edits: [
       {
         op: "removeBlock",
@@ -718,7 +779,14 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
         note: "editor note shipped as public copy",
       },
     ],
-    notes: "VBS is approved as-is otherwise; this only removes a leaked editor note.",
+    ensureSections: [
+      {
+        marker: "unforgettable week of faith, fun, and friendship",
+        atStart: true,
+        html: '<p>We\u2019re excited to invite kids ages 4 through 5th grade from all around our community to an unforgettable week of faith, fun, and friendship at Vacation Bible School!</p>',
+      },
+    ],
+    notes: "VBS is approved as-is otherwise; body restored after the editor-note removal took its shared block.",
   },
   {
     slug: "family-support-for-persons-with-disabilities",
@@ -733,13 +801,36 @@ export const MINISTRY_PLANS: MinistryPlan[] = [
         replace: "",
         note: "drop broken email link (phone remains)",
       },
+      {
+        op: "appendAfter",
+        anchor: "reached via phone at 973-497-4309",
+        html: '<p class="sh-pending"><strong><em>Pending: updated ministry information — Maria Auricchio will provide updates.</em></strong></p>',
+        note: "red staff-facing flag for pending page update",
+      },
     ],
   },
   // music / youth-ministry — approved as is; no changes.
 ];
 
-/** Page-table (/p/…) standalone twins. Filled in from the July review. */
-const PAGE_PLANS: PagePlan[] = [];
+/** Page-table (/p/…) rows. The four ministry "standalone" drafts below
+ *  were never published (their /p/ routes 404) and still carry raw
+ *  audit notes ("Add what volunteering entails? I asked Tracey.",
+ *  "(button linking to …)") — archive them so they can't accidentally
+ *  go live with that verbiage. Content stays in the DB. */
+const PAGE_PLANS: PagePlan[] = [
+  { slug: "adoration", unpublish: true, notes: "draft duplicate of /adoration with leaked audit notes" },
+  { slug: "grow", unpublish: true, notes: "draft duplicate of /grow with leaked editor notes" },
+  { slug: "vbs", unpublish: true, notes: "draft duplicate of /vbs with leaked editor notes" },
+  { slug: "wwp", unpublish: true, notes: "draft duplicate of /wwp with leaked editor notes" },
+  {
+    slug: "pastoral-council",
+    edits: [
+      // Official branding is "ChristLife" (staff request applies
+      // site-wide; this bio had the lowercase variant).
+      { op: "replace", find: "the Christlife series", replace: "the ChristLife series" },
+    ],
+  },
+];
 
 /* ------------------------------------------------------------------ */
 /* Engine                                                              */
@@ -784,7 +875,6 @@ export function normalizePhrase(s: string): string {
   return looseText(s);
 }
 
-const BLOCK_RE = /<(p|li|h2|h3|h4|blockquote)\b[^>]*>[\s\S]*?<\/\1>/gi;
 
 /** Remove block elements whose text contains the phrase. Returns the
  *  new html + count removed. Falls back to clearing short standalone
@@ -793,13 +883,29 @@ const BLOCK_RE = /<(p|li|h2|h3|h4|blockquote)\b[^>]*>[\s\S]*?<\/\1>/gi;
 export function removeBlocks(html: string, phrase: string): { html: string; removed: number } {
   const needle = normalizePhrase(phrase);
   let removed = 0;
-  const out = html.replace(BLOCK_RE, (m) => {
+  // Innermost blocks first (<p>/<li>/<h2-4>) so a note that is one
+  // paragraph inside a <blockquote> doesn't take the whole quote —
+  // and its siblings — with it. Only fall back to removing a
+  // blockquote wholesale when no inner block matched.
+  const INNER_RE = /<(p|li|h2|h3|h4)\b[^>]*>[\s\S]*?<\/\1>/gi;
+  let out = html.replace(INNER_RE, (m) => {
     if (looseText(m).includes(needle)) {
       removed += 1;
       return "";
     }
     return m;
   });
+  if (removed === 0) {
+    out = out.replace(/<blockquote\b[^>]*>[\s\S]*?<\/blockquote>/gi, (m) => {
+      if (looseText(m).includes(needle)) {
+        removed += 1;
+        return "";
+      }
+      return m;
+    });
+  }
+  // Drop blockquotes left with no content after inner removals.
+  out = out.replace(/<blockquote\b[^>]*>[\s\n]*<\/blockquote>/gi, "");
   if (removed === 0 && !/<(p|li|h2|h3|h4|blockquote)\b/i.test(html)) {
     // Plain string field (heading / tagline / label) — clear it when it
     // is essentially the phrase itself.
@@ -897,7 +1003,10 @@ async function applyEdits(
             return html;
           }
           if (edit.op === "appendAfter") {
+            // Only append to HTML block strings — never to plain-text
+            // fields like taglines that may echo the same sentence.
             if (
+              /<\w+/.test(s) &&
               looseText(s).includes(normalizePhrase(edit.anchor)) &&
               !looseText(s).includes(normalizePhrase(edit.html))
             ) {
@@ -1186,6 +1295,38 @@ async function processMinistry(plan: MinistryPlan): Promise<void> {
       },
     ];
     await applyEdits(plan.edits, targets);
+  }
+
+  // Restore/insert body sections (after edits, so a freshly inserted
+  // section is never touched by this run's removals).
+  if (plan.ensureSections && plan.ensureSections.length > 0) {
+    const existing = await db
+      .select({ id: pageSections.id, position: pageSections.position, payload: pageSections.payload })
+      .from(pageSections)
+      .where(and(eq(pageSections.parentKind, "ministry"), eq(pageSections.parentId, m.id)))
+      .orderBy(asc(pageSections.position));
+    for (const spec of plan.ensureSections) {
+      const marker = normalizePhrase(spec.marker);
+      const present = existing.some((s) => looseText(JSON.stringify(s.payload)).includes(marker));
+      if (present) {
+        log(`  ✓  section containing "${truncate(spec.marker, 48)}" already present`);
+        continue;
+      }
+      const positions = existing.map((s) => s.position);
+      const position = spec.atStart
+        ? (positions.length > 0 ? Math.min(...positions) - 1 : 0)
+        : (positions.length > 0 ? Math.max(...positions) + 1 : 0);
+      if (!DRY_RUN) {
+        await db.insert(pageSections).values({
+          parentKind: "ministry",
+          parentId: m.id,
+          position,
+          kind: "rich_text",
+          payload: { kind: "rich_text", html: spec.html } as (typeof pageSections.$inferInsert)["payload"],
+        });
+      }
+      hit(`restored section containing "${truncate(spec.marker, 48)}"${DRY_RUN ? "  (dry run)" : ""}`);
+    }
   }
 
   if (plan.notes) log(`  ℹ️   ${plan.notes}`);
