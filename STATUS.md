@@ -41,6 +41,7 @@ Last updated: **2026-07-28**
 | 17 | July staff ministry punch list (51 items) | ✅ Done |
 | 18 | Legacy-URL reconciliation — 23 new CMS pages, redirect overhaul, **middleware redirect bug fixed** | ✅ Done |
 | 18.1 | CMS pages moved from /p/<slug> to root /<slug> (Matthew: "no /p") | ✅ Done |
+| 18.2 | WP backend port — 239 blog posts, 214 Redirection short links, intake recipients | ✅ Done |
 
 Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).
 
@@ -795,6 +796,71 @@ which a reserved-slug validator now handles instead.
   lint, build green. Note: middleware's redirect-list data cache holds
   entries up to 300s, so the first ~5 min after deploy may still serve a
   few stale /p 308s — they resolve to the same pages either way.
+
+## ✅ Shipped — Wave 18.2 · WordPress backend port (2026-07-28)
+
+Matthew supplied a WP Application Password (user `matthew@adventii.com` /
+`adventiimedia`; revoke it in wp-admin → Users → Profile when done).
+Audited the WP backend via REST: all 87 pages (3 drafts only), the
+Redirection plugin (310 rules), FluentForms (21 forms + notification
+recipients), and all post types. Three gaps found and closed:
+
+### 1. Blog was empty — 239 posts imported
+
+The `posts` table had ZERO rows while WP holds 253. Imported via
+`scripts/import-wp-posts-2026-07.ts` (idempotent, fetches public WP REST,
+re-runnable until DNS flip): **138 pastor letters + 101 stewardship
+spotlights**, each with sanitized HTML body, summary, publish date, and its
+featured image mirrored into Vercel Blob (236 images under
+`wp-import/posts/`). Uncategorized strays are classified by slug heuristic.
+**14 posts deliberately skipped** (3 news, 10 catechetical "inquire"
+articles, 1 messages) — the blog only has pastor/stewardship categories;
+adding a third category is a small enum migration + UI chip if wanted.
+
+### 2. WP Redirection plugin — 310 rules ported (214 new)
+
+The parish's operational short links (/pilgrimage, /volunteers, /jubilee,
+/communications, /scroll, /easter, /fish-fry, /pasta …) lived only in the
+WP Redirection plugin — invisible to every sitemap-based audit.
+`scripts/import-wp-redirection-2026-07.ts` (idempotent; needs WP_APP_USER +
+WP_APP_PASS) normalizes them (trailing slashes, query-string froms,
+sainthelen.org-absolute targets → relative), skips shadowing rules, remaps
+six dead WP-era targets, and merges — existing manifest entries always win.
+**Manifest: 36 → 250 entries.** Wildcard substitution added to middleware:
+`/from-our-pastor/* → /blog/*` maps every old permalink to its imported
+post (same for /stewardship-spotlight/* and /spotlight-homepage/*).
+
+### 3. Intake recipients synced from FluentForms
+
+`funeralFormRecipients` = tnydegger, mbrown, asoltys, mboyle (matches WP
+Funeral Intake notification); `baptismFormRecipients` = tsowa. Fill-only-
+if-empty.
+
+### FluentForms inventory (for scoping — NOT yet on the new site)
+
+Covered already: Funeral Intake ✅ (Wave 15), Baptism ✅ (Wave 15),
+Prayer Requests — page exists, but submission API is still the deferred
+`/api/prayer-request` (recipients on WP: Prayer@sainthelen.org,
+reginacook1022@gmail.com, tnydegger@sainthelen.org). **Not built** (mostly
+internal staff workflow forms): Parish Communication Form
+(mdugan+mboyle), Bulletin Submission (mdugan), Email Blast (mdugan),
+Pre-Mass Screen Submission (mdugan+matthew@adventii), Website Update
+(mboyle), Space Reservation (csteiner), Ministry Registration (mdugan),
+Worship Band Audition (asoltys), New OCIA Form (OCIA@, faith@, +2),
+Parish Registration, Jubilee Large Group, Inclusive Mass Mailing List
+(currently redirected to OnlineReg). Needs a scoping call: build as
+generic CMS form pages, or keep on an external form tool.
+
+### Also noted
+
+- **sh_event CPT: 60 events on WP** vs 5 dev-seed rows in the new events
+  table. ACF date fields aren't exposed over REST, so no clean automated
+  import — parish staff should enter upcoming events via /admin/events
+  (most of the 60 are past events).
+- WP WAF throttles rapid REST calls (intermittent 415s) — both import
+  scripts carry retry/backoff.
+- Media-migration reminder grew: post bodies contain inline
+  wp-content <img>/PDF links; featured images are already mirrored.
 
 ## 🛑 Paused — end-to-end testing in progress
 

@@ -46,8 +46,10 @@ export default auth(async (req) => {
   if (!skipRedirects) {
     const list = await getRedirects(req.url);
     // Exact match wins; otherwise a prefix rule ("/legacy-section/*")
-    // catches every path under it — used for retired WP sections whose
-    // children all map to one destination (e.g. /stewardship-spotlight/*).
+    // catches every path under it. A "*" in the TARGET substitutes the
+    // matched suffix (e.g. /from-our-pastor/* → /blog/* maps each old
+    // permalink to its imported post); without "*", everything under the
+    // prefix lands on the one destination.
     const match =
       list.find((r) => r.from === pathname) ??
       list.find(
@@ -56,7 +58,14 @@ export default auth(async (req) => {
           pathname.startsWith(r.from.slice(0, -1)),
       );
     if (match) {
-      const target = new URL(match.to, req.url);
+      let to = match.to;
+      if (match.from.endsWith("/*") && to.includes("*")) {
+        const suffix = pathname
+          .slice(match.from.length - 1)
+          .replace(/\/+$/, "");
+        to = to.replace("*", suffix);
+      }
+      const target = new URL(to, req.url);
       const status = match.permanent ? 308 : 307;
       return NextResponse.redirect(target, status);
     }
