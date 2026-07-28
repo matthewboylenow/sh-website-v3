@@ -268,6 +268,34 @@ export function SettingsForm({
           />
         </AdminField>
         <AdminField
+          name="ociaFormRecipients"
+          label="OCIA form recipients"
+          hint="Comma-separated emails. Receive the OCIA inquirer PDF + summary."
+          errors={errors.ociaFormRecipients}
+        >
+          <input
+            id="ociaFormRecipients-input"
+            name="ociaFormRecipients"
+            type="text"
+            defaultValue={(initial.ociaFormRecipients ?? []).join(", ")}
+            className="form-input"
+          />
+        </AdminField>
+        <AdminField
+          name="prayerFormRecipients"
+          label="Prayer request recipients"
+          hint="Comma-separated emails. Receive prayer requests from /prayers."
+          errors={errors.prayerFormRecipients}
+        >
+          <input
+            id="prayerFormRecipients-input"
+            name="prayerFormRecipients"
+            type="text"
+            defaultValue={(initial.prayerFormRecipients ?? []).join(", ")}
+            className="form-input"
+          />
+        </AdminField>
+        <AdminField
           name="footerCopy"
           label="Footer copy"
           hint="Short paragraph shown in the main footer next to contact info."

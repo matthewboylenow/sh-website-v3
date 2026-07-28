@@ -37,6 +37,8 @@ function parseGeneralForm(formData: FormData) {
   const recipients = splitEmails(get("welcomeFormRecipients"));
   const funeralRecipients = splitEmails(get("funeralFormRecipients"));
   const baptismRecipients = splitEmails(get("baptismFormRecipients"));
+  const ociaRecipients = splitEmails(get("ociaFormRecipients"));
+  const prayerRecipients = splitEmails(get("prayerFormRecipients"));
   return {
     contactEmail: get("contactEmail"),
     contactPhone: get("contactPhone") || null,
@@ -54,6 +56,8 @@ function parseGeneralForm(formData: FormData) {
     welcomeFormRecipients: recipients,
     funeralFormRecipients: funeralRecipients,
     baptismFormRecipients: baptismRecipients,
+    ociaFormRecipients: ociaRecipients,
+    prayerFormRecipients: prayerRecipients,
     logoBlobKey: get("logoBlobKey") || null,
     logoAlt: get("logoAlt") || null,
     faviconBlobKey: get("faviconBlobKey") || null,

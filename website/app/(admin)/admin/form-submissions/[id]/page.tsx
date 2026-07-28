@@ -11,8 +11,10 @@ import { assetUrl } from "@/lib/blob";
 import { toDate } from "@/lib/dates";
 import { buildFuneralSections } from "@/lib/pdf/funeral";
 import { buildBaptismSections } from "@/lib/pdf/baptism";
+import { buildOciaSections } from "@/lib/pdf/ocia";
 import type { FuneralSubmission } from "@/lib/validators/funeral";
 import type { BaptismSubmission } from "@/lib/validators/baptism";
+import type { OciaSubmission } from "@/lib/validators/ocia";
 import type { PdfSection } from "@/lib/pdf/intake-types";
 
 export const metadata = { title: "Submission · Admin" };
@@ -20,6 +22,7 @@ export const metadata = { title: "Submission · Admin" };
 const KIND_LABEL: Record<FormSubmissionKind, string> = {
   funeral: "Funeral intake",
   baptism: "Baptism intake",
+  ocia: "OCIA inquirer",
 };
 
 export default async function FormSubmissionDetailPage({
@@ -49,7 +52,9 @@ export default async function FormSubmissionDetailPage({
     sections =
       kind === "funeral"
         ? buildFuneralSections(payload as unknown as FuneralSubmission)
-        : buildBaptismSections(payload as unknown as BaptismSubmission);
+        : kind === "baptism"
+          ? buildBaptismSections(payload as unknown as BaptismSubmission)
+          : buildOciaSections(payload as unknown as OciaSubmission);
   } catch {
     sections = [
       {

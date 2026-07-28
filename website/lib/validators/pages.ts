@@ -15,7 +15,10 @@ export const RESERVED_PAGE_SLUGS = new Set([
   // (site) static routes
   "baptism", "blog", "bulletin", "contact", "events", "formation",
   "funerals", "give", "im-new", "inquiries", "mass", "ministries",
-  "sacraments",
+  "ocia-form", "sacraments",
+  // NOTE: "prayers" has a dedicated route too, but it deliberately renders
+  // the CMS page with that slug (plus the prayer-request form), so the
+  // page must stay editable — do not reserve it.
   // standalone ministry root routes
   "adoration", "basketball", "called", "christlife", "grow", "lifelines",
   "music", "pre-cana", "vbs", "wwp", "young-adult-ministry",

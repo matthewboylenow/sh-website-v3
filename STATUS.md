@@ -42,6 +42,7 @@ Last updated: **2026-07-28**
 | 18 | Legacy-URL reconciliation — 23 new CMS pages, redirect overhaul, **middleware redirect bug fixed** | ✅ Done |
 | 18.1 | CMS pages moved from /p/<slug> to root /<slug> (Matthew: "no /p") | ✅ Done |
 | 18.2 | WP backend port — 239 blog posts, 214 Redirection short links, intake recipients | ✅ Done |
+| 18.3 | OCIA inquirer form (/ocia-form) + prayer requests (/prayers + API) | ✅ Done |
 
 Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).
 
@@ -861,6 +862,44 @@ generic CMS form pages, or keep on an external form tool.
   scripts carry retry/backoff.
 - Media-migration reminder grew: post bodies contain inline
   wp-content <img>/PDF links; featured images are already mirrored.
+
+## ✅ Shipped — Wave 18.3 · OCIA form + prayer requests (2026-07-28)
+
+Per Matthew: of the 11 remaining WP FluentForms, only OCIA is needed
+(plus wiring prayer requests); the rest are dropped. Events entered
+manually by staff.
+
+- **OCIA inquirer form** at `/ocia-form` — third intake form on the Wave 15
+  pattern: `lib/validators/ocia.ts` (same questions/options as FluentForm
+  #24), `lib/pdf/ocia.ts` section builders, `POST /api/ocia`
+  (rate-limited 3/hr, PDF + email + form_submissions row, kind "ocia"),
+  `components/forms/OciaForm.tsx`. Admin form-submissions list/detail
+  handle the new kind. Recipients editable in /admin/settings
+  (seeded: OCIA@, faith@, mike.murphy@comcast.net, llphd@yahoo.com).
+  Name+email required; everything else optional (legacy form required
+  nothing). become-catholic page gained a CTA section linking the form;
+  the old `/ocia-form → /become-catholic` redirect was removed (it would
+  have shadowed the route).
+- **Prayer requests live on `/prayers`** — dedicated route renders the
+  admin-editable "prayers" CMS page content and appends the form
+  (matches the WP page, which embedded FluentForm #13). `POST
+  /api/prayer-request` clones the welcome relay: rate-limited, nothing
+  persisted, straight to `prayerFormRecipients` (seeded: Prayer@,
+  reginacook1022@gmail.com, tnydegger@) with Reply-To the requester.
+  Fields match WP: email* / person being prayed for* / reason* / phone /
+  comments.
+- **Migration 0023** adds `ocia_form_recipients` + `prayer_form_recipients`
+  to site_settings (applied to Neon). `FORM_SUBMISSION_KINDS` gains "ocia"
+  (text column — no SQL change).
+- Verified: /ocia-form + /prayers 200, become-catholic shows the CTA,
+  prayer API happy path ok (console-fallback email), both APIs 400 with
+  field errors on bad payloads, typecheck/lint/build green.
+- **Dropped by decision (2026-07-28):** Parish Communication, Bulletin
+  Submission, Email Blast, Pre-Mass Screen, Website Update, Space
+  Reservation, Ministry Registration, Worship Band Audition, Parish
+  Registration, Jubilee Large Group, Inclusive Mass Mailing List (stays an
+  external OnlineReg link). WP sh_event entries: staff enter upcoming
+  events manually via /admin/events.
 
 ## 🛑 Paused — end-to-end testing in progress
 

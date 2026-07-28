@@ -43,7 +43,7 @@ const ROUTE_PATHS = new Set([
   "/", "/admin", "/api", "/sign-in", "/design-system", "/p",
   "/baptism", "/blog", "/bulletin", "/contact", "/events", "/formation",
   "/funerals", "/give", "/im-new", "/inquiries", "/mass", "/ministries",
-  "/sacraments",
+  "/ocia-form", "/prayers", "/sacraments",
   "/adoration", "/basketball", "/called", "/christlife", "/grow",
   "/lifelines", "/music", "/pre-cana", "/vbs", "/wwp",
   "/young-adult-ministry", "/youth-ministry",

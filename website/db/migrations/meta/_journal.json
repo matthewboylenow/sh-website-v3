@@ -162,6 +162,13 @@
       "when": 1777235000000,
       "tag": "0022_funeral_baptism_intake",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1785000000000,
+      "tag": "0023_ocia_prayer_recipients",
+      "breakpoints": true
     }
   ]
 }

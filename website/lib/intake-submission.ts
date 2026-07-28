@@ -130,12 +130,13 @@ async function getRecipients(kind: FormSubmissionKind): Promise<string[]> {
     .select({
       funeral: siteSettings.funeralFormRecipients,
       baptism: siteSettings.baptismFormRecipients,
+      ocia: siteSettings.ociaFormRecipients,
     })
     .from(siteSettings)
     .where(eq(siteSettings.id, 1))
     .limit(1);
   if (!row) return [];
-  return kind === "funeral" ? row.funeral : row.baptism;
+  return row[kind];
 }
 
 /**

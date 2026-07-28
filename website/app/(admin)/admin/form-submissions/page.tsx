@@ -15,11 +15,13 @@ export const metadata = { title: "Form submissions · Admin" };
 const KIND_LABEL: Record<FormSubmissionKind, string> = {
   funeral: "Funeral",
   baptism: "Baptism",
+  ocia: "OCIA",
 };
 
 const KIND_PILL: Record<FormSubmissionKind, string> = {
   funeral: "bg-navy/10 text-navy",
   baptism: "bg-rust-pale text-rust-dark",
+  ocia: "bg-gold/20 text-navy",
 };
 
 const FILTERS = ["all", ...FORM_SUBMISSION_KINDS] as const;

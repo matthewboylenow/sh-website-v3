@@ -652,7 +652,7 @@ export const inquiryEvents = pgTable(
 /* Form submissions — sacramental intake forms (funeral, baptism)      */
 /* ------------------------------------------------------------------ */
 
-export const FORM_SUBMISSION_KINDS = ["funeral", "baptism"] as const;
+export const FORM_SUBMISSION_KINDS = ["funeral", "baptism", "ocia"] as const;
 
 /**
  * Sacramental intake submissions from the public site. Each row holds
@@ -1140,6 +1140,14 @@ export const siteSettings = pgTable(
       .default(sql`'{}'`)
       .notNull(),
     baptismFormRecipients: text("baptism_form_recipients")
+      .array()
+      .default(sql`'{}'`)
+      .notNull(),
+    ociaFormRecipients: text("ocia_form_recipients")
+      .array()
+      .default(sql`'{}'`)
+      .notNull(),
+    prayerFormRecipients: text("prayer_form_recipients")
       .array()
       .default(sql`'{}'`)
       .notNull(),

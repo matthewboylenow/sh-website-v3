@@ -21,6 +21,8 @@ export const SiteSettingsGeneralSchema = z.object({
   welcomeFormRecipients: z.array(z.email()).default([]),
   funeralFormRecipients: z.array(z.email()).default([]),
   baptismFormRecipients: z.array(z.email()).default([]),
+  ociaFormRecipients: z.array(z.email()).default([]),
+  prayerFormRecipients: z.array(z.email()).default([]),
   logoBlobKey: z.string().max(500).optional().nullable(),
   logoAlt: z.string().max(120).optional().nullable(),
   faviconBlobKey: z.string().max(500).optional().nullable(),
