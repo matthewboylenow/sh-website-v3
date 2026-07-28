@@ -130,7 +130,7 @@ export default async function GivePage() {
             )}
 
             <Link
-              href="/p/heritage"
+              href="/heritage"
               className="group flex flex-col gap-3 rounded-lg border border-rule bg-cream p-6 transition-colors hover:border-rust"
             >
               <span className="sh-eyebrow">Planned giving</span>

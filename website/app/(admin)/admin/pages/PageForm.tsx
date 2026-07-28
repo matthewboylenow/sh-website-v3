@@ -163,7 +163,7 @@ export function PageForm({
             canonicalUrl: defaultValues.canonicalUrl,
           }}
           ogImagePreviewUrl={ogImagePreviewUrl}
-          publicPath={defaultValues.slug ? `/p/${defaultValues.slug}` : undefined}
+          publicPath={defaultValues.slug ? `/${defaultValues.slug}` : undefined}
         />
 
         <button

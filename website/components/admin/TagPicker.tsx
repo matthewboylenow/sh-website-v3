@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 /**
@@ -35,12 +36,12 @@ export function TagPicker({
     return (
       <p className="text-xs text-ink-3">
         No options yet — add some in{" "}
-        <a
+        <Link
           href="/admin/settings/taxonomies"
           className="font-semibold text-rust-dark hover:text-rust"
         >
           Settings → Taxonomies
-        </a>
+        </Link>
         .
       </p>
     );

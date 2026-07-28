@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -72,18 +73,18 @@ export default async function AdminApprovalsPage({
           </p>
         </div>
         <nav className="flex gap-1 text-sm">
-          <a
+          <Link
             href="/admin/approvals"
             className={`rounded-pill px-4 py-1.5 font-semibold ${filter === "pending" ? "bg-navy text-white" : "text-ink-2 hover:bg-cream"}`}
           >
             Pending
-          </a>
-          <a
+          </Link>
+          <Link
             href="/admin/approvals?status=all"
             className={`rounded-pill px-4 py-1.5 font-semibold ${filter === "all" ? "bg-navy text-white" : "text-ink-2 hover:bg-cream"}`}
           >
             All
-          </a>
+          </Link>
         </nav>
       </header>
 

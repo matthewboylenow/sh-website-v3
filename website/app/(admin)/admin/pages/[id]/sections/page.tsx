@@ -122,7 +122,7 @@ export default async function PageSectionsPage({
           <p className="sh-lede mt-2 text-[15px]">
             Block-based content for{" "}
             <Link
-              href={`/p/${p.slug}`}
+              href={`/${p.slug}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-rust-dark hover:text-rust"

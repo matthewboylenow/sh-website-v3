@@ -914,9 +914,9 @@ Questions? Call the parish office at 908-232-1214 (Monday–Friday, 9:30am–5:0
  * middleware prefix support shipped in the same commit as this script.
  */
 const REDIRECTS: Redirect[] = [
-  // New /p/ pages created by this script
-  ...SEEDS.map((s) => ({ from: `/${s.slug}`, to: `/p/${s.slug}`, permanent: true })),
-  // Aliases and retired URLs
+  // NOTE (Wave 18.1): CMS pages serve at the ROOT URL — no "/<slug> →
+  // /p/<slug>" entries here. A redirect from a published page's own URL
+  // would shadow the app/(site)/[slug] route. Aliases and retired URLs only.
   { from: "/youth", to: "/youth-ministry", permanent: true },
   { from: "/stewardship-spotlight", to: "/blog?category=stewardship", permanent: true },
   { from: "/stewardship-spotlight/*", to: "/blog?category=stewardship", permanent: false },
@@ -926,14 +926,14 @@ const REDIRECTS: Redirect[] = [
   { from: "/family-activities", to: "/ministries", permanent: true },
   { from: "/youth-activities", to: "/ministries", permanent: true },
   { from: "/adult-activities", to: "/ministries", permanent: true },
-  { from: "/christmas", to: "/p/advent", permanent: false },
-  { from: "/old-synod", to: "/p/synod-recap", permanent: true },
-  { from: "/adlut-faith-leader", to: "/p/ad-lead", permanent: true },
+  { from: "/christmas", to: "/advent", permanent: false },
+  { from: "/old-synod", to: "/synod-recap", permanent: true },
+  { from: "/adlut-faith-leader", to: "/ad-lead", permanent: true },
   { from: "/inclusive-mass-mailing-list", to: "https://my.sainthelen.org/OnlineReg/3218", permanent: false },
-  { from: "/message-series", to: "/p/current-series", permanent: true },
-  { from: "/message-series/*", to: "/p/current-series", permanent: true },
-  { from: "/stream", to: "/p/live", permanent: true },
-  { from: "/lifelines-resources", to: "/p/lifeline-resources", permanent: true },
+  { from: "/message-series", to: "/current-series", permanent: true },
+  { from: "/message-series/*", to: "/current-series", permanent: true },
+  { from: "/stream", to: "/live", permanent: true },
+  { from: "/lifelines-resources", to: "/lifeline-resources", permanent: true },
 ];
 
 /**

@@ -117,14 +117,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: "monthly" as const,
         priority: 0.6,
       })),
-    // Sacrament pages live in the pages table as "sacraments-<slug>" but
-    // canonicalize to /sacraments/<slug> — emit the canonical URL.
+    // CMS pages serve at the site root (July 2026 — no /p prefix).
+    // Sacrament rows ("sacraments-<slug>") canonicalize to /sacraments/<slug>.
     ...pageRows
       .filter((r) => !r.noindex)
       .map((r) => ({
         url: r.slug.startsWith("sacraments-")
           ? `${SITE_ORIGIN}/sacraments/${r.slug.slice("sacraments-".length)}`
-          : `${SITE_ORIGIN}/p/${r.slug}`,
+          : `${SITE_ORIGIN}/${r.slug}`,
         lastModified: r.updatedAt,
         changeFrequency: "monthly" as const,
         priority: 0.6,

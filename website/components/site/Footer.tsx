@@ -73,7 +73,7 @@ export function Footer({
               <p>
                 &copy; {year} Saint Helen Parish &middot; A Roman Catholic parish
                 in the Archdiocese of Newark &middot;{" "}
-                <Link href="/p/privacy-policy" className="text-white/85 underline-offset-2 hover:text-gold hover:underline">
+                <Link href="/privacy-policy" className="text-white/85 underline-offset-2 hover:text-gold hover:underline">
                   Privacy Policy
                 </Link>
               </p>

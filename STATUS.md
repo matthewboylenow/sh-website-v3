@@ -40,6 +40,7 @@ Last updated: **2026-07-28**
 | 16 | June reconciliation — 18 ministry bodies + 9 evergreen pages + standalone root URLs + redirects + inquiry fallback | ✅ Done |
 | 17 | July staff ministry punch list (51 items) | ✅ Done |
 | 18 | Legacy-URL reconciliation — 23 new CMS pages, redirect overhaul, **middleware redirect bug fixed** | ✅ Done |
+| 18.1 | CMS pages moved from /p/<slug> to root /<slug> (Matthew: "no /p") | ✅ Done |
 
 Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).
 
@@ -761,6 +762,39 @@ Script is idempotent (verified: second run = 0 changes) and safe to re-run.
   admin if desired.
 - Subsplash livestream embed still pending (Step 8) — /p/live + /stream +
   /mass all ready for it.
+
+## ✅ Shipped — Wave 18.1 · CMS pages at root URLs (2026-07-28)
+
+Matthew: "I don't want the /p." CMS pages now serve at `/<slug>` directly —
+the `/p/` prefix existed only to avoid slug collisions with real routes,
+which a reserved-slug validator now handles instead.
+
+- **Route move.** `app/(site)/p/[slug]` → `app/(site)/[slug]` (root dynamic
+  segment; static routes always win). `sacraments-*` rows are guarded off
+  the root and keep canonicalizing to `/sacraments/<name>`.
+- **`/p/*` compat redirects.** New thin `app/(site)/p/[slug]/page.tsx`
+  issues a 308 to the root URL (`/p/sacraments-baptism → /sacraments/baptism`).
+  Anything bookmarked or indexed under /p keeps working.
+- **Reserved slugs.** `lib/validators/pages.ts` exports
+  `RESERVED_PAGE_SLUGS` (all top-level routes + admin/api/sign-in etc.);
+  the pages editor rejects colliding slugs. **Keep the list in sync when
+  adding top-level routes.**
+- **DB sweep** (`scripts/move-pages-to-root-2026-07.ts`, idempotent,
+  DRY_RUN=1 preview): dropped 37 now-shadowing `/x → /p/x` redirects
+  (manifest 73 → 36), retargeted 8 more (`/ocia-form → /become-catholic`
+  etc.), rewrote the nav manifest + 19 page_sections payloads; swept
+  ministries/posts/events/staff/announcements for stray /p/ links (none).
+- **Code links** updated: /give Heritage card, footer privacy-policy link,
+  admin pages editor "view on site" links, sitemap (0 /p/ URLs emitted),
+  Wave 18 import script (no longer adds /<slug> → /p/<slug> entries — a
+  re-run after this wave stays root-serving).
+- Converted 3 pre-existing admin `<a href>` to `<Link>` (`no-html-link-for-pages`
+  started firing once a root dynamic segment existed).
+- **Verified**: all 42 published pages 200 at root; /p/* 308s to root;
+  alias redirects land on root targets; sacraments unaffected; typecheck,
+  lint, build green. Note: middleware's redirect-list data cache holds
+  entries up to 300s, so the first ~5 min after deploy may still serve a
+  few stale /p 308s — they resolve to the same pages either way.
 
 ## 🛑 Paused — end-to-end testing in progress
 

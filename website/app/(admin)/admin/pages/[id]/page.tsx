@@ -46,7 +46,7 @@ export default async function EditPagePage({
             Sections →
           </Link>
           <Link
-            href={`/p/${row.slug}`}
+            href={`/${row.slug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-semibold text-rust-dark hover:text-rust"
