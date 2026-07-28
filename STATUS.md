@@ -43,6 +43,7 @@ Last updated: **2026-07-28**
 | 18.1 | CMS pages moved from /p/<slug> to root /<slug> (Matthew: "no /p") | ✅ Done |
 | 18.2 | WP backend port — 239 blog posts, 214 Redirection short links, intake recipients | ✅ Done |
 | 18.3 | OCIA inquirer form (/ocia-form) + prayer requests (/prayers + API) | ✅ Done |
+| 18.4 | Our Team → staff_card blocks + full wp-content media migration (82 assets) | ✅ Done |
 
 Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).
 
@@ -900,6 +901,34 @@ manually by staff.
   Registration, Jubilee Large Group, Inclusive Mass Mailing List (stays an
   external OnlineReg link). WP sh_event entries: staff enter upcoming
   events manually via /admin/events.
+
+## ✅ Shipped — Wave 18.4 · Our Team + media migration (2026-07-28)
+
+- **Our Team is now database-driven.** `/our-team` previously rendered 42
+  scraped prose blocks disconnected from the staff table. Rebuilt
+  (`scripts/rebuild-our-team-2026-07.ts`) as heading + `staff_card`
+  sections referencing staff rows: Clergy (name-prefix detection —
+  Rev./Fr./Msgr./Deacon) then Parish Staff, ordered by orderingPriority.
+  Editing/deactivating a person in `/admin/staff` now updates the page
+  automatically; the old prose blocks are backed up at
+  `scripts/data/our-team-sections-backup-2026-07-28.json`. Staff table
+  holds 17 active real staff with photos (4 dev-seed rows deactivated).
+- **wp-content media migration COMPLETE** (`scripts/migrate-wp-media-2026-07.ts`,
+  idempotent — blob_assets.caption records each source URL for re-run
+  dedupe). 82 unique assets (PGC/harassment/whistleblower policies,
+  Called & Gifted library, LifeLine weekly guides, Walk With One guides,
+  WWP FAQ, Family Sacrament doc, Respect Life docs from the dead
+  adventii.dev mirror, inline post images) downloaded from the live WP
+  host, mirrored into Vercel Blob under `wp-import/files/`, and every
+  reference rewritten across page_sections, posts, and site settings
+  (incl. redirect targets like /pilgrimage → PDF). Combined with 18.2's
+  236 post images: **zero own-host wp-content references remain in the
+  database** — the media dependency on WordPress is fully severed.
+  External hosts' wp-content (rcan.org, olastrafford.org) deliberately
+  left alone.
+- The full WP media library (unreferenced files) is NOT mirrored — take a
+  one-time backup of `wp-content/uploads` before decommissioning WP if an
+  archive is wanted.
 
 ## 🛑 Paused — end-to-end testing in progress
 
