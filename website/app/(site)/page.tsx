@@ -12,6 +12,12 @@ import { HOMEPAGE_PARENT_ID } from "@/app/(admin)/admin/homepage/constants";
 
 export const revalidate = 3600;
 
+export const metadata = {
+  title: { absolute: "Parish Community of Saint Helen — Westfield, NJ" },
+  description:
+    "Mass times, livestream, ministries, events, faith formation, and giving at the Parish Community of Saint Helen in Westfield, New Jersey. All are welcome.",
+};
+
 export default async function HomePage() {
   const [banner, weeklyMassTimes, settings, sectionRows] = await Promise.all([
     getActiveSeasonalBanner(),

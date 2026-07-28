@@ -9,6 +9,7 @@ import {
   posts,
 } from "@/db/schema";
 import { SITE_ORIGIN } from "@/lib/seo";
+import { STANDALONE_SLUGS } from "@/lib/ministry-route";
 
 export const revalidate = 3600;
 
@@ -71,6 +72,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_ORIGIN}/formation`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_ORIGIN}/blog`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${SITE_ORIGIN}/bulletin`, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${SITE_ORIGIN}/give`, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${SITE_ORIGIN}/contact`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_ORIGIN}/sacraments`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_ORIGIN}/baptism`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_ORIGIN}/funerals`, changeFrequency: "monthly", priority: 0.6 },
   ];
 
   const dynamicRoutes: MetadataRoute.Sitemap = [
@@ -82,10 +88,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: "weekly" as const,
         priority: 0.7,
       })),
+    // The 12 standalone ministries canonicalize to their root URL
+    // (e.g. /adoration) — emit that instead of /ministries/<slug> so the
+    // sitemap matches the canonicalUrl on each row.
     ...ministryRows
       .filter((r) => !r.noindex)
       .map((r) => ({
-        url: `${SITE_ORIGIN}/ministries/${r.slug}`,
+        url: (STANDALONE_SLUGS as readonly string[]).includes(r.slug)
+          ? `${SITE_ORIGIN}/${r.slug}`
+          : `${SITE_ORIGIN}/ministries/${r.slug}`,
         lastModified: r.updatedAt,
         changeFrequency: "monthly" as const,
         priority: 0.7,
@@ -106,10 +117,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: "monthly" as const,
         priority: 0.6,
       })),
+    // Sacrament pages live in the pages table as "sacraments-<slug>" but
+    // canonicalize to /sacraments/<slug> — emit the canonical URL.
     ...pageRows
       .filter((r) => !r.noindex)
       .map((r) => ({
-        url: `${SITE_ORIGIN}/p/${r.slug}`,
+        url: r.slug.startsWith("sacraments-")
+          ? `${SITE_ORIGIN}/sacraments/${r.slug.slice("sacraments-".length)}`
+          : `${SITE_ORIGIN}/p/${r.slug}`,
         lastModified: r.updatedAt,
         changeFrequency: "monthly" as const,
         priority: 0.6,

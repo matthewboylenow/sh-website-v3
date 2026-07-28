@@ -2,7 +2,7 @@
 
 > **Read this first, every session.** This is the running log of what's shipped, what's in flight, what's queued, and what's broken. It pairs with `CLAUDE.md` (rules) and `/design-ref/` (specs). Update it after every meaningful step.
 
-Last updated: **2026-07-24**
+Last updated: **2026-07-28**
 
 ---
 
@@ -38,6 +38,8 @@ Last updated: **2026-07-24**
 | 14.J | Favicon CMS + last-edited-by + content-editor playbook + logo-upload fix | ✅ Done |
 | 15 | Sacramental intake forms — funeral + baptism (PDF + email + admin) | ✅ Done |
 | 16 | June reconciliation — 18 ministry bodies + 9 evergreen pages + standalone root URLs + redirects + inquiry fallback | ✅ Done |
+| 17 | July staff ministry punch list (51 items) | ✅ Done |
+| 18 | Legacy-URL reconciliation — 23 new CMS pages, redirect overhaul, **middleware redirect bug fixed** | ✅ Done |
 
 Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).
 
@@ -665,6 +667,100 @@ the script treats those as no-ops.
 copy, ChristLife 2026 dates, Adoration volunteering description
 (Tracey), Respect Life IVF-talk video edit, Family Support updates
 (Maria → Matt), soup-kitchen naming confirmation from Marilyn.
+
+## ✅ Shipped — Wave 18 · Legacy-URL reconciliation (2026-07-28)
+
+Full audit of the live sainthelen.org sitemap (126 URLs) against the new
+site. Every legacy URL now resolves — via a real page, a formation/sacrament
+route, or a redirect. Two **pre-existing production bugs found and fixed**
+along the way. Build green; all 38 redirect paths + 39 destination pages
+smoke-tested against a local dev server wired to Neon.
+
+### 🐛 Bug 1 — vanity redirects never ran (middleware export precedence)
+
+`middleware.ts` exported both a named `middleware` (the bare Auth.js
+wrapper) and a `default` export (the wrapped handler with the vanity-URL
+redirect logic). **Next.js prefers the named `middleware` export**, so the
+redirect logic was silently dead since Wave 13.F — all 85 admin-managed
+redirects were inert in every environment. Fixed by keeping `auth`
+module-private and default-exporting only the wrapped handler. A comment
+now guards against regression.
+
+### 🐛 Bug 2 — 12 standalone roots shadowed by stale redirects
+
+The pre-Wave-16 standalone-pages import left `/adoration → /p/adoration`
+(× 12, all pointing at *draft* pages that 404 publicly). Once Bug 1 was
+fixed these would have broken all 12 standalone ministry URLs. The import
+script now deletes them (`REMOVE_FROMS`); the 12 root routes serve directly
+again.
+
+### 23 new CMS pages (scripts/import-legacy-pages-2026-07.ts)
+
+Content pulled from the live WP site 2026-07-28, imported via the same
+marked → sanitize-html → htmlToBlocks pipeline as June. All published at
+`/p/<slug>` with a permanent redirect from the legacy root URL:
+
+pgc · inclusive-mass · marriage (World Marriage Day, cross-links to
+/sacraments/marriage + /pre-cana) · more (Programs & Activities hub) ·
+path (Discipleship Path) · subscribe · religious-education ·
+reled-registration (2026-27 fees + links) · lifeline-resources ·
+walk-with-one · connect-survey · fest · sponsor · presence · advent ·
+lent · easter-scroll · current-series (message series) · cgteam ·
+mens-cornerstone-team-candidates · summer-discipleship-discovery-series ·
+synod-recap · ad-lead
+
+Script is idempotent (verified: second run = 0 changes) and safe to re-run.
+`DRY_RUN=1` previews.
+
+### Redirect manifest changes (85 → 73 entries)
+
+- +5 new: `/youth → /youth-ministry`, `/stewardship-spotlight/*` (prefix),
+  `/message-series` + `/message-series/*`, `/lifelines-resources`.
+- 30 REVIEW placeholders retargeted from generic fallbacks (`/`, `/events`,
+  `/ministries`, `/contact`) to the real content pages above.
+- `/stewardship-spotlight` + `/stewardship-spotlight/*` →
+  `/blog?category=stewardship` (per Matthew 2026-07-28).
+- `/inclusive-mass-mailing-list` → external OnlineReg URL.
+- −12 stale standalone shadows removed (Bug 2).
+- **Middleware now supports prefix rules**: a `from` ending in `/*` matches
+  every path under it (exact matches win first).
+
+### Giving settings + /give page
+
+- `giving.primaryUrl` filled with `https://my.sainthelen.org/give/make-a-gift`;
+  Memorial & Restricted designations added (fill-only-if-empty — admin edits
+  never clobbered).
+- `/give` page code: new "Other ways to give" section (Text-to-Give GIVE →
+  908-860-8444, offering envelopes via sthelen@sainthelen.org, stock &
+  securities) + navy "Stewardship Spotlights" banner → /blog?category=stewardship.
+
+### SEO fixes
+
+- `app/sitemap.ts`: added /give, /contact, /sacraments, /baptism, /funerals;
+  the 12 standalone ministries now emit their root URL (matches canonicalUrl);
+  sacrament pages emit `/sacraments/<slug>` instead of `/p/sacraments-<slug>`.
+  122 URLs total (live WP sitemap: 126).
+- Homepage finally has its own metadata (absolute title + description).
+
+### ⚠️ Follow-ups / still needs a human
+
+- **wp-content assets**: ~30 links in the imported pages point at
+  `sainthelen.org/wp-content/uploads/...` PDFs/DOCX (PGC code of conduct,
+  Walk With One guides, LifeLine weekly guides, Called & Gifted library,
+  Family Sacrament doc, Inclusive Mass follow-along). They work until the
+  DNS flip, then break. Migrate to Vercel Blob (media library) before
+  launch — `grep wp-content` across page_sections finds them all.
+- **/subscribe** has no embedded signup form — links to text-CONNECT and
+  comms.sainthelen.org. If there's a Flocknote/embed URL, add it via the
+  admin sections editor.
+- **Seasonal pages** (advent, lent, christmas→advent redirect, easter-scroll,
+  current-series, fest, sponsor) imported as-is from the current season —
+  parish staff should refresh them each season via /admin/pages.
+- **DRE contact emails** on reled-registration were Cloudflare-obfuscated on
+  the WP side; imported with names + phone extensions only. Add emails via
+  admin if desired.
+- Subsplash livestream embed still pending (Step 8) — /p/live + /stream +
+  /mass all ready for it.
 
 ## 🛑 Paused — end-to-end testing in progress
 

@@ -27,9 +27,13 @@ async function getRedirects(reqUrl: string): Promise<Redirect[]> {
   }
 }
 
-export const { auth: middleware } = NextAuth(authConfig);
+// NOTE: this must NOT be exported as `middleware` — Next prefers a named
+// `middleware` export over the default export, and a bare `auth` export
+// here silently replaced the wrapped handler below (vanity redirects never
+// ran). Keep `auth` module-private and default-export the wrapped handler.
+const { auth } = NextAuth(authConfig);
 
-export default middleware(async (req) => {
+export default auth(async (req) => {
   const pathname = req.nextUrl.pathname;
 
   // Skip vanity-redirect lookup for Next internals, the API, and admin
@@ -41,7 +45,16 @@ export default middleware(async (req) => {
 
   if (!skipRedirects) {
     const list = await getRedirects(req.url);
-    const match = list.find((r) => r.from === pathname);
+    // Exact match wins; otherwise a prefix rule ("/legacy-section/*")
+    // catches every path under it — used for retired WP sections whose
+    // children all map to one destination (e.g. /stewardship-spotlight/*).
+    const match =
+      list.find((r) => r.from === pathname) ??
+      list.find(
+        (r) =>
+          r.from.endsWith("/*") &&
+          pathname.startsWith(r.from.slice(0, -1)),
+      );
     if (match) {
       const target = new URL(match.to, req.url);
       const status = match.permanent ? 308 : 307;

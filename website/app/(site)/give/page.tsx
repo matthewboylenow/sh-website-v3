@@ -173,6 +173,68 @@ export default async function GivePage() {
             </div>
           )}
 
+          <div className="mt-16">
+            <h2 className="font-serif text-2xl font-bold text-navy">
+              Other ways to give
+            </h2>
+            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="flex flex-col gap-2 rounded-lg border border-rule bg-white p-6">
+                <span className="sh-eyebrow">Text-to-Give</span>
+                <p className="text-sm text-ink-2">
+                  Text <strong>GIVE</strong> to{" "}
+                  <a
+                    href="sms:9088608444&body=GIVE"
+                    className="font-semibold text-rust-dark hover:text-rust"
+                  >
+                    (908) 860-8444
+                  </a>{" "}
+                  and follow the prompts — a quick, secure gift from your
+                  phone.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 rounded-lg border border-rule bg-white p-6">
+                <span className="sh-eyebrow">Offering envelopes</span>
+                <p className="text-sm text-ink-2">
+                  Prefer envelopes? Request a set by emailing{" "}
+                  <a
+                    href="mailto:sthelen@sainthelen.org"
+                    className="font-semibold text-rust-dark hover:text-rust"
+                  >
+                    sthelen@sainthelen.org
+                  </a>{" "}
+                  or calling the parish office.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 rounded-lg border border-rule bg-white p-6">
+                <span className="sh-eyebrow">Stock &amp; securities</span>
+                <p className="text-sm text-ink-2">
+                  Donate appreciated stocks, bonds, or mutual funds for
+                  potential tax advantages. Contact the parish office for the
+                  transfer form and instructions.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-16 rounded-lg bg-navy p-6 sh-on-dark sm:p-8">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gold">
+              Stewardship Spotlights
+            </span>
+            <h2 className="mt-2 font-serif text-2xl font-bold text-white">
+              Meet our parishioners
+            </h2>
+            <p className="mt-2 max-w-[60ch] text-sm text-white/85">
+              Stories of time, talent, and treasure from the Saint Helen
+              community — see how your generosity is making a difference.
+            </p>
+            <Link
+              href="/blog?category=stewardship"
+              className="mt-5 inline-flex items-center gap-2 rounded-pill bg-white/15 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/25 hover:text-white"
+            >
+              Read their stories <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+
           <div className="mt-16 rounded-lg border border-rule bg-cream p-6 sm:p-8">
             <h2 className="font-serif text-xl font-bold text-navy">
               Need help giving?
