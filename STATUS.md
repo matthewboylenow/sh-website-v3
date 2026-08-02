@@ -2,7 +2,7 @@
 
 > **Read this first, every session.** This is the running log of what's shipped, what's in flight, what's queued, and what's broken. It pairs with `CLAUDE.md` (rules) and `/design-ref/` (specs). Update it after every meaningful step.
 
-Last updated: **2026-07-28**
+Last updated: **2026-08-02**
 
 ---
 
@@ -44,6 +44,8 @@ Last updated: **2026-07-28**
 | 18.2 | WP backend port — 239 blog posts, 214 Redirection short links, intake recipients | ✅ Done |
 | 18.3 | OCIA inquirer form (/ocia-form) + prayer requests (/prayers + API) | ✅ Done |
 | 18.4 | Our Team → staff_card blocks + full wp-content media migration (82 assets) | ✅ Done |
+| 19 | Test harness + CI + shared role predicates | ✅ Done (221 tests, GitHub Actions on push/PR) |
+| 19.1 | Starter layouts on "+ New page" | ✅ Done (blank / simple / ministry landing / upcoming event) |
 
 Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).
 
@@ -1005,6 +1007,110 @@ Build paused after Step 6. Step 7 deferred. Step 8 (Fathom + Subsplash) queued. 
 
 - ~~`/events/[slug]` detail pages~~ — built in Wave 13.E.4 with recurrence summary + upcoming-dates panel.
 - ~~Homepage is hardcoded~~ — Wave 14 made it fully CMS-editable at `/admin/homepage`.
+
+## Wave 19 — test harness, CI, role predicates, starter layouts
+
+Built 2 August 2026. Everything below is additive; no existing behaviour was
+changed.
+
+### 19.0 — the safety net
+
+Before this wave the repo had zero test files, no CI, and no `.github`
+directory. 38,000 lines with nothing watching them.
+
+- **Vitest** (`vitest.config.ts`, `tests/setup.ts`). Runs in Node, no jsdom,
+  no network. `TZ` pinned to `America/New_York` — the parish's zone, not
+  Vercel's UTC, because several date bugs only surface when the two differ.
+- **`.github/workflows/ci.yml`** — `typecheck`, `lint`, `test` on every push
+  and PR, pnpm 10 / Node 22, concurrency-cancelled per branch. Deliberately
+  does **not** run `next build`: the build needs `DATABASE_URL` and the auth
+  secrets, and Vercel already builds every push.
+- **221 tests across 6 suites.** See `website/tests/README.md` for the map.
+- **`tests/fixtures/sections.ts`** — one valid payload per block kind,
+  exhaustive-checked against `PageSectionPayload` at compile time. Add a
+  block kind and this file stops type-checking until you add it there.
+- **Integration tests** (`tests/integration/*.db.test.ts`) skip unless
+  `TEST_DATABASE_URL` is set. Verified locally against Postgres 16 with all
+  24 migrations applied.
+
+### 19.1 — `lib/redirect-match.ts`
+
+The vanity-redirect matching logic was inlined in the `auth(...)` closure in
+`middleware.ts`, where it could not be tested without standing up NextAuth
+and a `NextRequest`. Lifted out verbatim into three pure functions —
+`shouldSkipRedirects`, `matchRedirect`, `resolveRedirectTarget` — plus
+`redirectStatus`. `middleware.ts` now calls them. No behaviour change; 29
+tests around it, including the Wave 18 failure mode.
+
+### 19.2 — `lib/authz.ts`
+
+The same role check was copy-pasted into ~24 server-action files and the
+copies had drifted into three different spellings. `staff/_actions.ts` named
+its guard `requireWriter` but was admin-only; `homepage/_actions.ts` named
+its guard `requireAdmin` but was the writer check. With three roles the
+spellings agree. With a fourth they would not, silently, in whichever files
+nobody remembered to update.
+
+`lib/authz.ts` is now the single matrix: `canWriteContent`, `canAdminister`,
+`canAccessMinistry`, `inquiryScopeFor`. All 24 files call it. **Behaviour is
+identical for all three current roles** — including the two oddly-named
+guards, which were preserved exactly and annotated rather than "fixed". The
+naming and the homepage/staff asymmetry are open questions, not decisions
+this wave made.
+
+### 19.3 — starter layouts
+
+`lib/page-starter-layouts.ts` plus a picker on `/admin/pages/new`. Choosing
+a layout seeds ordinary `page_sections` rows and gets out of the way: no
+template entity, no link back, nothing to keep in sync. After creation the
+rows are indistinguishable from blocks added by hand.
+
+Four options: **Blank**, **Simple text page** (heading / rich text /
+callout), **Ministry landing** (image+text / rich text / featured events /
+buttons), **Upcoming event** (callout with registration CTA / overview /
+card grid for dates or sessions / link list for documents / buttons — built
+for pilgrimages, retreats and series like the Eucharistic Congress, Manresa,
+World Marriage Day).
+
+Seeding is deliberately **not** in a transaction with the page insert. If
+seeding fails the page is still created empty, because a create button that
+appears to do nothing is worse than a page you have to fill in by hand.
+
+Also fixed here: the slug hint on the page form still said `/p/<slug>`,
+stale since Wave 18.1.
+
+### Known gaps pinned by tests, not fixed
+
+These are real defects on the current build. Each has a test that documents
+current behaviour so a change is deliberate rather than accidental. All are
+in `tests/recurrence.test.ts` under `known gaps`, except the last two.
+
+1. **DST is not handled in recurrence expansion.** Expansion copies the base
+   event's *UTC* clock onto every generated day. A 7pm ET event created in
+   August is stored as `23:00Z` and still emits `23:00Z` in November, which
+   is 6pm ET. Every recurring event shifts by an hour for half the year.
+   Fixing it means expanding in `America/New_York` rather than UTC, and
+   `lib/dates.ts` needs an explicit `timeZone` at format time too.
+2. **Exception dates silently no-op for a non-UTC admin.** `RecurrenceEditor`
+   builds the exception timestamp with `base.getHours()` (browser-local) fed
+   into `Date.UTC(...)`, while expansion generates with `getUTCHours()`. For
+   anyone outside UTC the strings do not match, so the cancelled week still
+   appears. Highest-priority of the three — it fails quietly and looks like
+   the editor is broken.
+3. **A weekly `until` is checked against the week, not the occurrence.** The
+   loop tests the Monday-anchored cursor, so an occurrence can land a few
+   days past the end date.
+4. **The embed "allowlist" does not constrain hosts.** `provider` selects
+   the wrapper markup and iframe height; the URL is only checked for being
+   parseable. A `google_form` embed can point anywhere, and `javascript:` /
+   `data:` URLs pass validation because zod's `.url()` delegates to the URL
+   constructor. Admin-only input, so this is hardening rather than an open
+   hole — but it is described as an allowlist and is not one. Pinned in
+   `tests/page-sections-validator.test.ts`.
+5. **There are 17 block kinds, not 18.** 16 leaves plus `columns`. This doc
+   and the handoff notes both said 18.
+
+---
 
 ## What's left before launch
 

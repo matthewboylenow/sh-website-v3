@@ -5,14 +5,15 @@ import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { ministries, ministryEdits } from "@/db/schema";
+import { FORBIDDEN_ADMIN_ONLY, canAdminister } from "@/lib/authz";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user) return { ok: false as const, error: "Not signed in" };
-  if (session.user.role !== "admin")
-    return { ok: false as const, error: "Forbidden — admins only" };
+  if (!canAdminister(session.user.role))
+    return { ok: false as const, error: FORBIDDEN_ADMIN_ONLY };
   return { ok: true as const, session };
 }
 

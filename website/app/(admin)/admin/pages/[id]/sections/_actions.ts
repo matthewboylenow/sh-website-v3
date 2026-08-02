@@ -9,6 +9,7 @@ import {
   type SaveSectionsResult,
 } from "@/lib/server/page-sections-actions";
 import type { MinistrySectionsManifestInput } from "@/lib/validators/page-sections";
+import { FORBIDDEN, canWriteContent } from "@/lib/authz";
 
 /**
  * Pages wrapper for the polymorphic section saver. Admin + editor only.
@@ -19,8 +20,8 @@ export async function savePageSectionsAction(
 ): Promise<SaveSectionsResult> {
   const session = await auth();
   if (!session?.user) return { ok: false, error: "Not signed in" };
-  if (session.user.role === "ministry_lead") {
-    return { ok: false, error: "Forbidden" };
+  if (!canWriteContent(session.user.role)) {
+    return { ok: false, error: FORBIDDEN };
   }
 
   const [p] = await db

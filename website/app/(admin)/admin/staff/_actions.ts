@@ -11,6 +11,7 @@ import {
   StaffCreateSchema,
   StaffUpdateSchema,
 } from "@/lib/validators/staff";
+import { FORBIDDEN_ADMIN_ONLY, canAdminister } from "@/lib/authz";
 
 type ActionResult =
   | { ok: true; id: string; slug: string }
@@ -20,9 +21,10 @@ type ActionResult =
 async function requireWriter() {
   const session = await auth();
   if (!session?.user) return { ok: false as const, error: "Not signed in" };
-  // Staff is admin-only per backend.html §07 roles table.
-  if (session.user.role !== "admin") {
-    return { ok: false as const, error: "Forbidden — admins only" };
+  // Staff is admin-only per backend.html §07 roles table, despite the
+  // requireWriter name. See lib/authz.ts for the full matrix.
+  if (!canAdminister(session.user.role)) {
+    return { ok: false as const, error: FORBIDDEN_ADMIN_ONLY };
   }
   return { ok: true as const, session };
 }

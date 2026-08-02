@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { siteSettings, type MatchmakerManifest } from "@/db/schema";
 import { MatchmakerManifestSchema } from "@/lib/validators/matchmaker";
+import { FORBIDDEN_ADMIN_ONLY, canAdminister } from "@/lib/authz";
 
 type ActionResult =
   | { ok: true }
@@ -15,8 +16,8 @@ type ActionResult =
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user) return { ok: false as const, error: "Not signed in" };
-  if (session.user.role !== "admin")
-    return { ok: false as const, error: "Forbidden — admins only" };
+  if (!canAdminister(session.user.role))
+    return { ok: false as const, error: FORBIDDEN_ADMIN_ONLY };
   return { ok: true as const };
 }
 

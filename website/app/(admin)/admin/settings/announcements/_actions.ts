@@ -15,6 +15,7 @@ import {
   AnnouncementCreateSchema,
   AnnouncementUpdateSchema,
 } from "@/lib/validators/announcements";
+import { FORBIDDEN_ADMIN_ONLY, canAdminister } from "@/lib/authz";
 
 type ActionResult =
   | { ok: true; id: string }
@@ -24,8 +25,8 @@ type ActionResult =
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user) return { ok: false as const, error: "Not signed in" };
-  if (session.user.role !== "admin") {
-    return { ok: false as const, error: "Forbidden — admins only" };
+  if (!canAdminister(session.user.role)) {
+    return { ok: false as const, error: FORBIDDEN_ADMIN_ONLY };
   }
   return { ok: true as const };
 }

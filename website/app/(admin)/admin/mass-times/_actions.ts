@@ -13,6 +13,7 @@ import {
   MassTimeUpdateSchema,
   OVERRIDE_KINDS,
 } from "@/lib/validators/mass-times";
+import { FORBIDDEN, canWriteContent } from "@/lib/authz";
 
 type ActionResult =
   | { ok: true; id: string }
@@ -22,8 +23,8 @@ type ActionResult =
 async function requireWriter() {
   const session = await auth();
   if (!session?.user) return { ok: false as const, error: "Not signed in" };
-  if (session.user.role === "ministry_lead")
-    return { ok: false as const, error: "Forbidden" };
+  if (!canWriteContent(session.user.role))
+    return { ok: false as const, error: FORBIDDEN };
   return { ok: true as const, session };
 }
 

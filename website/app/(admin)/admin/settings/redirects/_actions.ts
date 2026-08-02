@@ -9,6 +9,7 @@ import {
   RedirectsManifestSchema,
   type RedirectsManifestInput,
 } from "@/lib/validators/redirects";
+import { FORBIDDEN_ADMIN_ONLY, canAdminister } from "@/lib/authz";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -17,8 +18,8 @@ export async function saveRedirectsAction(
 ): Promise<Result> {
   const session = await auth();
   if (!session?.user) return { ok: false, error: "Not signed in" };
-  if (session.user.role !== "admin") {
-    return { ok: false, error: "Forbidden — admins only" };
+  if (!canAdminister(session.user.role)) {
+    return { ok: false, error: FORBIDDEN_ADMIN_ONLY };
   }
 
   const parsed = RedirectsManifestSchema.safeParse(manifest);

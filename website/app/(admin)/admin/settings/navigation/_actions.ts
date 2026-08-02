@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { siteSettings } from "@/db/schema";
 import { NavManifestSchema, type NavManifestInput } from "@/lib/validators/nav";
+import { FORBIDDEN_ADMIN_ONLY, canAdminister } from "@/lib/authz";
 
 type Result =
   | { ok: true }
@@ -16,8 +17,8 @@ export async function saveNavManifestAction(
 ): Promise<Result> {
   const session = await auth();
   if (!session?.user) return { ok: false, error: "Not signed in" };
-  if (session.user.role !== "admin") {
-    return { ok: false, error: "Forbidden — admins only" };
+  if (!canAdminister(session.user.role)) {
+    return { ok: false, error: FORBIDDEN_ADMIN_ONLY };
   }
 
   const parsed = NavManifestSchema.safeParse(manifest);

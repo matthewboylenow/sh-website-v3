@@ -15,14 +15,17 @@ import {
 } from "@/lib/server/page-sections-actions";
 import type { MinistrySectionsManifestInput } from "@/lib/validators/page-sections";
 import { HOMEPAGE_PARENT_ID } from "./constants";
+import { FORBIDDEN, canWriteContent } from "@/lib/authz";
 
 type Result = { ok: true } | { ok: false; error: string };
 
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user) return { ok: false as const, error: "Not signed in" };
-  if (session.user.role === "ministry_lead") {
-    return { ok: false as const, error: "Forbidden" };
+  // Named requireAdmin, but this is deliberately the writer check —
+  // editors may edit the homepage. See lib/authz.ts for the full matrix.
+  if (!canWriteContent(session.user.role)) {
+    return { ok: false as const, error: FORBIDDEN };
   }
   return { ok: true as const };
 }

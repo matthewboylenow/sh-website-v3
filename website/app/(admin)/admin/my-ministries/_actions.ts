@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { ministries, ministryEdits, ministryLeads } from "@/db/schema";
 import { ENABLE_MINISTRY_SELF_SERVICE } from "@/lib/flags";
 import { MinistryEditProposedSchema } from "@/lib/validators/ministry-edits";
+import { canWriteContent } from "@/lib/authz";
 
 type ActionResult =
   | { ok: true; id: string }
@@ -30,8 +31,7 @@ export async function submitMinistryEditAction(
   const session = await auth();
   if (!session?.user) return { ok: false, error: "Not signed in" };
 
-  const isPrivileged =
-    session.user.role === "admin" || session.user.role === "editor";
+  const isPrivileged = canWriteContent(session.user.role);
   const leadsThis = session.user.ministryIds.includes(ministryId);
 
   if (!isPrivileged && !leadsThis) {
