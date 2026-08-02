@@ -1,0 +1,60 @@
+name: CI
+
+# Runs on every push and every pull request. Three gates, all of which can
+# run without a database, without secrets, and without network access to
+# anything but the package registry:
+#
+#   typecheck  — tsc --noEmit
+#   lint       — eslint
+#   test       — vitest
+#
+# The production build is deliberately NOT run here. `next build` needs
+# DATABASE_URL and the auth secrets, and a CI job that needs production
+# credentials is a job people eventually disable. Vercel builds every push
+# already; this workflow is the part Vercel does not do.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+# A second push to the same branch cancels the first — no point burning
+# minutes on a commit that has already been superseded.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: website
+
+jobs:
+  verify:
+    name: typecheck · lint · test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test

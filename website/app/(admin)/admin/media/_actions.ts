@@ -6,6 +6,7 @@ import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { blobAssets } from "@/db/schema";
+import { FORBIDDEN_ADMIN_ONLY, canAdminister } from "@/lib/authz";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -23,8 +24,8 @@ export async function deleteBlobAssetAction(
 ): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user) return { ok: false, error: "Not signed in" };
-  if (session.user.role !== "admin")
-    return { ok: false, error: "Forbidden — admins only" };
+  if (!canAdminister(session.user.role))
+    return { ok: false, error: FORBIDDEN_ADMIN_ONLY };
 
   const [row] = await db
     .select({ blobUrl: blobAssets.blobUrl })

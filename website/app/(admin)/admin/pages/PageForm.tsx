@@ -5,6 +5,10 @@ import { useState, useTransition } from "react";
 import { AdminField } from "@/components/admin/AdminField";
 import { PhotoUploader } from "@/components/admin/PhotoUploader";
 import { SeoPanel } from "@/components/admin/SeoPanel";
+import {
+  STARTER_LAYOUTS,
+  type StarterLayoutId,
+} from "@/lib/page-starter-layouts";
 import { createPageAction, updatePageAction } from "./_actions";
 
 type PageFormValues = {
@@ -37,6 +41,7 @@ export function PageForm({
   const [pending, start] = useTransition();
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [topError, setTopError] = useState<string | null>(null);
+  const [starterLayout, setStarterLayout] = useState<StarterLayoutId>("blank");
 
   const onSubmit = (formData: FormData) => {
     setErrors({});
@@ -47,7 +52,15 @@ export function PageForm({
           ? await createPageAction(formData)
           : await updatePageAction(pageId!, formData);
       if (result.ok) {
-        router.push(`/admin/pages/${result.id}?saved=1`);
+        // A starter layout has already put blocks on the page, so drop the
+        // editor straight into Sections rather than an overview screen
+        // whose content they cannot see yet.
+        const seeded = mode === "create" && starterLayout !== "blank";
+        router.push(
+          seeded
+            ? `/admin/pages/${result.id}/sections`
+            : `/admin/pages/${result.id}?saved=1`,
+        );
         router.refresh();
         return;
       }
@@ -81,7 +94,7 @@ export function PageForm({
           name="slug"
           label="URL slug"
           required
-          hint="Public URL is /p/<slug>. Lowercase letters, numbers, hyphens only."
+          hint="Public URL is /<slug>. Lowercase letters, numbers, hyphens only."
           errors={errors.slug}
         >
           <input
@@ -112,11 +125,63 @@ export function PageForm({
           />
         </AdminField>
 
-        <p className="rounded-md border border-dashed border-rule bg-cream/40 px-4 py-3 text-xs text-ink-3">
-          Long-form content lives in <strong>Sections</strong> — save the
-          page first, then click <em>Sections</em> to add rich text, images,
-          embeds, card grids, and more.
-        </p>
+        {mode === "create" ? (
+          <fieldset className="rounded-lg border border-rule bg-white p-5">
+            <legend className="px-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
+              Start from
+            </legend>
+            <p className="mb-4 text-xs text-ink-3">
+              Adds a set of blocks to save you building the page from
+              scratch. Everything stays editable afterwards — delete what you
+              don&rsquo;t want.
+            </p>
+            <input type="hidden" name="starterLayout" value={starterLayout} />
+            <div className="space-y-2">
+              {STARTER_LAYOUTS.map((layout) => {
+                const selected = starterLayout === layout.id;
+                return (
+                  <label
+                    key={layout.id}
+                    className={
+                      "flex cursor-pointer gap-3 rounded-md border p-3 transition-colors " +
+                      (selected
+                        ? "border-rust bg-rust-pale/40"
+                        : "border-rule hover:bg-cream/40")
+                    }
+                  >
+                    <input
+                      type="radio"
+                      name="starterLayoutChoice"
+                      value={layout.id}
+                      checked={selected}
+                      onChange={() => setStarterLayout(layout.id)}
+                      className="mt-1"
+                    />
+                    <span className="flex-1">
+                      <span className="block text-sm font-semibold text-navy">
+                        {layout.label}
+                      </span>
+                      <span className="block text-xs text-ink-2">
+                        {layout.description}
+                      </span>
+                      {layout.blocks.length > 0 && (
+                        <span className="mt-1 block font-mono text-[11px] text-ink-3">
+                          {layout.blocks.join(" · ")}
+                        </span>
+                      )}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        ) : (
+          <p className="rounded-md border border-dashed border-rule bg-cream/40 px-4 py-3 text-xs text-ink-3">
+            Long-form content lives in <strong>Sections</strong> — click{" "}
+            <em>Sections</em> to add rich text, images, embeds, card grids,
+            and more.
+          </p>
+        )}
       </div>
 
       <aside className="space-y-5">

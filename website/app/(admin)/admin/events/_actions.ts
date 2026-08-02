@@ -12,6 +12,7 @@ import {
 } from "@/lib/validators/events";
 import { editorFields } from "@/lib/audit";
 import { parseSeoFromForm } from "@/lib/validators/seo";
+import { FORBIDDEN, canWriteContent } from "@/lib/authz";
 
 /**
  * Server Actions for the events admin. All mutations end with
@@ -31,8 +32,8 @@ async function requireWriter() {
   if (!session?.user) {
     return { ok: false as const, error: "Not signed in" };
   }
-  if (session.user.role === "ministry_lead") {
-    return { ok: false as const, error: "Forbidden" };
+  if (!canWriteContent(session.user.role)) {
+    return { ok: false as const, error: FORBIDDEN };
   }
   return { ok: true as const, session };
 }

@@ -10,6 +10,7 @@ import {
   InquiryStatusUpdateSchema,
   type InquiryStatusUpdateInput,
 } from "@/lib/validators/inquiries";
+import { canWriteContent, inquiryScopeFor } from "@/lib/authz";
 
 type Result =
   | { ok: true }
@@ -23,8 +24,7 @@ async function authorize(inquiryId: string) {
   const session = await auth();
   if (!session?.user) return { ok: false as const, error: "Not signed in" };
 
-  const role = session.user.role;
-  if (role === "admin" || role === "editor") {
+  if (canWriteContent(session.user.role)) {
     return { ok: true as const, session };
   }
 
@@ -195,9 +195,5 @@ export async function visibleMinistryFilter(): Promise<
 > {
   const session = await auth();
   if (!session?.user) return { kind: "none" };
-  const role = session.user.role;
-  if (role === "admin" || role === "editor") return { kind: "all" };
-  const ids = session.user.ministryIds ?? [];
-  if (ids.length === 0) return { kind: "none" };
-  return { kind: "scope", ministryIds: ids };
+  return inquiryScopeFor(session.user.role, session.user.ministryIds);
 }

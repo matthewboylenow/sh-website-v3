@@ -9,6 +9,7 @@ import {
   type SaveSectionsResult,
 } from "@/lib/server/page-sections-actions";
 import type { MinistrySectionsManifestInput } from "@/lib/validators/page-sections";
+import { canAccessMinistry } from "@/lib/authz";
 
 /**
  * Ministry-side wrapper for the polymorphic section saver. Authorization:
@@ -21,12 +22,8 @@ export async function saveMinistrySectionsAction(
   const session = await auth();
   if (!session?.user) return { ok: false, error: "Not signed in" };
 
-  const role = session.user.role;
-  if (role === "ministry_lead") {
-    const myIds = session.user.ministryIds ?? [];
-    if (!myIds.includes(ministryId)) {
-      return { ok: false, error: "You don't lead that ministry" };
-    }
+  if (!canAccessMinistry(session.user.role, session.user.ministryIds, ministryId)) {
+    return { ok: false, error: "You don't lead that ministry" };
   }
 
   // Confirm the parent exists before writing.

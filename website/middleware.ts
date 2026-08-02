@@ -1,6 +1,13 @@
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import authConfig from "./auth.config";
+import {
+  matchRedirect,
+  redirectStatus,
+  resolveRedirectTarget,
+  shouldSkipRedirects,
+  type Redirect,
+} from "./lib/redirect-match";
 
 /**
  * Edge middleware. Order:
@@ -11,8 +18,6 @@ import authConfig from "./auth.config";
  * /api/redirects route's revalidateTag("redirects") bust, so the hot
  * path is one in-memory cache hit per request after warmup.
  */
-
-type Redirect = { from: string; to: string; permanent?: boolean };
 
 async function getRedirects(reqUrl: string): Promise<Redirect[]> {
   try {
@@ -36,38 +41,14 @@ const { auth } = NextAuth(authConfig);
 export default auth(async (req) => {
   const pathname = req.nextUrl.pathname;
 
-  // Skip vanity-redirect lookup for Next internals, the API, and admin
-  // routes (admins shouldn't 307 mid-flow on their own paths).
-  const skipRedirects =
-    pathname.startsWith("/_next/") ||
-    pathname.startsWith("/api/") ||
-    pathname.startsWith("/admin");
-
-  if (!skipRedirects) {
+  // Matching logic lives in lib/redirect-match.ts so it can be unit tested
+  // without NextAuth or a NextRequest. Behaviour is unchanged.
+  if (!shouldSkipRedirects(pathname)) {
     const list = await getRedirects(req.url);
-    // Exact match wins; otherwise a prefix rule ("/legacy-section/*")
-    // catches every path under it. A "*" in the TARGET substitutes the
-    // matched suffix (e.g. /from-our-pastor/* → /blog/* maps each old
-    // permalink to its imported post); without "*", everything under the
-    // prefix lands on the one destination.
-    const match =
-      list.find((r) => r.from === pathname) ??
-      list.find(
-        (r) =>
-          r.from.endsWith("/*") &&
-          pathname.startsWith(r.from.slice(0, -1)),
-      );
+    const match = matchRedirect(list, pathname);
     if (match) {
-      let to = match.to;
-      if (match.from.endsWith("/*") && to.includes("*")) {
-        const suffix = pathname
-          .slice(match.from.length - 1)
-          .replace(/\/+$/, "");
-        to = to.replace("*", suffix);
-      }
-      const target = new URL(to, req.url);
-      const status = match.permanent ? 308 : 307;
-      return NextResponse.redirect(target, status);
+      const target = new URL(resolveRedirectTarget(match, pathname), req.url);
+      return NextResponse.redirect(target, redirectStatus(match));
     }
   }
 

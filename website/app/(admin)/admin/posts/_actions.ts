@@ -8,6 +8,7 @@ import { editorFields } from "@/lib/audit";
 import { parseSeoFromForm } from "@/lib/validators/seo";
 import { posts } from "@/db/schema";
 import { PostCreateSchema, PostUpdateSchema } from "@/lib/validators/posts";
+import { FORBIDDEN, canWriteContent } from "@/lib/authz";
 
 type ActionResult =
   | { ok: true; id: string; slug: string }
@@ -17,8 +18,8 @@ type ActionResult =
 async function requireWriter() {
   const session = await auth();
   if (!session?.user) return { ok: false as const, error: "Not signed in" };
-  if (session.user.role === "ministry_lead") {
-    return { ok: false as const, error: "Forbidden" };
+  if (!canWriteContent(session.user.role)) {
+    return { ok: false as const, error: FORBIDDEN };
   }
   return { ok: true as const, session };
 }

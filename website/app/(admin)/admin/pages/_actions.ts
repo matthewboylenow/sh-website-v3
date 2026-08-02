@@ -9,6 +9,8 @@ import { pages, pageSections } from "@/db/schema";
 import { editorFields } from "@/lib/audit";
 import { parseSeoFromForm } from "@/lib/validators/seo";
 import { PageCreateSchema, PageUpdateSchema } from "@/lib/validators/pages";
+import { FORBIDDEN, canWriteContent } from "@/lib/authz";
+import { sectionsForStarterLayout } from "@/lib/page-starter-layouts";
 
 type ActionResult =
   | { ok: true; id: string; slug: string }
@@ -18,8 +20,8 @@ type ActionResult =
 async function requireWriter() {
   const session = await auth();
   if (!session?.user) return { ok: false as const, error: "Not signed in" };
-  if (session.user.role !== "admin" && session.user.role !== "editor")
-    return { ok: false as const, error: "Forbidden" };
+  if (!canWriteContent(session.user.role))
+    return { ok: false as const, error: FORBIDDEN };
   return { ok: true as const, session };
 }
 
@@ -50,6 +52,8 @@ export async function createPageAction(formData: FormData): Promise<ActionResult
     };
   }
 
+  const starterSections = sectionsForStarterLayout(formData.get("starterLayout"));
+
   try {
     const [row] = await db
       .insert(pages)
@@ -61,6 +65,30 @@ export async function createPageAction(formData: FormData): Promise<ActionResult
       .returning({ id: pages.id, slug: pages.slug });
     revalidateTag("pages");
     if (!row) return { ok: false, error: "Insert returned no row" };
+
+    // Seed the chosen starter layout as ordinary section rows. These are
+    // fully editable afterwards and carry no link back to the layout.
+    //
+    // Deliberately not in a transaction with the page insert: if seeding
+    // fails, an empty page is a far better outcome than a create button
+    // that appears to do nothing. The editor can add blocks by hand.
+    if (starterSections.length > 0) {
+      try {
+        await db.insert(pageSections).values(
+          starterSections.map((payload, position) => ({
+            parentKind: "page" as const,
+            parentId: row.id,
+            position,
+            kind: payload.kind,
+            payload,
+          })),
+        );
+        revalidateTag("page-sections");
+      } catch {
+        // Swallowed on purpose — see above.
+      }
+    }
+
     return { ok: true, id: row.id, slug: row.slug };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Database error";
