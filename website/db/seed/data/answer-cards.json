@@ -1,0 +1,1452 @@
+{
+ "version": "1.0.0",
+ "blocked_urls": [
+  {
+   "url": "https://sainthelen.org/baptism/",
+   "reason": "Baptism form. Tracey Sowa sends this privately after speaking with the family. Must never be discoverable.",
+   "match": "exact_and_children"
+  }
+ ],
+ "cards": [
+  {
+   "key": "mass-times",
+   "group": "Core parish information",
+   "triggers": [
+    "mass times",
+    "mass time",
+    "mass schedule",
+    "what time is mass",
+    "sunday mass",
+    "daily mass",
+    "weekend mass",
+    "masd",
+    "mass"
+   ],
+   "answer": "Weekend Masses are Saturday at 5:00 PM, and Sunday at 8:00 AM, 10:00 AM, 12:00 PM and 6:00 PM.\nThe 10:00 AM Mass is livestreamed, and the 6:00 PM is a rebroadcast of it.\nDaily Mass is Monday through Saturday at 9:00 AM and is also livestreamed.\nWhether it is your first time or your first time in a long while, you are welcome here.",
+   "links": [
+    [
+     "Mass times and what to expect",
+     "https://sainthelen.org/im-new/"
+    ],
+    [
+     "Watch the livestream",
+     "https://sainthelen.org/stream/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "confession",
+   "group": "Core parish information",
+   "triggers": [
+    "confession",
+    "confessions",
+    "reconciliation",
+    "penance",
+    "go to confession",
+    "when is confession"
+   ],
+   "answer": "Confession is heard every Saturday at 4:00 PM, right before the 5:00 PM Mass.\nIf Saturday afternoon does not work for you, call the Parish Office and we will find a time with one of our priests.",
+   "links": [
+    [
+     "About Reconciliation",
+     "https://sainthelen.org/sacraments/reconciliation/"
+    ]
+   ],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "adoration",
+   "group": "Core parish information",
+   "triggers": [
+    "adoration",
+    "eucharistic adoration",
+    "blessed sacrament",
+    "holy hour"
+   ],
+   "answer": "Details on Eucharistic Adoration at Saint Helen, including the current schedule, are on our Adoration page.",
+   "links": [
+    [
+     "Adoration",
+     "https://sainthelen.org/adoration/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "office-hours",
+   "group": "Core parish information",
+   "triggers": [
+    "office hours",
+    "parish office",
+    "phone number",
+    "call the office",
+    "contact",
+    "address",
+    "where are you"
+   ],
+   "answer": "The Parish Office is open Monday through Friday, 9:30 AM to 5:00 PM, and you can reach us at 908-232-1214.\nWe are at 1600 Rahway Avenue, Westfield, NJ 07090.",
+   "links": [],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "bulletin",
+   "group": "Core parish information",
+   "triggers": [
+    "bulletin",
+    "bulletins",
+    "bull",
+    "bulliten",
+    "weekly bulletin",
+    "this week's bulletin",
+    "parish bulletin"
+   ],
+   "answer": "Our bulletin is published every week and you can read the current one or browse past issues on the bulletin page.",
+   "links": [
+    [
+     "Parish Bulletin",
+     "https://sainthelen.org/bulletin/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "livestream",
+   "group": "Core parish information",
+   "triggers": [
+    "livestream",
+    "live stream",
+    "live",
+    "watch online",
+    "youtube",
+    "stream",
+    "facebook live",
+    "livestreams"
+   ],
+   "answer": "The 10:00 AM Sunday Mass is livestreamed on our YouTube channel and on Facebook.\nRecordings stay up afterwards, so you can watch any time.",
+   "links": [
+    [
+     "Livestream",
+     "https://sainthelen.org/stream/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "giving",
+   "group": "Core parish information",
+   "triggers": [
+    "give",
+    "giving",
+    "donate",
+    "donation",
+    "offertory",
+    "tithe",
+    "online giving",
+    "collection"
+   ],
+   "answer": "You can give online, or text GIVE to 908-860-8444 to give from your phone.\nContributions can also be mailed to 1600 Rahway Avenue, Westfield, NJ 07090.",
+   "links": [
+    [
+     "Ways to give",
+     "https://sainthelen.org/give/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "register-parish",
+   "group": "Core parish information",
+   "triggers": [
+    "register",
+    "registration",
+    "become a parishioner",
+    "join the parish",
+    "new here",
+    "i'm new",
+    "new to saint helen",
+    "registraion"
+   ],
+   "answer": "We would love to have you. You can register your family through our I'm New page, or text CONNECT to 908-860-8444 for a virtual connect card.\nPlenty of our parishioners drive in from well outside Westfield, so if you are not local, come anyway. Everyone is welcome here, whatever your background and wherever you are starting from.",
+   "links": [
+    [
+     "I'm New",
+     "https://sainthelen.org/im-new/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "mass-intentions",
+   "group": "Core parish information",
+   "triggers": [
+    "mass intentions",
+    "mass intention",
+    "mass intensions",
+    "offer a mass",
+    "when can mass intentions"
+   ],
+   "answer": "You can see all upcoming Mass Intentions on our Mass Intentions page.\nTo request one, call the Parish Office.",
+   "links": [
+    [
+     "Mass Intentions",
+     "https://sainthelen.org/mass-intentions/"
+    ]
+   ],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "baptism",
+   "group": "Sacraments",
+   "triggers": [
+    "baptism",
+    "baptize",
+    "baptise",
+    "christening",
+    "baptism class",
+    "baptism form",
+    "register for baptism",
+    "get my child baptized",
+    "how do i get my kid baptized",
+    "baby baptized",
+    "godparents",
+    "godparent"
+   ],
+   "answer": "Congratulations, and welcome. Baptism celebrates your child's entrance into the Church, and we would love to walk with you through it.\nPlease call our receptionist, Marielena Bula, at 908-232-1214. She will set up a call with Tracey Sowa, our Baptism Coordinator, who will talk everything through with you and send you what you need.",
+   "links": [
+    [
+     "About Baptism",
+     "https://sainthelen.org/sacraments/baptism/"
+    ]
+   ],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": false,
+   "note": "DO NOT LINK the baptism form at /baptism/. Tracey sends that privately after speaking with the family. It is on the system blocklist.",
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "marriage",
+   "group": "Sacraments",
+   "triggers": [
+    "marriage",
+    "wedding",
+    "get married",
+    "pre-cana",
+    "precana",
+    "pre cana",
+    "engaged",
+    "convalidation"
+   ],
+   "answer": "Congratulations. Our Marriage page walks through getting married at Saint Helen, including Pre-Cana preparation and how far ahead to start.\nCall the Parish Office to begin, ideally about a year out.",
+   "links": [
+    [
+     "Marriage",
+     "https://sainthelen.org/sacraments/marriage/"
+    ]
+   ],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "confirmation",
+   "group": "Sacraments",
+   "triggers": [
+    "confirmation",
+    "conformation",
+    "confirmed",
+    "get confirmed",
+    "sponsor"
+   ],
+   "answer": "Confirmation at Saint Helen is part of our faith formation for grades 9 and 10. Details are on our Confirmation page.",
+   "links": [
+    [
+     "Confirmation",
+     "https://sainthelen.org/sacraments/confirmation/"
+    ],
+    [
+     "Religious Education",
+     "https://sainthelen.org/religious-education/"
+    ]
+   ],
+   "contact": "mfusco",
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Michael Fusco, Director of Religious Education, Grades 5-10",
+    null,
+    "mfusco@sainthelen.org"
+   ]
+  },
+  {
+   "key": "first-communion",
+   "group": "Sacraments",
+   "triggers": [
+    "first communion",
+    "first holy communion",
+    "communion",
+    "eucharist",
+    "first eucharist"
+   ],
+   "answer": "First Holy Communion is part of our religious education program. You can read about the Eucharist on our sacraments page, and reach out to our Director of Religious Education with questions.",
+   "links": [
+    [
+     "Eucharist",
+     "https://sainthelen.org/sacraments/eucharist/"
+    ],
+    [
+     "Religious Education",
+     "https://sainthelen.org/religious-education/"
+    ]
+   ],
+   "contact": "nmurphy",
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Nicole Murphy, Director of Religious Education, Grades 1-4",
+    null,
+    "nmurphy@sainthelen.org"
+   ]
+  },
+  {
+   "key": "ocia",
+   "group": "Sacraments",
+   "triggers": [
+    "ocia",
+    "rcia",
+    "become catholic",
+    "becoming catholic",
+    "convert",
+    "join the church",
+    "adult baptism"
+   ],
+   "answer": "If you are thinking about becoming Catholic, or you were baptized but never confirmed, OCIA is where that journey starts.\nEmail OCIA@sainthelen.org and someone will walk you through it. There is no commitment in asking.",
+   "links": [],
+   "contact": "ocia",
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "OCIA team",
+    null,
+    "OCIA@sainthelen.org"
+   ]
+  },
+  {
+   "key": "funeral",
+   "group": "Pastoral and care",
+   "triggers": [
+    "funeral",
+    "funerals",
+    "funeral mass",
+    "funeral arrangements",
+    "death",
+    "died",
+    "passed away",
+    "burial",
+    "wake"
+   ],
+   "answer": "We are so sorry for your loss. Our Funerals page explains how we walk families through planning a funeral Mass at Saint Helen.\nPlease call the Parish Office at 908-232-1214 and we will help you from there. You do not need to have anything figured out before you call.",
+   "links": [
+    [
+     "Funerals at Saint Helen",
+     "https://sainthelen.org/funerals/"
+    ]
+   ],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": true,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "funeral-livestream",
+   "group": "Pastoral and care",
+   "triggers": [
+    "funeral livestream",
+    "funeral live stream",
+    "watch funeral",
+    "funeral video",
+    "livestream funeral mass",
+    "funeral on youtube"
+   ],
+   "answer": "Funeral Masses at Saint Helen are livestreamed on our YouTube channel, and the recording stays available afterwards for family and friends who could not be with us.\nIf you are looking for a particular funeral and cannot find it, call the Parish Office and we will help you.",
+   "links": [
+    [
+     "Livestream",
+     "https://sainthelen.org/stream/"
+    ]
+   ],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": true,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "funeral-support",
+   "group": "Pastoral and care",
+   "triggers": [
+    "funeral support",
+    "funeral ministry",
+    "funeral luncheon",
+    "help with a funeral"
+   ],
+   "answer": "Our Funeral Support Ministry helps families with the practical side of a funeral so you have less to carry.",
+   "links": [
+    [
+     "Funeral Support Ministry",
+     "https://sainthelen.org/ministries/funeral-support/"
+    ]
+   ],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": true,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "grief",
+   "group": "Pastoral and care",
+   "triggers": [
+    "grief",
+    "griefshare",
+    "grief share",
+    "grief support",
+    "bereavement",
+    "bereavement ministry",
+    "mourning",
+    "lost my husband",
+    "lost my wife"
+   ],
+   "answer": "You do not have to carry this by yourself.\nSaint Helen has people who walk with parishioners through loss, and our Care Ministry can connect you with the right support.\nIf you would rather simply talk to someone, call the Parish Office at 908-232-1214 and say so. That is always enough, and there is no wrong time to reach out.",
+   "links": [
+    [
+     "Care Ministry",
+     "https://sainthelen.org/ministries/care-ministry/"
+    ]
+   ],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": true,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "mental-health",
+   "group": "Pastoral and care",
+   "triggers": [
+    "mental health",
+    "mental health ministry",
+    "depression",
+    "anxiety",
+    "struggling",
+    "counseling",
+    "counselling",
+    "therapist",
+    "therapy"
+   ],
+   "answer": "Our Mental Health Ministry exists because faith and mental health belong in the same conversation.\nThe Saint Helen Counseling Project can also connect you with professional counseling.\nIf you are in crisis right now, please call or text 988 to reach the Suicide and Crisis Lifeline, any time of day.",
+   "links": [
+    [
+     "Mental Health Ministry",
+     "https://sainthelen.org/ministries/mental-health-ministry/"
+    ],
+    [
+     "Saint Helen Counseling Project",
+     "https://sainthelen.org/ministries/saint-helen-counseling-project/"
+    ]
+   ],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": true,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "anointing",
+   "group": "Pastoral and care",
+   "triggers": [
+    "anointing",
+    "anointing of the sick",
+    "last rites",
+    "sick",
+    "hospital",
+    "seriously ill",
+    "priest for the sick"
+   ],
+   "answer": "If someone is seriously ill, facing surgery, or nearing the end of life, please call us. Do not wait.\nCall the Parish Office at 908-232-1214 and follow the prompts. A priest can come to a home, a hospital or a care facility.",
+   "links": [
+    [
+     "Anointing of the Sick",
+     "https://sainthelen.org/sacraments/anointing-of-the-sick/"
+    ]
+   ],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": true,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "caregivers",
+   "group": "Pastoral and care",
+   "triggers": [
+    "caregiver",
+    "caregivers support",
+    "caring for a parent",
+    "elderly parent",
+    "dementia"
+   ],
+   "answer": "Our Caregiver's Support ministry is for parishioners looking after someone they love, which is often quietly exhausting work.",
+   "links": [
+    [
+     "Caregiver's Support",
+     "https://sainthelen.org/ministries/caregivers-support/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": true,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "disability-support",
+   "group": "Pastoral and care",
+   "triggers": [
+    "disability",
+    "disabilities",
+    "special needs",
+    "accessible",
+    "wheelchair",
+    "autism",
+    "sensory"
+   ],
+   "answer": "Saint Helen has a Family Support ministry for people with disabilities and their families, and our church has barrier free front doors and restrooms.\nSensory supports, including noise cancelling headphones, fidgets and easy to follow Mass booklets, are available at the 10:00 AM and 12:00 PM Sunday Masses. Ask a Hospitality Minister before Mass.",
+   "links": [
+    [
+     "Family Support for Persons with Disabilities",
+     "https://sainthelen.org/ministries/family-support-for-persons-with-disabilities/"
+    ]
+   ],
+   "contact": null,
+   "moments": [
+    {
+     "label": "Sensory supports begin",
+     "when": "2026-08-02",
+     "after": "drop"
+    }
+   ],
+   "clergy_review": true,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "help-need",
+   "group": "Pastoral and care",
+   "triggers": [
+    "help",
+    "need help",
+    "food pantry",
+    "financial help",
+    "st vincent de paul",
+    "helping hands",
+    "assistance",
+    "rent help"
+   ],
+   "answer": "If you or your family need help, please ask. Our Helping Hands and Hearts ministry and our Care Ministry exist for this, and what you share stays private.\nCall the Parish Office at 908-232-1214 during business hours. Nobody will make it awkward, and you will not be the first person to call.",
+   "links": [
+    [
+     "Helping Hands and Hearts",
+     "https://sainthelen.org/ministries/helping-hands-and-hearts/"
+    ],
+    [
+     "Care Ministry",
+     "https://sainthelen.org/ministries/care-ministry/"
+    ]
+   ],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": true,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "safety",
+   "group": "Pastoral and care",
+   "triggers": [
+    "abuse",
+    "report abuse",
+    "safe environment",
+    "protecting god's children",
+    "battered",
+    "domestic violence",
+    "unsafe at home"
+   ],
+   "answer": "If you are in immediate danger, please call 911.\nThe National Domestic Violence Hotline is available any hour of the day or night at 1-800-799-7233.\nIf you would like to talk with someone at the parish, call the Parish Office at 908-232-1214 during normal business hours, Monday through Friday, 9:30 AM to 5:00 PM. You will be treated with care and what you share stays private.",
+   "links": [],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": true,
+   "note": "Highest-priority clergy review. Deliberately routes to the office rather than naming a priest.",
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "religious-ed",
+   "group": "Formation and programs",
+   "triggers": [
+    "religious education",
+    "ccd",
+    "rel ed",
+    "sunday school",
+    "faith formation",
+    "ccd registration",
+    "religious ed registration"
+   ],
+   "answer": "Religious Education at Saint Helen covers grades 1 through 10. Program details, schedules and registration are on our Religious Education page.\nRegistering requires a MySaintHelen account, and if you are not yet a parishioner you will want to register your family first.",
+   "links": [
+    [
+     "Religious Education",
+     "https://sainthelen.org/religious-education/"
+    ],
+    [
+     "I'm New",
+     "https://sainthelen.org/im-new/"
+    ]
+   ],
+   "contact": "reled",
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Nicole Murphy (Gr. 1-4) or Michael Fusco (Gr. 5-10)",
+    null,
+    "nmurphy@sainthelen.org / mfusco@sainthelen.org"
+   ]
+  },
+  {
+   "key": "vbs",
+   "group": "Formation and programs",
+   "triggers": [
+    "vbs",
+    "vacation bible school",
+    "summer camp",
+    "bible school",
+    "kids camp"
+   ],
+   "answer": "Vacation Bible School runs in the summer. Dates and registration go up each spring.",
+   "links": [
+    [
+     "Programs and Activities",
+     "https://sainthelen.org/more/"
+    ]
+   ],
+   "contact": "nmurphy",
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Nicole Murphy, Director of Religious Education, Grades 1-4",
+    null,
+    "nmurphy@sainthelen.org"
+   ]
+  },
+  {
+   "key": "youth",
+   "group": "Formation and programs",
+   "triggers": [
+    "youth",
+    "youth ministry",
+    "teens",
+    "high school",
+    "middle school",
+    "youth group",
+    "summer service"
+   ],
+   "answer": "Youth Ministry at Saint Helen is for middle and high school students, with service, retreats and regular gatherings through the year.",
+   "links": [
+    [
+     "Youth Ministry",
+     "https://sainthelen.org/youth-ministry/"
+    ]
+   ],
+   "contact": "pgardner",
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Patti Gardner, Youth Ministry",
+    null,
+    "pgardner@sainthelen.org"
+   ]
+  },
+  {
+   "key": "kids-mass",
+   "group": "Formation and programs",
+   "triggers": [
+    "kids corner",
+    "children's liturgy",
+    "clow",
+    "kids at mass",
+    "childcare",
+    "nursery",
+    "little kids"
+   ],
+   "answer": "During the school year we have Kids Corner for ages 2 through Kindergarten, and Children's Liturgy of the Word for grades 1 through 4, both at the 10:00 AM Sunday Mass.",
+   "links": [
+    [
+     "Kids Corner",
+     "https://sainthelen.org/ministries/kids-corner/"
+    ],
+    [
+     "Children's Liturgy of the Word",
+     "https://sainthelen.org/ministries/childrens-liturgy-of-the-word/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "lifelines",
+   "group": "Formation and programs",
+   "triggers": [
+    "lifelines",
+    "life lines",
+    "small groups",
+    "small group",
+    "lifeline resources",
+    "leader material for lifelines"
+   ],
+   "answer": "LifeLines are our small groups, formerly called Small Groups. They are a good way to get to know people and grow in faith.",
+   "links": [
+    [
+     "Programs and Activities",
+     "https://sainthelen.org/more/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "cornerstone",
+   "group": "Formation and programs",
+   "triggers": [
+    "cornerstone",
+    "mens cornerstone",
+    "womens cornerstone",
+    "retreat"
+   ],
+   "answer": "Cornerstone is our parish retreat experience for men and women, and many parishioners point to it as where they got connected.",
+   "links": [
+    [
+     "Cornerstone",
+     "https://sainthelen.org/ministries/cornerstone/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "wwp",
+   "group": "Formation and programs",
+   "triggers": [
+    "walking with purpose",
+    "wwp",
+    "ww",
+    "womens bible study",
+    "women's study"
+   ],
+   "answer": "Walking with Purpose is our women's Bible study.",
+   "links": [
+    [
+     "Programs and Activities",
+     "https://sainthelen.org/more/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "ageless",
+   "group": "Formation and programs",
+   "triggers": [
+    "ageless",
+    "seniors",
+    "senior ministry",
+    "agelee",
+    "older adults"
+   ],
+   "answer": "Ageless is our senior ministry, with regular gatherings, trips and service opportunities.",
+   "links": [
+    [
+     "Ageless Senior Ministry",
+     "https://sainthelen.org/ministries/ageless/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "volunteer",
+   "group": "Formation and programs",
+   "triggers": [
+    "volunteer",
+    "volunteering",
+    "get involved",
+    "serve",
+    "ministries",
+    "join a ministry",
+    "helping"
+   ],
+   "answer": "There is room for you. Our ministries page lists everything from hospitality and music to outreach and service, and most are happy to have someone new turn up.",
+   "links": [
+    [
+     "Programs and Activities",
+     "https://sainthelen.org/more/"
+    ]
+   ],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "music",
+   "group": "Formation and programs",
+   "triggers": [
+    "music",
+    "choir",
+    "cantor",
+    "music ministry",
+    "join the choir",
+    "contemporary music",
+    "singers",
+    "musicians"
+   ],
+   "answer": "We have contemporary worship music at every Mass, with choirs, cantors and instrumentalists.\nIf you sing or play, there is a place for you. New voices are always welcome.",
+   "links": [],
+   "contact": "arts",
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Music and Arts",
+    null,
+    "arts@sainthelen.org"
+   ]
+  },
+  {
+   "key": "sing-n-pray",
+   "group": "Formation and programs",
+   "triggers": [
+    "sing n pray",
+    "sing and pray",
+    "sing 'n pray",
+    "singing",
+    "kids music",
+    "children's music",
+    "sing"
+   ],
+   "answer": "Sing 'N Pray is its own ministry at Saint Helen, a joyful way for our younger singers to take part in worship.",
+   "links": [
+    [
+     "Sing 'N Pray",
+     "https://sainthelen.org/ministries/sing-n-pray/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "staff",
+   "group": "Formation and programs",
+   "triggers": [
+    "staff",
+    "who works here",
+    "directory",
+    "our team",
+    "priests",
+    "msgr tom",
+    "pastor"
+   ],
+   "answer": "You can find our full parish team, with photos and roles, on our staff pages.",
+   "links": [
+    [
+     "I'm New",
+     "https://sainthelen.org/im-new/"
+    ]
+   ],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "ash-wednesday",
+   "group": "Seasonal, activates on its own",
+   "triggers": [
+    "ash wednesday",
+    "ashes",
+    "ash",
+    "lent",
+    "lenten",
+    "ash wed",
+    "when do we get ashes"
+   ],
+   "answer": "Ash Wednesday marks the start of Lent, and ashes are distributed at Masses that day.\nThe full schedule is published in the bulletin and on our homepage in the weeks beforehand.",
+   "links": [
+    [
+     "Parish Bulletin",
+     "https://sainthelen.org/bulletin/"
+    ]
+   ],
+   "contact": null,
+   "moments": [
+    {
+     "label": "Ash Wednesday 2027",
+     "when": "2027-02-10",
+     "after": "roll"
+    }
+   ],
+   "clergy_review": false,
+   "note": "Activate 3 weeks before, archive the day after. Ash Wednesday: 2027 Feb 10, 2028 Mar 1, 2029 Feb 14.",
+   "evergreen": false
+  },
+  {
+   "key": "holy-week",
+   "group": "Seasonal, activates on its own",
+   "triggers": [
+    "holy week",
+    "easter",
+    "good friday",
+    "holy thursday",
+    "palm sunday",
+    "easter mass",
+    "triduum",
+    "easter vigil"
+   ],
+   "answer": "Holy Week and Easter schedules, including Holy Thursday, Good Friday and the Easter Vigil, are published in the bulletin a few weeks ahead.",
+   "links": [
+    [
+     "Parish Bulletin",
+     "https://sainthelen.org/bulletin/"
+    ]
+   ],
+   "contact": null,
+   "moments": [
+    {
+     "label": "Easter 2027",
+     "when": "2027-03-28",
+     "after": "roll"
+    }
+   ],
+   "clergy_review": false,
+   "note": "Activate Palm Sunday minus 3 weeks. Easter: 2027 Mar 28, 2028 Apr 16.",
+   "evergreen": false
+  },
+  {
+   "key": "christmas",
+   "group": "Seasonal, activates on its own",
+   "triggers": [
+    "christmas",
+    "christmas mass",
+    "christmas eve",
+    "midnight mass",
+    "christmas schedule",
+    "nativity",
+    "holiday mass"
+   ],
+   "answer": "Christmas Eve and Christmas Day Mass times are published in the bulletin and on our homepage in early December.\nChristmas Masses fill up. Seating is first come, first served, with overflow seating in the Chapel, and the early Christmas Eve Mass is livestreamed into the Chapel and Meaney Hall.",
+   "links": [
+    [
+     "Parish Bulletin",
+     "https://sainthelen.org/bulletin/"
+    ]
+   ],
+   "contact": null,
+   "moments": [
+    {
+     "label": "Christmas",
+     "when": "2026-12-25",
+     "after": "roll"
+    }
+   ],
+   "clergy_review": false,
+   "note": "Activate Dec 1. In 2025 the schedule was Eve 4, 6, 9 and midnight; Day 10 and 12. Confirm each year before publishing.",
+   "evergreen": false
+  },
+  {
+   "key": "advent",
+   "group": "Seasonal, activates on its own",
+   "triggers": [
+    "advent",
+    "advent penance",
+    "penance service",
+    "giving tree",
+    "immaculate conception",
+    "holy day"
+   ],
+   "answer": "During Advent we hold a parish Penance Service with extra confession times, and our Giving Tree supports families in need.\nDates are in the bulletin each year from late November.",
+   "links": [
+    [
+     "Parish Bulletin",
+     "https://sainthelen.org/bulletin/"
+    ]
+   ],
+   "contact": null,
+   "moments": [
+    {
+     "label": "First Sunday of Advent 2026",
+     "when": "2026-11-29",
+     "after": "roll"
+    }
+   ],
+   "clergy_review": false,
+   "note": "Activate Nov 20. In 2025: Penance Service Dec 10 at 7 PM, extra confessions Dec 9 from 2 to 8 PM.",
+   "evergreen": false
+  },
+  {
+   "key": "ireland",
+   "group": "Current, time-bound",
+   "triggers": [
+    "ireland",
+    "ireland trip",
+    "pilgrimage",
+    "ireland pilgrimage",
+    "trip to ireland",
+    "travel"
+   ],
+   "answer": "The Saint Helen Ireland Pilgrimage runs April 19 to 28, 2027, ten days with Msgr. Tom.",
+   "links": [
+    [
+     "Pilgrimage flyer",
+     "https://sainthelen.org/wp-content/uploads/2026/07/V4-FINAL-Nydegger-Ireland-27-Flyer-w-lottery-link.pdf"
+    ]
+   ],
+   "contact": null,
+   "moments": [
+    {
+     "label": "Information meeting",
+     "when": "2026-07-29T19:00",
+     "after": "drop",
+     "where": "the Church"
+    },
+    {
+     "label": "Trip departs",
+     "when": "2027-04-19",
+     "after": "archive"
+    }
+   ],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": false
+  },
+  {
+   "key": "jobs",
+   "group": "Known gaps, routed to a person",
+   "triggers": [
+    "jobs",
+    "job",
+    "employment",
+    "hiring",
+    "work at saint helen",
+    "careers",
+    "openings"
+   ],
+   "answer": "We do not have a jobs page on the site right now. If you are interested in working at Saint Helen, call the Parish Office at 908-232-1214 and we will point you to the right person.",
+   "links": [],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": false,
+   "note": "CONTENT GAP: /employment/ and /jobs/ are both 404. 5 searches.",
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "cyo",
+   "group": "Known gaps, routed to a person",
+   "triggers": [
+    "cyo",
+    "sports",
+    "basketball",
+    "cyo basketball",
+    "youth sports"
+   ],
+   "answer": "We do not have a CYO page on the site yet. Call the Parish Office at 908-232-1214 and we can connect you.",
+   "links": [],
+   "contact": "office",
+   "moments": [],
+   "clergy_review": false,
+   "note": "CONTENT GAP: /cyo/ is 404. 6 searches.",
+   "evergreen": true,
+   "contact_detail": [
+    "Parish Office",
+    "908-232-1214",
+    null
+   ]
+  },
+  {
+   "key": "abide",
+   "group": "Formation and programs",
+   "triggers": [
+    "abide",
+    "young adults",
+    "young adult",
+    "20s",
+    "30s",
+    "abide young adults"
+   ],
+   "answer": "Abide is our young adult ministry, for people roughly in their twenties and thirties.",
+   "links": [
+    [
+     "Abide Young Adults",
+     "https://sainthelen.org/young-adult-ministry/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "hallow",
+   "group": "Formation and programs",
+   "triggers": [
+    "hallow",
+    "hallow app",
+    "prayer app"
+   ],
+   "answer": "Saint Helen partners with Hallow, the Catholic prayer and meditation app, and parishioners can get access through us.",
+   "links": [
+    [
+     "Hallow at Saint Helen",
+     "https://sainthelen.org/hallow/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "podcast",
+   "group": "Core parish information",
+   "triggers": [
+    "podcast",
+    "podcasts",
+    "listen",
+    "homily podcast"
+   ],
+   "answer": "Our parish podcast is on the podcast page, along with where to subscribe.",
+   "links": [
+    [
+     "Podcast",
+     "https://sainthelen.org/podcast/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "called-gifted",
+   "group": "Formation and programs",
+   "triggers": [
+    "called and gifted",
+    "called",
+    "gifted",
+    "discern",
+    "charisms",
+    "cgteam"
+   ],
+   "answer": "Called and Gifted helps you discern the gifts God has given you and where they fit in the life of the parish.",
+   "links": [
+    [
+     "Called & Gifted",
+     "https://sainthelen.org/called/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "service-auction",
+   "group": "Formation and programs",
+   "triggers": [
+    "service auction",
+    "auction",
+    "fundraiser",
+    "fish fry"
+   ],
+   "answer": "The Service Auction is one of our parish fundraisers, run by parishioners offering their time and talents.",
+   "links": [
+    [
+     "Service Auction",
+     "https://sainthelen.org/ministries/service-auction/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "cfc",
+   "group": "Formation and programs",
+   "triggers": [
+    "catholic families connect",
+    "cfc",
+    "families",
+    "family ministry",
+    "elementary families",
+    "eft"
+   ],
+   "answer": "Catholic Families Connect and Elementary Families Together are ways for families with young children to get to know each other.",
+   "links": [
+    [
+     "Catholic Families Connect",
+     "https://sainthelen.org/ministries/catholic-families-connect/"
+    ],
+    [
+     "Elementary Families Together",
+     "https://sainthelen.org/ministries/eft/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  },
+  {
+   "key": "stations",
+   "group": "Seasonal, activates on its own",
+   "triggers": [
+    "stations of the cross",
+    "stations",
+    "way of the cross"
+   ],
+   "answer": "Stations of the Cross are prayed during Lent. Times are in the bulletin each week through the season.",
+   "links": [
+    [
+     "Parish Bulletin",
+     "https://sainthelen.org/bulletin/"
+    ]
+   ],
+   "contact": null,
+   "moments": [
+    {
+     "label": "Lent 2027 begins",
+     "when": "2027-02-10",
+     "after": "roll"
+    }
+   ],
+   "clergy_review": false,
+   "note": "Activate with the Ash Wednesday card, archive after Easter.",
+   "evergreen": false
+  },
+  {
+   "key": "easter-scroll",
+   "group": "Seasonal, activates on its own",
+   "triggers": [
+    "easter scroll",
+    "memorial scroll",
+    "easter memorial",
+    "scroll"
+   ],
+   "answer": "The Easter Memorial Scroll lets you remember loved ones during the Easter season.",
+   "links": [
+    [
+     "Easter Memorial Scroll",
+     "https://sainthelen.org/easter-scroll/"
+    ]
+   ],
+   "contact": null,
+   "moments": [
+    {
+     "label": "Easter 2027",
+     "when": "2027-03-28",
+     "after": "roll"
+    }
+   ],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": false
+  },
+  {
+   "key": "mission",
+   "group": "Core parish information",
+   "triggers": [
+    "mission statement",
+    "mission",
+    "vision",
+    "what we believe",
+    "about us",
+    "about"
+   ],
+   "answer": "Our mission, and more about who we are as a parish, is on our I'm New page.",
+   "links": [
+    [
+     "I'm New",
+     "https://sainthelen.org/im-new/"
+    ]
+   ],
+   "contact": null,
+   "moments": [],
+   "clergy_review": false,
+   "note": null,
+   "evergreen": true
+  }
+ ]
+}

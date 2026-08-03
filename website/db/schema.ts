@@ -7,6 +7,11 @@
  */
 
 import { sql } from "drizzle-orm";
+import type {
+  ActivationWindow,
+  AnswerLink,
+  Moment,
+} from "@/lib/answers/types";
 import {
   type AnyPgColumn,
   boolean,
@@ -1266,3 +1271,185 @@ export type InquiryEvent = typeof inquiryEvents.$inferSelect;
 export type InquiryStatus = (typeof INQUIRY_STATUSES)[number];
 export type FormSubmission = typeof formSubmissions.$inferSelect;
 export type FormSubmissionKind = (typeof FORM_SUBMISSION_KINDS)[number];
+
+/* ------------------------------------------------------------------ */
+/* Answer engine — cards, search log, feedback                         */
+/*                                                                      */
+/* Ported from the WordPress plugin Saint Helen Answers 2.4.1-b. The    */
+/* PHP was never the asset; the behaviour is, and it lives in           */
+/* lib/answers/ with its tests. These three tables are where it lands.  */
+/* ------------------------------------------------------------------ */
+
+export const ANSWER_CARD_STATUSES = ["draft", "review", "published", "archived"] as const;
+export type AnswerCardStatus = (typeof ANSWER_CARD_STATUSES)[number];
+
+/**
+ * Answer cards. Written once, matched against what people actually type,
+ * misspellings included. No model runs when a visitor searches, so nothing
+ * can be invented and nothing costs money per search.
+ *
+ * `status` carries a `review` state: a card touching grief, loss or crisis
+ * cannot be published by someone without the reviewer role. That is a real
+ * workflow rather than a note in a document.
+ */
+export const answerCards = pgTable(
+  "answer_cards",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    /** Stable business key, e.g. "mass-times". Unique, unlike WordPress. */
+    key: text("key").notNull(),
+    title: text("title").notNull(),
+    answer: text("answer").notNull(),
+    /** Admin grouping only — never shipped to the browser. */
+    group: text("group").notNull().default(""),
+    /** Phrases people type, stored raw and normalised at match time. */
+    triggers: jsonb("triggers").$type<string[]>().notNull().default([]),
+    links: jsonb("links").$type<AnswerLink[]>().notNull().default([]),
+    /** Dated lines on the card — meetings, feasts, deadlines. */
+    moments: jsonb("moments").$type<Moment[]>().notNull().default([]),
+    /** Key into siteSettings contacts, not a person's details. */
+    contact: text("contact").notNull().default(""),
+    /** Grief, loss or crisis. Gates publishing. */
+    pastoral: boolean("pastoral").notNull().default(false),
+    /**
+     * When set, the card is only findable inside a window around a feast.
+     * New in the port — the WordPress copy promised this and never built it,
+     * so the Christmas card was searchable in June.
+     */
+    activation: jsonb("activation").$type<ActivationWindow | null>(),
+    status: text("status", { enum: ANSWER_CARD_STATUSES })
+      .notNull()
+      .default("draft"),
+    /** Editorial note, never public. */
+    note: text("note").notNull().default(""),
+    /** Provenance: "Seed import", "Bulletin, March 2 2026". */
+    source: text("source").notNull().default(""),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    lastEditedBy: uuid("last_edited_by").references(() => users.id),
+    lastEditedAt: timestamp("last_edited_at", { withTimezone: true }),
+  },
+  (t) => [
+    // WordPress resolved a duplicate key by taking whichever row the query
+    // happened to return first. A Mass time is not a thing to be casual about.
+    uniqueIndex("answer_cards_key_uq").on(t.key),
+    index("answer_cards_status_idx").on(t.status),
+  ],
+);
+
+export const SEARCH_RESULT_KINDS = ["card", "page", "none"] as const;
+
+/**
+ * One row per search, written once typing settles — not per keystroke. The
+ * old parish helper logged every letter and inflated its numbers about
+ * fivefold, which made every report meaningless.
+ */
+export const answerSearches = pgTable(
+  "answer_searches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    /** What they typed, scrubbed of contact details on the way in. */
+    query: text("query").notNull(),
+    /** Normalised form, which is what the dead-ends report groups on. */
+    queryNorm: text("query_norm").notNull(),
+    resultKind: text("result_kind", { enum: SEARCH_RESULT_KINDS })
+      .notNull()
+      .default("none"),
+    /** Key of the winning card, when one won. */
+    cardKey: text("card_key"),
+    /** How many results were on screen. */
+    resultCount: smallint("result_count").notNull().default(0),
+    /** How many cards matched in total, shown or not. A card matching far
+     *  more often than it appears is winning searches it should not. */
+    matchCount: smallint("match_count").notNull().default(0),
+    clicked: boolean("clicked").notNull().default(false),
+    clickedUrl: text("clicked_url"),
+    /** Salted daily hash of address and agent. No address is ever stored. */
+    sessionHash: text("session_hash"),
+    source: text("source").notNull().default("widget"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("answer_searches_created_idx").on(t.createdAt),
+    index("answer_searches_norm_idx").on(t.queryNorm),
+    // The dead-ends report is the hot path for both the dashboard and the
+    // weekly digest, and it only ever asks for misses.
+    index("answer_searches_dead_idx")
+      .on(t.createdAt)
+      .where(sql`${t.resultKind} = 'none'`),
+    index("answer_searches_session_idx").on(t.sessionHash),
+  ],
+);
+
+/**
+ * "Did this help?" — and on a no, what they were actually looking for.
+ *
+ * The count alone was never actionable. Five people typing the same thing is
+ * a card you are missing; five people typing five different things is a card
+ * winning matches it should not. Those are opposite problems and the number
+ * five looks identical in both, so the row carries the search behind it,
+ * everything else that was on screen, and where the marked card sat.
+ */
+export const answerFeedback = pgTable(
+  "answer_feedback",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    cardKey: text("card_key").notNull(),
+    helpful: boolean("helpful").notNull(),
+    /** The search behind the vote. */
+    query: text("query"),
+    searchId: uuid("search_id").references(() => answerSearches.id, {
+      onDelete: "set null",
+    }),
+    /** Keys of every card on screen, in the order they appeared. */
+    shown: jsonb("shown").$type<string[]>().notNull().default([]),
+    /** Where the marked card sat, 1-indexed. 0 means it was not on screen. */
+    position: smallint("position").notNull().default(0),
+    resultCount: smallint("result_count").notNull().default(0),
+    /**
+     * One sentence in the person's own words. Scrubbed of emails, phone
+     * numbers and long digit runs before it is written, capped at 300, and
+     * wiped after 180 days while the counts around it stay for 400.
+     */
+    wanted: text("wanted"),
+    wantedAt: timestamp("wanted_at", { withTimezone: true }),
+    sessionHash: text("session_hash"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("answer_feedback_card_idx").on(t.cardKey),
+    index("answer_feedback_created_idx").on(t.createdAt),
+    index("answer_feedback_helpful_idx").on(t.helpful, t.createdAt),
+    index("answer_feedback_wanted_at_idx").on(t.wantedAt),
+    // One vote per card per search. WordPress guarded this with a flag on a
+    // DOM node that every re-render destroyed, so a refresh let the same
+    // visitor vote again and again.
+    uniqueIndex("answer_feedback_once_uq").on(t.searchId, t.cardKey),
+  ],
+);
+
+/** Rate limiting, keyed on the same daily session hash. Postgres rather
+ *  than Redis on purpose: parish traffic is a few thousand searches a
+ *  month, and one fewer service to pay for and remember is worth more
+ *  here than the microseconds. */
+export const answerRateLimits = pgTable("answer_rate_limits", {
+  sessionHash: text("session_hash").primaryKey(),
+  count: integer("count").notNull().default(0),
+  windowStartedAt: timestamp("window_started_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export type AnswerCardRow = typeof answerCards.$inferSelect;
+export type AnswerSearchRow = typeof answerSearches.$inferSelect;
+export type AnswerFeedbackRow = typeof answerFeedback.$inferSelect;
+
