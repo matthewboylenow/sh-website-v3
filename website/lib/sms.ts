@@ -15,6 +15,19 @@
 
 const DEV_SMS_CODE = "123456";
 
+/**
+ * The dev fallback is only ever allowed off production.
+ *
+ * Without this, a missing or misspelled Twilio variable in the Vercel
+ * production environment silently turns "123456" into a valid sign-in code
+ * for any staff phone number on file. That is a full admin takeover behind
+ * one typo, and nothing about it would look wrong from the outside — the
+ * sign-in screen behaves exactly as it should.
+ */
+function devFallbackAllowed(): boolean {
+  return process.env.NODE_ENV !== "production";
+}
+
 const recentSends = new Map<string, number[]>(); // phone → timestamps
 const PER_PHONE_LIMIT = 5;
 const PER_PHONE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
@@ -67,6 +80,12 @@ export async function sendSmsCode(phone: string): Promise<{ ok: boolean; error?:
   }
 
   if (!isTwilioConfigured()) {
+    if (!devFallbackAllowed()) {
+      return {
+        ok: false,
+        error: "Text-message sign-in is unavailable. Use the email link instead.",
+      };
+    }
     console.log(
       `\n${"=".repeat(70)}\n` +
         `📱  DEV SMS CODE — Twilio Verify not configured\n` +
@@ -99,6 +118,14 @@ export async function checkSmsCode(
   code: string,
 ): Promise<boolean> {
   if (!isTwilioConfigured()) {
+    if (!devFallbackAllowed()) {
+      console.error(
+        "[sms] Twilio Verify is not configured in production. Refusing to " +
+          "verify a code. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and " +
+          "TWILIO_VERIFY_SERVICE_SID, or disable SMS sign-in.",
+      );
+      return false;
+    }
     return code === DEV_SMS_CODE;
   }
 
