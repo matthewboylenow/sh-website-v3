@@ -46,6 +46,12 @@ Last updated: **2026-08-02**
 | 18.4 | Our Team → staff_card blocks + full wp-content media migration (82 assets) | ✅ Done |
 | 19 | Test harness + CI + shared role predicates | ✅ Done (221 tests, GitHub Actions on push/PR) |
 | 19.1 | Starter layouts on "+ New page" | ✅ Done (blank / simple / ministry landing / upcoming event) |
+| 20.A | Answer engine — core logic, schema, 52 seed cards | ✅ Done (398 tests) |
+| 20.B | Answer engine — API routes + public widget | ✅ Done (464 tests) |
+| 20.C | Answer engine — homepage hero placement | ✅ Done (471 tests) |
+| 20.D | Answer engine — admin screens + retention job | ✅ Done (486 tests) |
+| 21 | Timezone — recurrence and formatting on the parish clock | ✅ Done (512 tests) |
+| 21 | Pre-launch punch list | 🟡 Scoped — see `claude/v3-launch-scope.md` |
 
 Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).
 
@@ -1079,7 +1085,7 @@ appears to do nothing is worse than a page you have to fill in by hand.
 Also fixed here: the slug hint on the page form still said `/p/<slug>`,
 stale since Wave 18.1.
 
-### Known gaps pinned by tests, not fixed
+### Known gaps pinned by tests — items 1–3 fixed in Wave 21
 
 These are real defects on the current build. Each has a test that documents
 current behaviour so a change is deliberate rather than accidental. All are
@@ -1109,6 +1115,82 @@ in `tests/recurrence.test.ts` under `known gaps`, except the last two.
    `tests/page-sections-validator.test.ts`.
 5. **There are 17 block kinds, not 18.** 16 leaves plus `columns`. This doc
    and the handoff notes both said 18.
+
+---
+
+## Wave 20.A — the answer engine, core
+
+Ported from the WordPress plugin **Saint Helen Answers 2.4.1-b**. The PHP was
+never the asset; the behaviour is, and it now lives in `lib/answers/` with
+173 tests of its own.
+
+### What is built
+
+- `lib/answers/normalize.ts` — one normaliser. WordPress had two that
+  disagreed about hyphens, so the text used for matching and the text stored
+  for reporting were different strings.
+- `lib/answers/match.ts` — the scoring ladder (exact 100, substring 60, token
+  equals trigger 45, token in trigger 30, fuzzy 25), Levenshtein, and the
+  page fallback. Scores never accumulate; a card's score is always one of
+  {0, 25, 30, 45, 60, 100}.
+- `lib/answers/liturgical.ts` — anonymous Gregorian computus and the eleven
+  feasts. Asserted against the published calendar 2025–2030, plus Easter
+  falling on a Sunday between Mar 22 and Apr 25 for every year to 2060.
+- `lib/answers/resolve.ts` — moment/timeline resolution and the new
+  activation window.
+- `lib/answers/blocklist.ts` — URL blocking, enforced at save and at render.
+- `lib/answers/scrub.ts` — the PII scrub for free text and search terms.
+- Three tables + a rate-limit table (`0024_answer_engine.sql`), verified
+  against a real Postgres 16 with all 25 migrations applied.
+- `db/seed/answer-cards.ts` — the 52 starter cards, ten pastoral ones held in
+  review.
+
+### Deliberate departures from WordPress
+
+Agreed with Matthew: fix the ones that matter, keep the rest identical.
+
+1. **Two-letter queries no longer hijack the substring rung.** `"st"` used to
+   score 60 against every trigger containing those letters — "christmas
+   mass", "first communion" — and outranked genuine word matches. There is
+   now a four-character floor on that rung.
+2. **A token must be a word, not any run of letters.** `"car insurance"`
+   returned the childcare card, because "car" sits inside "childcare" and
+   "careers". A token now has to be a whole word in the trigger, or a
+   four-character-or-longer prefix of one, which is what keeps "confess"
+   finding "confession".
+3. **One result count, and it is what the visitor saw.** WordPress computed
+   this two ways for the same interaction, so "shown 2nd of 9" could appear
+   for a screen that only ever held two cards. `match_count` is stored
+   separately because it answers a different question.
+4. **The blocklist no longer has a query-string hole.** `/baptism?src=email`
+   was not blocked by a rule on `/baptism/`. For a page whose entire purpose
+   is "must never be discoverable", that was the whole point.
+5. **Search terms are scrubbed too.** WordPress scrubbed the follow-up
+   sentence and kept the raw search term unscrubbed for 400 days.
+6. **The phone scrub no longer eats Mass times.** The old pattern was "ten or
+   more characters of digits and separators", which redacted "mass at 8 9 10
+   11 12" entirely.
+7. **`answer_cards.key` is unique**, and a visitor votes once per card per
+   search. WordPress guarded the second with a flag on a DOM node that every
+   re-render destroyed.
+8. **Unknown liturgical rules fail loudly** rather than making the line
+   vanish.
+
+### The activation window — new behaviour
+
+Six seed cards carried notes like *"Activate 3 weeks before, archive the day
+after"* and sat in a group called *"Seasonal, activates on its own"*. Nothing
+implemented it: the Christmas card was searchable in June. Cards now carry an
+optional window and are only findable inside it. The windows are read
+straight off the cards' own notes — Advent opens Nov 20, Christmas opens
+Dec 1, Ash Wednesday three weeks before and gone the day after.
+
+### Not built yet (20.B)
+
+API routes (`/api/answers/corpus`, `/api/answers/event`), the public search
+widget, and the admin screens for cards, analytics and dead ends. The
+bulletin PDF reader is deliberately out of scope for now; `protected_keys()`
+belongs with it.
 
 ---
 

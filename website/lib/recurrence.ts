@@ -4,17 +4,26 @@ import {
   type RecurrenceEnd,
   type Weekday,
 } from "@/db/schema";
+import {
+  fromParishWallClock,
+  parishDateString,
+  toParishWallClock,
+  type WallClock,
+} from "@/lib/timezone";
 
 /**
  * Recurrence expansion. Given a base event and a date window, yield
  * concrete instance start/end timestamps. Pure functions — no DB access.
  *
+ * **Everything here works on the parish's own clock, not UTC.** A 7pm Mass
+ * is at 7pm all year. The previous version copied the base event's UTC time
+ * onto every generated day, so an event created in August published as 6pm
+ * from November to March — every recurring event on the site slid by an hour
+ * for half the year.
+ *
  * v1 supports two rule shapes:
  *   - weekly with interval + multi-weekday picker
  *   - "nth weekday of the month" with interval (e.g. 2nd Tuesday every month)
- *
- * Exception dates are matched on the timestamp's ISO string. Editor
- * stores them in the same shape we generate, so equality works.
  */
 
 /** Default expansion horizon for "never"-ending rules. */
@@ -25,76 +34,74 @@ const SAFETY_MAX = 2000;
 
 const JS_DAY_TO_CODE: Weekday[] = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 
-function weekdayCode(d: Date): Weekday {
-  return JS_DAY_TO_CODE[d.getUTCDay()] ?? "MO";
-}
+/* ------------------------------------------------------------------ */
+/* Calendar arithmetic, on plain YYYY-MM-DD strings                    */
+/*                                                                      */
+/* Deliberately not Date maths. These are calendar days, and doing the  */
+/* arithmetic on instants is what let the timezone in.                  */
+/* ------------------------------------------------------------------ */
 
-function addDays(d: Date, n: number): Date {
-  const next = new Date(d.getTime());
-  next.setUTCDate(next.getUTCDate() + n);
-  return next;
-}
+const DAY_MS = 86_400_000;
 
-function addMonths(d: Date, n: number): Date {
-  const next = new Date(d.getTime());
-  // Use month math that doesn't overshoot (e.g. Jan 31 + 1 month → Feb 28).
-  const target = next.getUTCMonth() + n;
-  next.setUTCDate(1);
-  next.setUTCMonth(target);
-  return next;
-}
-
-function startOfWeek(d: Date): Date {
-  // Monday-anchored week. JS getDay: 0=Sun..6=Sat. Convert to 0=Mon..6=Sun.
-  const day = (d.getUTCDay() + 6) % 7;
-  return addDays(d, -day);
-}
-
-/** Build a date in UTC at the same H:M:S as `template`. */
-function withClockOf(date: Date, template: Date): Date {
-  const next = new Date(date.getTime());
-  next.setUTCHours(
-    template.getUTCHours(),
-    template.getUTCMinutes(),
-    template.getUTCSeconds(),
-    template.getUTCMilliseconds(),
+function dateToUtcNoon(date: string): number {
+  // Noon, so adding days can never cross a day boundary by accident.
+  return Date.UTC(
+    Number(date.slice(0, 4)),
+    Number(date.slice(5, 7)) - 1,
+    Number(date.slice(8, 10)),
+    12,
   );
-  return next;
 }
 
-/** True when `current` is within the recurrence's end condition. */
+function utcNoonToDate(ms: number): string {
+  const d = new Date(ms);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
+function addDays(date: string, n: number): string {
+  return utcNoonToDate(dateToUtcNoon(date) + n * DAY_MS);
+}
+
+function weekdayOf(date: string): Weekday {
+  return JS_DAY_TO_CODE[new Date(dateToUtcNoon(date)).getUTCDay()] ?? "MO";
+}
+
+/** Monday-anchored start of the week containing `date`. */
+function startOfWeek(date: string): string {
+  const day = (new Date(dateToUtcNoon(date)).getUTCDay() + 6) % 7;
+  return addDays(date, -day);
+}
+
+/** nth (or last) weekday of a month, as YYYY-MM-DD, or null. */
+function nthWeekdayOfMonth(
+  year: number,
+  month: number /* 1-12 */,
+  nth: 1 | 2 | 3 | 4 | 5 | "last",
+  weekday: Weekday,
+): string | null {
+  if (!WEEKDAYS.includes(weekday)) return null;
+
+  const occurrences: string[] = [];
+  const first = `${year}-${String(month).padStart(2, "0")}-01`;
+  let cursor = first;
+  while (Number(cursor.slice(5, 7)) === month) {
+    if (weekdayOf(cursor) === weekday) occurrences.push(cursor);
+    cursor = addDays(cursor, 1);
+  }
+  if (occurrences.length === 0) return null;
+  if (nth === "last") return occurrences[occurrences.length - 1] ?? null;
+  return occurrences[nth - 1] ?? null;
+}
+
+/** True when `date` is within the recurrence's end condition. */
 function notPastEnd(
-  current: Date,
+  date: string,
   emittedCount: number,
   ends: RecurrenceEnd,
 ): boolean {
   if (ends.kind === "never") return true;
   if (ends.kind === "count") return emittedCount < ends.count;
-  // until: inclusive of the day specified
-  const u = new Date(`${ends.until}T23:59:59.999Z`);
-  return current.getTime() <= u.getTime();
-}
-
-/** nth (or last) weekday of the given month-year, returned as a UTC Date. */
-function nthWeekdayOfMonth(
-  year: number,
-  month: number /* 0-indexed */,
-  nth: 1 | 2 | 3 | 4 | 5 | "last",
-  weekday: Weekday,
-): Date | null {
-  const targetIdx = WEEKDAYS.indexOf(weekday); // 0=MO..6=SU
-  if (targetIdx === -1) return null;
-  // Iterate every day of the month and pick.
-  const occurrences: Date[] = [];
-  const probe = new Date(Date.UTC(year, month, 1));
-  while (probe.getUTCMonth() === month) {
-    const code = weekdayCode(probe);
-    if (code === weekday) occurrences.push(new Date(probe.getTime()));
-    probe.setUTCDate(probe.getUTCDate() + 1);
-  }
-  if (occurrences.length === 0) return null;
-  if (nth === "last") return occurrences[occurrences.length - 1] ?? null;
-  return occurrences[nth - 1] ?? null;
+  return date <= ends.until;
 }
 
 export type EventInstance = {
@@ -116,8 +123,10 @@ export function expandEvent(
   fromDate: Date,
   toDate: Date,
 ): EventInstance[] {
-  const baseStart = base.startsAt instanceof Date ? base.startsAt : new Date(base.startsAt);
-  const baseEnd = base.endsAt instanceof Date ? base.endsAt : new Date(base.endsAt);
+  const baseStart =
+    base.startsAt instanceof Date ? base.startsAt : new Date(base.startsAt);
+  const baseEnd =
+    base.endsAt instanceof Date ? base.endsAt : new Date(base.endsAt);
   const durationMs = baseEnd.getTime() - baseStart.getTime();
 
   if (!recurrence) {
@@ -125,41 +134,86 @@ export function expandEvent(
     return [{ startsAt: baseStart, endsAt: baseEnd, isOriginal: true }];
   }
 
-  const exceptions = new Set(exceptionDates.map((s) => new Date(s).toISOString()));
+  // The event's wall time — the thing that must not move.
+  const baseWall = toParishWallClock(baseStart);
+  const baseDate = parishDateString(baseStart);
+  const windowStart = parishDateString(fromDate);
+  const windowEnd = parishDateString(toDate);
+
+  /**
+   * Exceptions are compared on the parish calendar day, not on an exact
+   * timestamp.
+   *
+   * The old version compared ISO strings for exact equality, and the editor
+   * built those strings from the browser's local hours while expansion used
+   * UTC hours. For anybody outside UTC the two never matched, so cancelling
+   * a week silently did nothing and looked like a broken button. A cancelled
+   * date is a cancelled day; the clock time was never the point.
+   */
+  const exceptions = new Set(
+    exceptionDates
+      .map((raw) => {
+        // A bare YYYY-MM-DD is already a calendar day and means exactly
+        // what it says. Reading it through a timezone would shift it.
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+        const d = new Date(raw);
+        return Number.isNaN(d.getTime()) ? raw.slice(0, 10) : parishDateString(d);
+      })
+      .filter(Boolean),
+  );
+
   const out: EventInstance[] = [];
   let emitted = 0;
+
+  /** Turn a parish calendar day into a real instant at the event's time. */
+  const instantOn = (date: string): Date =>
+    fromParishWallClock({
+      year: Number(date.slice(0, 4)),
+      month: Number(date.slice(5, 7)),
+      day: Number(date.slice(8, 10)),
+      hour: baseWall.hour,
+      minute: baseWall.minute,
+    } satisfies WallClock);
+
+  /** Record one occurrence. Returns false when the date is cancelled. */
+  const take = (date: string): boolean => {
+    // A cancelled week is not an occurrence at all. It neither appears nor
+    // counts against a "10 sessions" rule — an editor who cancels one date
+    // is not asking for one fewer meeting, which is what the WordPress
+    // version quietly did.
+    if (exceptions.has(date)) return false;
+
+    if (date >= windowStart && date <= windowEnd) {
+      const startsAt = instantOn(date);
+      if (startsAt >= baseStart) {
+        out.push({
+          startsAt,
+          endsAt: new Date(startsAt.getTime() + durationMs),
+          isOriginal: date === baseDate,
+        });
+      }
+    }
+    return true;
+  };
 
   if (recurrence.freq === "weekly") {
     const byday = recurrence.byday;
     if (byday.length === 0) return [];
-    // Walk one full week at a time, scaled by interval.
-    let cursor = startOfWeek(baseStart);
+
+    let cursor = startOfWeek(baseDate);
     let safety = 0;
-    while (
-      safety++ < SAFETY_MAX &&
-      cursor <= toDate &&
-      notPastEnd(cursor, emitted, recurrence.ends)
-    ) {
-      // For each weekday in this week (Mon..Sun)
+    outer: while (safety++ < SAFETY_MAX && cursor <= windowEnd) {
       for (let i = 0; i < 7; i++) {
-        if (!notPastEnd(cursor, emitted, recurrence.ends)) break;
         const day = addDays(cursor, i);
-        const code = weekdayCode(day);
-        if (!byday.includes(code)) continue;
-        const startsAt = withClockOf(day, baseStart);
-        if (startsAt < baseStart) continue; // never emit before original start
-        if (startsAt > toDate) break;
-        if (startsAt >= fromDate) {
-          if (!exceptions.has(startsAt.toISOString())) {
-            out.push({
-              startsAt,
-              endsAt: new Date(startsAt.getTime() + durationMs),
-              isOriginal: startsAt.getTime() === baseStart.getTime(),
-            });
-          }
-        }
-        emitted++;
-        if (recurrence.ends.kind === "count" && emitted >= recurrence.ends.count) break;
+        if (!byday.includes(weekdayOf(day))) continue;
+        if (day < baseDate) continue;
+        if (day > windowEnd) break outer;
+        // The end condition is checked against the occurrence itself, not
+        // against the Monday its week starts on. The old version tested the
+        // week, so an occurrence could land days past the stated end date.
+        if (!notPastEnd(day, emitted, recurrence.ends)) break outer;
+
+        if (take(day)) emitted++;
       }
       cursor = addDays(cursor, 7 * Math.max(1, recurrence.interval));
     }
@@ -167,36 +221,30 @@ export function expandEvent(
   }
 
   // monthly_nth
-  let monthCursor = new Date(
-    Date.UTC(baseStart.getUTCFullYear(), baseStart.getUTCMonth(), 1),
-  );
+  let year = Number(baseDate.slice(0, 4));
+  let month = Number(baseDate.slice(5, 7));
   let safety = 0;
-  while (
-    safety++ < SAFETY_MAX &&
-    monthCursor <= toDate &&
-    notPastEnd(monthCursor, emitted, recurrence.ends)
-  ) {
+  while (safety++ < SAFETY_MAX) {
+    const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
+    if (monthStart > windowEnd) break;
+
     const day = nthWeekdayOfMonth(
-      monthCursor.getUTCFullYear(),
-      monthCursor.getUTCMonth(),
+      year,
+      month,
       recurrence.nth,
       recurrence.weekday,
     );
-    if (day) {
-      const startsAt = withClockOf(day, baseStart);
-      if (startsAt >= baseStart && startsAt <= toDate) {
-        if (startsAt >= fromDate && !exceptions.has(startsAt.toISOString())) {
-          out.push({
-            startsAt,
-            endsAt: new Date(startsAt.getTime() + durationMs),
-            isOriginal: startsAt.getTime() === baseStart.getTime(),
-          });
-        }
-        emitted++;
-        if (recurrence.ends.kind === "count" && emitted >= recurrence.ends.count) break;
-      }
+    if (day && day >= baseDate) {
+      if (!notPastEnd(day, emitted, recurrence.ends)) break;
+      if (day > windowEnd) break;
+      if (take(day)) emitted++;
     }
-    monthCursor = addMonths(monthCursor, Math.max(1, recurrence.interval));
+
+    month += Math.max(1, recurrence.interval);
+    while (month > 12) {
+      month -= 12;
+      year += 1;
+    }
   }
   return out;
 }
@@ -215,7 +263,8 @@ export function expandEvents<
   fromDate: Date,
   toDate: Date,
 ): Array<T & { occurrenceStartsAt: Date; occurrenceEndsAt: Date }> {
-  const out: Array<T & { occurrenceStartsAt: Date; occurrenceEndsAt: Date }> = [];
+  const out: Array<T & { occurrenceStartsAt: Date; occurrenceEndsAt: Date }> =
+    [];
   for (const e of list) {
     const instances = expandEvent(
       e,
@@ -232,7 +281,9 @@ export function expandEvents<
       });
     }
   }
-  out.sort((a, b) => a.occurrenceStartsAt.getTime() - b.occurrenceStartsAt.getTime());
+  out.sort(
+    (a, b) => a.occurrenceStartsAt.getTime() - b.occurrenceStartsAt.getTime(),
+  );
   return out;
 }
 
@@ -243,13 +294,20 @@ export function summarizeRecurrence(r: Recurrence | null | undefined): string {
   if (r.freq === "weekly") {
     const days = r.byday.map(weekdayName).join(", ");
     const everyN =
-      interval === 1 ? "Every week" : interval === 2 ? "Every other week" : `Every ${interval} weeks`;
+      interval === 1
+        ? "Every week"
+        : interval === 2
+          ? "Every other week"
+          : `Every ${interval} weeks`;
     return `${everyN} on ${days}${endSuffix(r.ends)}`;
   }
-  // monthly_nth
   const ord = ordinal(r.nth);
   const everyN =
-    interval === 1 ? "Every month" : interval === 2 ? "Every other month" : `Every ${interval} months`;
+    interval === 1
+      ? "Every month"
+      : interval === 2
+        ? "Every other month"
+        : `Every ${interval} months`;
   return `${everyN} on the ${ord} ${weekdayName(r.weekday)}${endSuffix(r.ends)}`;
 }
 
@@ -272,6 +330,17 @@ function weekdayName(w: Weekday): string {
 
 function endSuffix(ends: RecurrenceEnd): string {
   if (ends.kind === "never") return "";
-  if (ends.kind === "count") return ` · ${ends.count} occurrence${ends.count === 1 ? "" : "s"}`;
+  if (ends.kind === "count")
+    return ` · ${ends.count} occurrence${ends.count === 1 ? "" : "s"}`;
   return ` · until ${ends.until}`;
+}
+
+/**
+ * Build the stored form of a cancelled date.
+ *
+ * Exposed so the admin editor and the expansion agree by construction
+ * rather than by two people remembering the same convention.
+ */
+export function exceptionDateFor(date: string): string {
+  return date.slice(0, 10);
 }

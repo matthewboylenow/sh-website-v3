@@ -391,10 +391,12 @@ describe("expandEvent — monthly nth-weekday rules", () => {
       WINDOW_FROM,
       new Date("2027-01-01T00:00:00.000Z"),
     );
+    // December's instant is an hour later in UTC because the parish is on
+    // standard time by then. The wall clock — 7pm — has not moved.
     expect(starts(out)).toEqual([
       "2026-08-11T23:00:00.000Z",
       "2026-10-13T23:00:00.000Z",
-      "2026-12-08T23:00:00.000Z",
+      "2026-12-09T00:00:00.000Z",
     ]);
   });
 
@@ -434,11 +436,13 @@ describe("expandEvent — monthly nth-weekday rules", () => {
       new Date("2026-11-01T00:00:00.000Z"),
       new Date("2027-03-01T00:00:00.000Z"),
     );
+    // All four are 7pm in Westfield; all four are on standard time, so
+    // each lands at midnight UTC the following day.
     expect(starts(out)).toEqual([
-      "2026-11-10T23:00:00.000Z",
-      "2026-12-08T23:00:00.000Z",
-      "2027-01-12T23:00:00.000Z",
-      "2027-02-09T23:00:00.000Z",
+      "2026-11-11T00:00:00.000Z",
+      "2026-12-09T00:00:00.000Z",
+      "2027-01-13T00:00:00.000Z",
+      "2027-02-10T00:00:00.000Z",
     ]);
   });
 
@@ -610,61 +614,174 @@ describe("horizon constant", () => {
 
 /**
  * ---------------------------------------------------------------------
- * KNOWN GAPS
+ * THE TIMEZONE FIXES
  *
- * These tests pin what the code does *today*. They are not endorsements.
- * Each one has a matching entry in the handoff notes with the proposed
- * fix. If you change the behaviour deliberately, change the test and say
- * so in STATUS.md — do not delete it.
+ * These three were pinned as known gaps in Wave 19 and fixed in Wave 21.
+ * The parish is in Westfield, New Jersey; Vercel runs UTC. Expansion now
+ * works on the parish's own clock.
  * ---------------------------------------------------------------------
  */
-describe("known gaps — current behaviour, pinned deliberately", () => {
-  it("GAP 1: a cancelled date still consumes a slot in a `count` rule", () => {
-    // RFC 5545 says EXDATE consumes a COUNT slot, so this is arguably
-    // correct — but nothing in the admin UI tells an editor that
-    // cancelling one week shortens the series by one.
+describe("a 7pm event is at 7pm all year", () => {
+  // 23:00Z in August is 7pm in Westfield.
+  const base = { startsAt: WED_7PM, endsAt: WED_830PM };
+
+  const parishHour = (d: Date) =>
+    Number(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        hour: "numeric",
+        hour12: false,
+      }).format(d),
+    ) % 24;
+
+  it("keeps the hour across the autumn change", () => {
     const out = expandEvent(
-      { startsAt: WED_7PM, endsAt: WED_830PM },
-      weekly({ ends: { kind: "count", count: 3 } }),
-      ["2026-08-12T23:00:00.000Z"],
+      base,
+      weekly(),
+      [],
+      new Date("2026-10-01T00:00:00.000Z"),
+      new Date("2026-12-01T00:00:00.000Z"),
+    );
+    expect(out.length).toBeGreaterThan(4);
+    for (const i of out) {
+      expect(parishHour(i.startsAt), i.startsAt.toISOString()).toBe(19);
+    }
+    // The UTC instant moves by an hour, which is the point — the wall
+    // clock is what stayed still.
+    const october = out.find((i) => i.startsAt < new Date("2026-11-01"))!;
+    const november = out.find((i) => i.startsAt > new Date("2026-11-02"))!;
+    expect(october.startsAt.toISOString().slice(11, 16)).toBe("23:00");
+    expect(november.startsAt.toISOString().slice(11, 16)).toBe("00:00");
+  });
+
+  it("keeps the hour across the spring change", () => {
+    const marchBase = {
+      startsAt: "2027-02-03T00:00:00.000Z", // 7pm Feb 2, EST
+      endsAt: "2027-02-03T01:30:00.000Z",
+    };
+    const out = expandEvent(
+      marchBase,
+      weekly({ byday: ["TU"] }),
+      [],
+      new Date("2027-02-01T00:00:00.000Z"),
+      new Date("2027-04-15T00:00:00.000Z"),
+    );
+    expect(out.length).toBeGreaterThan(6);
+    for (const i of out) {
+      expect(parishHour(i.startsAt), i.startsAt.toISOString()).toBe(19);
+    }
+  });
+
+  it("preserves the duration across a change", () => {
+    const out = expandEvent(
+      base,
+      weekly(),
+      [],
+      new Date("2026-10-01T00:00:00.000Z"),
+      new Date("2026-12-01T00:00:00.000Z"),
+    );
+    const expected =
+      new Date(WED_830PM).getTime() - new Date(WED_7PM).getTime();
+    for (const i of out) {
+      expect(i.endsAt.getTime() - i.startsAt.getTime()).toBe(expected);
+    }
+  });
+});
+
+describe("cancelling a week actually cancels it", () => {
+  const base = { startsAt: WED_7PM, endsAt: WED_830PM };
+
+  it("accepts a plain calendar date", () => {
+    // What the date picker in the admin gives you.
+    const out = expandEvent(
+      base,
+      weekly(),
+      ["2026-08-12"],
       WINDOW_FROM,
-      WINDOW_TO,
+      new Date("2026-08-27T00:00:00.000Z"),
     );
     expect(starts(out)).toEqual([
       "2026-08-05T23:00:00.000Z",
       "2026-08-19T23:00:00.000Z",
+      "2026-08-26T23:00:00.000Z",
     ]);
   });
 
-  it("GAP 2: a weekly `until` is checked against the week, not the occurrence", () => {
-    // until = Monday Aug 3. The Wednesday in that same week still fires,
-    // because the loop tests the Monday-anchored cursor rather than the
-    // generated start. Fix would be to test `startsAt` against `until`.
+  it("accepts a full timestamp written in any zone", () => {
+    // The old version compared exact ISO strings, and the editor built
+    // them from the browser's local hours while expansion used UTC. For
+    // anyone outside UTC — which is everyone at this parish — the two
+    // never matched and the cancelled week still appeared.
+    // Note a UTC midnight timestamp is deliberately absent. 00:00Z on the
+    // 12th is 8pm on the 11th in Westfield, so it genuinely means the 11th.
+    // Reading it as the 12th would be guessing.
+    for (const spelling of [
+      "2026-08-12T23:00:00.000Z",
+      "2026-08-12T19:00:00.000-04:00",
+      "2026-08-12T12:00:00.000Z",
+      "2026-08-12T14:30:00.000Z",
+    ]) {
+      const out = expandEvent(
+        base,
+        weekly(),
+        [spelling],
+        WINDOW_FROM,
+        new Date("2026-08-20T00:00:00.000Z"),
+      );
+      expect(starts(out), spelling).toEqual([
+        "2026-08-05T23:00:00.000Z",
+        "2026-08-19T23:00:00.000Z",
+      ]);
+    }
+  });
+
+  it("does not consume a slot in a count rule", () => {
+    // Cancelling one week should not quietly shorten the series. An
+    // editor who cancels a date is not asking for one fewer meeting.
     const out = expandEvent(
-      { startsAt: WED_7PM, endsAt: WED_830PM },
+      base,
+      weekly({ ends: { kind: "count", count: 3 } }),
+      ["2026-08-12"],
+      WINDOW_FROM,
+      WINDOW_TO,
+    );
+    // Three sessions were asked for, so three happen — the cancelled week
+    // is skipped and the series runs a week longer.
+    expect(starts(out)).toEqual([
+      "2026-08-05T23:00:00.000Z",
+      "2026-08-19T23:00:00.000Z",
+      "2026-08-26T23:00:00.000Z",
+    ]);
+  });
+});
+
+describe("a weekly until date is honoured to the day", () => {
+  const base = { startsAt: WED_7PM, endsAt: WED_830PM };
+
+  it("does not emit an occurrence past the end date", () => {
+    // until = Monday Aug 3. The Wednesday in that same week used to fire
+    // anyway, because the loop tested the Monday its week started on.
+    const out = expandEvent(
+      base,
       weekly({ ends: { kind: "until", until: "2026-08-03" } }),
       [],
       WINDOW_FROM,
       WINDOW_TO,
     );
-    expect(starts(out)).toEqual(["2026-08-05T23:00:00.000Z"]);
+    expect(starts(out)).toEqual([]);
   });
 
-  it("GAP 3: the UTC clock is held fixed across a daylight-saving change", () => {
-    // A 7pm ET event in August is stored as 23:00Z. In November, 23:00Z is
-    // 6pm ET. Expansion copies the UTC clock, so the published time slides
-    // an hour for half the year. Fixing this means expanding in
-    // America/New_York, not UTC.
+  it("includes an occurrence falling exactly on the end date", () => {
     const out = expandEvent(
-      { startsAt: WED_7PM, endsAt: WED_830PM },
-      weekly(),
+      base,
+      weekly({ ends: { kind: "until", until: "2026-08-12" } }),
       [],
-      new Date("2026-11-01T00:00:00.000Z"),
-      new Date("2026-11-15T00:00:00.000Z"),
+      WINDOW_FROM,
+      WINDOW_TO,
     );
     expect(starts(out)).toEqual([
-      "2026-11-04T23:00:00.000Z", // 6pm ET, not 7pm
-      "2026-11-11T23:00:00.000Z",
+      "2026-08-05T23:00:00.000Z",
+      "2026-08-12T23:00:00.000Z",
     ]);
   });
 });
