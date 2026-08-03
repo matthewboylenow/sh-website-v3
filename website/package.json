@@ -16,7 +16,8 @@
     "db:check": "tsx --env-file=.env.local db/check.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "answers:seed": "tsx --env-file=.env.local db/seed/answer-cards-run.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

@@ -51,6 +51,7 @@ Last updated: **2026-08-02**
 | 20.C | Answer engine — homepage hero placement | ✅ Done (471 tests) |
 | 20.D | Answer engine — admin screens + retention job | ✅ Done (486 tests) |
 | 21 | Timezone — recurrence and formatting on the parish clock | ✅ Done (512 tests) |
+| 21.1 | Deploy config — vercel.json cron + answer-card seed script | ✅ Done |
 | 21 | Pre-launch punch list | 🟡 Scoped — see `claude/v3-launch-scope.md` |
 
 Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).
