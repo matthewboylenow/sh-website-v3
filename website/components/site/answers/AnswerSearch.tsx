@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { search, type SearchOutcome } from "@/lib/answers/match";
 import type { CorpusCard, CorpusPage } from "@/lib/answers/types";
 
@@ -15,6 +15,10 @@ import type { CorpusCard, CorpusPage } from "@/lib/answers/types";
  * enough to avoid re-rendering on every keystroke. 1200ms before logging,
  * because the old parish helper logged every letter and inflated its own
  * numbers about fivefold — every report it produced was meaningless.
+ *
+ * `variant="hero"` puts it over the homepage video: a dark scrim so it
+ * survives a bright frame, and results in a floating panel so the hero never
+ * shifts under someone's cursor. On a phone the panel becomes a bottom sheet.
  */
 
 type Contacts = Record<string, { name: string; phone: string; email: string }>;
@@ -28,6 +32,9 @@ type Corpus = {
 const SEARCH_DEBOUNCE_MS = 180;
 const LOG_DEBOUNCE_MS = 1200;
 const MIN_QUERY = 2;
+
+/** Room the panel needs below the box before it stops opening upward. */
+const PANEL_MIN_SPACE_PX = 380;
 
 async function post(body: unknown): Promise<Record<string, unknown>> {
   try {
@@ -44,20 +51,36 @@ async function post(body: unknown): Promise<Record<string, unknown>> {
 }
 
 export function AnswerSearch({
+  variant = "default",
   label = "What are you looking for?",
   placeholder = "Mass times, baptism, volunteering, livestream…",
 }: {
+  variant?: "default" | "hero";
   label?: string;
   placeholder?: string;
 }) {
+  const hero = variant === "hero";
+
   const [query, setQuery] = useState("");
   const [corpus, setCorpus] = useState<Corpus | null>(null);
   const [outcome, setOutcome] = useState<SearchOutcome<CorpusCard> | null>(null);
   const [searchId, setSearchId] = useState<string | null>(null);
+  const [openUpward, setOpenUpward] = useState(false);
+  const [isSmall, setIsSmall] = useState(false);
 
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
   const corpusPromise = useRef<Promise<Corpus | null> | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const logTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isOpen = outcome !== null;
+
+  const close = useCallback(() => {
+    setOutcome(null);
+    setSearchId(null);
+    if (logTimer.current) clearTimeout(logTimer.current);
+  }, []);
 
   const loadCorpus = useCallback((): Promise<Corpus | null> => {
     if (!corpusPromise.current) {
@@ -68,11 +91,19 @@ export function AnswerSearch({
     return corpusPromise.current;
   }, []);
 
-  // Warm the corpus on first focus rather than on page load, so a visitor
-  // who never uses the box never pays for it.
+  // Warm the corpus on first focus rather than page load, so a visitor who
+  // never uses the box never pays for it.
   const onFocus = useCallback(() => {
     void loadCorpus().then((c) => c && setCorpus(c));
   }, [loadCorpus]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const sync = () => setIsSmall(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -81,13 +112,62 @@ export function AnswerSearch({
     };
   }, []);
 
+  // Escape and click-away.
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    const onDown = (e: PointerEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) close();
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onDown);
+    };
+  }, [isOpen, close]);
+
+  /**
+   * Give way to the navigation.
+   *
+   * The mobile drawer locks body scroll when it opens. Rather than winning a
+   * stacking race — which would put search results on top of the menu, and is
+   * worse than losing it — the panel simply closes.
+   */
+  useEffect(() => {
+    if (!isOpen) return;
+    const observer = new MutationObserver(() => {
+      if (document.body.style.overflow === "hidden") close();
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["style", "class"],
+    });
+    return () => observer.disconnect();
+  }, [isOpen, close]);
+
+  // Decide which way the panel opens before the browser paints it, so it
+  // never appears in one place and jumps to another.
+  useLayoutEffect(() => {
+    if (!isOpen || !hero || isSmall) return;
+    const box = wrapRef.current?.getBoundingClientRect();
+    if (!box) return;
+    setOpenUpward(window.innerHeight - box.bottom < PANEL_MIN_SPACE_PX);
+  }, [isOpen, hero, isSmall, outcome]);
+
+  // A second search must not inherit the first one's scroll offset, or the
+  // answer opens mid-paragraph.
+  useEffect(() => {
+    if (panelRef.current) panelRef.current.scrollTop = 0;
+  }, [outcome]);
+
   const run = useCallback(
     (raw: string) => {
       const trimmed = raw.trim();
       if (trimmed.length < MIN_QUERY) {
-        setOutcome(null);
-        setSearchId(null);
-        if (logTimer.current) clearTimeout(logTimer.current);
+        close();
         return;
       }
 
@@ -115,7 +195,7 @@ export function AnswerSearch({
         }, LOG_DEBOUNCE_MS);
       });
     },
-    [loadCorpus],
+    [loadCorpus, close],
   );
 
   const onChange = (value: string) => {
@@ -131,39 +211,74 @@ export function AnswerSearch({
 
   const hasResults =
     outcome !== null && (outcome.cards.length > 0 || outcome.pages.length > 0);
-  const isDeadEnd = outcome !== null && !hasResults;
+
+  // The panel floats in hero mode so the page beneath never reflows. In the
+  // ordinary mode it sits in the flow, where pushing content down is fine.
+  const panelClass = !hero
+    ? "mt-4 space-y-4"
+    : isSmall
+      ? "fixed inset-x-0 bottom-0 z-30 max-h-[78vh] overflow-y-auto rounded-t-2xl border-t border-rule bg-cream p-4 shadow-[0_-20px_50px_rgba(15,26,53,0.3)]"
+      : `absolute z-30 w-full max-h-[70vh] overflow-y-auto rounded-xl border border-rule bg-cream p-4 shadow-[0_30px_60px_rgba(15,26,53,0.34)] ${
+          openUpward ? "bottom-full mb-3" : "top-full mt-3"
+        }`;
 
   return (
-    <div className="w-full">
-      <label htmlFor="answer-search" className="block text-sm font-semibold">
-        {label}
-      </label>
-      <div className="relative mt-2">
-        <input
-          id="answer-search"
-          type="search"
-          value={query}
-          onChange={(e) => onChange(e.target.value)}
-          onFocus={onFocus}
-          placeholder={placeholder}
-          autoComplete="off"
-          className="form-input w-full pr-10"
-          aria-describedby="answer-search-status"
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={() => {
-              setQuery("");
-              setOutcome(null);
-              setSearchId(null);
-            }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-2 py-1 text-sm text-ink-3 hover:text-rust-dark"
-            aria-label="Clear search"
-          >
-            ×
-          </button>
-        )}
+    <div ref={wrapRef} className={hero ? "relative w-full sm:max-w-md" : "w-full"}>
+      {/* The dim lives inside the widget. Appending it to <body> would put
+          it above the panel, because the wrapper is its own stacking
+          context — that exact bug shipped once already. */}
+      {hero && isSmall && isOpen && (
+        <div aria-hidden="true" className="fixed inset-0 z-20 bg-black/50" />
+      )}
+
+      <div
+        className={
+          hero
+            ? "sh-on-dark rounded-xl bg-navy/75 p-4 ring-1 ring-white/20 backdrop-blur-md"
+            : ""
+        }
+      >
+        <label
+          htmlFor="answer-search"
+          className={`block text-sm font-semibold ${hero ? "text-white" : ""}`}
+        >
+          {label}
+        </label>
+        <div className="relative mt-2">
+          <input
+            id="answer-search"
+            type="search"
+            value={query}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={onFocus}
+            placeholder={placeholder}
+            autoComplete="off"
+            className={
+              hero
+                ? "w-full rounded-pill border border-white/25 bg-white/95 px-4 py-3 pr-10 text-ink placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-rust focus:ring-offset-2 focus:ring-offset-navy"
+                : "form-input w-full pr-10"
+            }
+            // Deliberately not a combobox. The panel holds paragraphs,
+            // links and Yes/No buttons, not a list of options, so the
+            // listbox pattern would describe it wrongly and trap a screen
+            // reader in an interaction that has no options to choose. The
+            // live region below announces the result count instead.
+            aria-describedby="answer-search-status"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                close();
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full px-1 text-lg leading-none text-ink-3 hover:text-rust-dark"
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          )}
+        </div>
       </div>
 
       <p id="answer-search-status" className="sr-only" role="status">
@@ -172,63 +287,82 @@ export function AnswerSearch({
           : `${outcome.shownCount} result${outcome.shownCount === 1 ? "" : "s"}`}
       </p>
 
-      {hasResults && (
-        <div className="mt-4 space-y-4">
-          {outcome.cards.map((card, i) => (
-            <AnswerCardView
-              key={card.k}
-              card={card}
-              contacts={corpus?.contacts ?? {}}
-              position={i + 1}
-              shown={outcome.cards.map((c) => c.k)}
-              resultCount={outcome.shownCount}
-              query={query.trim()}
-              searchId={searchId}
-              onLinkClick={onResultClick}
-            />
-          ))}
-
-          {outcome.pages.length > 0 && (
-            <div className="rounded-lg border border-rule bg-white p-4">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
-                {outcome.cards.length > 0
-                  ? "More pages that might help"
-                  : "Pages that might help"}
-              </h3>
-              <ul className="mt-2 space-y-1">
-                {outcome.pages.map((p) => (
-                  <li key={p.u}>
-                    <a
-                      href={p.u}
-                      onClick={() => onResultClick(p.u)}
-                      className="text-sm text-rust-dark hover:text-rust"
-                    >
-                      {p.t}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+      {isOpen && (
+        <div ref={panelRef} className={panelClass}>
+          {hero && (
+            <div className="mb-2 flex justify-end">
+              <button
+                type="button"
+                onClick={close}
+                className="rounded-full px-2 py-1 text-sm text-ink-3 hover:text-rust-dark"
+              >
+                Close
+              </button>
             </div>
           )}
-        </div>
-      )}
 
-      {isDeadEnd && (
-        <div className="mt-4 rounded-lg border border-dashed border-rule bg-cream/40 p-4 text-sm text-ink-2">
-          <p>
-            We don&rsquo;t have an answer written for that one yet, and
-            we&rsquo;ve made a note of it.
-          </p>
-          <p className="mt-2">
-            The Parish Office can help —{" "}
-            <a
-              href={`tel:${(corpus?.contacts.office?.phone ?? "").replace(/\D/g, "")}`}
-              className="text-rust-dark hover:text-rust"
-            >
-              {corpus?.contacts.office?.phone || "call us"}
-            </a>
-            .
-          </p>
+          {hasResults ? (
+            <div className="space-y-4">
+              {outcome.cards.map((card, i) => (
+                <AnswerCardView
+                  key={card.k}
+                  card={card}
+                  contacts={corpus?.contacts ?? {}}
+                  position={i + 1}
+                  shown={outcome.cards.map((c) => c.k)}
+                  resultCount={outcome.shownCount}
+                  query={query.trim()}
+                  searchId={searchId}
+                  onLinkClick={onResultClick}
+                />
+              ))}
+
+              {outcome.pages.length > 0 && (
+                <div className="rounded-lg border border-rule bg-white p-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-3">
+                    {outcome.cards.length > 0
+                      ? "More pages that might help"
+                      : "Pages that might help"}
+                  </h3>
+                  <ul className="mt-2 space-y-1">
+                    {outcome.pages.map((p) => (
+                      <li key={p.u}>
+                        <a
+                          href={p.u}
+                          onClick={() => onResultClick(p.u)}
+                          className="text-sm text-rust-dark hover:text-rust"
+                        >
+                          {p.t}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-dashed border-rule bg-white p-4 text-sm text-ink-2">
+              <p>
+                We don&rsquo;t have an answer written for that one yet, and
+                we&rsquo;ve made a note of it.
+              </p>
+              <p className="mt-2">
+                The Parish Office can help
+                {corpus?.contacts.office?.phone ? (
+                  <>
+                    {" — "}
+                    <a
+                      href={`tel:${corpus.contacts.office.phone.replace(/\D/g, "")}`}
+                      className="text-rust-dark hover:text-rust"
+                    >
+                      {corpus.contacts.office.phone}
+                    </a>
+                  </>
+                ) : null}
+                .
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

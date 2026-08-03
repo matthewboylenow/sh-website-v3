@@ -48,7 +48,8 @@ Last updated: **2026-08-02**
 | 19.1 | Starter layouts on "+ New page" | ✅ Done (blank / simple / ministry landing / upcoming event) |
 | 20.A | Answer engine — core logic, schema, 52 seed cards | ✅ Done (398 tests) |
 | 20.B | Answer engine — API routes + public widget | ✅ Done (464 tests) |
-| 20.C | Answer engine — admin screens | ⬜ Next |
+| 20.C | Answer engine — homepage hero placement | ✅ Done (471 tests) |
+| 20.D | Answer engine — admin screens | ⬜ Next |
 | 21 | Pre-launch punch list | 🟡 Scoped — see `claude/v3-launch-scope.md` |
 
 Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).

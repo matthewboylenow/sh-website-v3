@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AnswerSearch } from "@/components/site/answers/AnswerSearch";
 import { Container } from "@/components/site/Container";
 import { HeroVideo } from "@/components/site/HeroVideo";
 import { SectionRenderer } from "@/components/site/page-sections/SectionRenderer";
@@ -46,8 +47,12 @@ export default async function HomePage() {
       {/* ---- Hero ------------------------------------------------- */}
       <HeroVideo videoUrl={hero.videoUrl} posterUrl={hero.posterUrl}>
         <Container width="wide">
-          <div className="sh-on-dark flex min-h-[640px] flex-col justify-center pt-32 pb-20 sm:min-h-[720px] sm:pt-40">
+          <div className="sh-on-dark relative flex min-h-[640px] flex-col justify-center pt-32 pb-20 sm:min-h-[720px] sm:pt-40">
             <div className="max-w-[40ch]">
+              {/* The search box lives at the end of this block on mobile,
+                  where it reads as the last thing in the hero, and is
+                  repositioned to the bottom right on larger screens. See
+                  the sibling below. */}
               {hero.eyebrow && <span className="sh-eyebrow">{hero.eyebrow}</span>}
               <h1 className="sh-display mt-4">{hero.title}</h1>
               {hero.lede && <p className="sh-lede mt-6 max-w-[48ch]">{hero.lede}</p>}
@@ -108,6 +113,17 @@ export default async function HomePage() {
                   )}
                 </div>
               )}
+            </div>
+
+            {/*
+              The answer box. Bottom right on a laptop so it sits opposite
+              the headline rather than under it; full width and last in the
+              hero on a phone, where a second column would just squeeze the
+              text. It answers the question people actually arrive with,
+              which is usually "when is Mass".
+            */}
+            <div className="mt-12 flex justify-start lg:absolute lg:right-0 lg:bottom-20 lg:mt-0 lg:w-[28rem] lg:justify-end">
+              <AnswerSearch variant="hero" />
             </div>
           </div>
         </Container>
