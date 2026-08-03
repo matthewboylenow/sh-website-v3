@@ -50,6 +50,7 @@ Last updated: **2026-08-02**
 | 20.B | Answer engine — API routes + public widget | ✅ Done (464 tests) |
 | 20.C | Answer engine — homepage hero placement | ✅ Done (471 tests) |
 | 20.D | Answer engine — admin screens + retention job | ✅ Done (486 tests) |
+| 21 | Timezone — recurrence and formatting on the parish clock | ✅ Done (512 tests) |
 | 21 | Pre-launch punch list | 🟡 Scoped — see `claude/v3-launch-scope.md` |
 
 Build sequence is from `design-ref/pages/backend.html §16` (Steps 1–8) + the resolved post-Step-6 scope memory (Waves 9–13).
@@ -1084,7 +1085,7 @@ appears to do nothing is worse than a page you have to fill in by hand.
 Also fixed here: the slug hint on the page form still said `/p/<slug>`,
 stale since Wave 18.1.
 
-### Known gaps pinned by tests, not fixed
+### Known gaps pinned by tests — items 1–3 fixed in Wave 21
 
 These are real defects on the current build. Each has a test that documents
 current behaviour so a change is deliberate rather than accidental. All are

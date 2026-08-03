@@ -8,6 +8,7 @@ import {
   type Weekday,
 } from "@/db/schema";
 import { summarizeRecurrence } from "@/lib/recurrence";
+import { exceptionDateFor } from "@/lib/recurrence";
 
 const WEEKDAY_LABEL: Record<Weekday, string> = {
   MO: "Mon",
@@ -33,14 +34,12 @@ export function RecurrenceEditor({
   onChange,
   exceptionDates,
   onExceptionsChange,
-  baseStart,
 }: {
   value: Recurrence | null;
   onChange: (next: Recurrence | null) => void;
   exceptionDates: string[];
   onExceptionsChange: (next: string[]) => void;
   /** ISO datetime-local value of the event's start, used to seed exception times. */
-  baseStart: string;
 }) {
   const [newException, setNewException] = useState("");
 
@@ -84,32 +83,22 @@ export function RecurrenceEditor({
 
   const addException = () => {
     if (!newException) return;
-    // Always store as a full ISO with the same clock time as the base
-    // start. Editor surfaces the date; we re-attach the time so the
-    // expansion's exact-equality check works.
-    let iso: string;
-    try {
-      // newException is "YYYY-MM-DD" (date input). Use the base event's
-      // time-of-day; if absent, use midnight UTC.
-      const [y, m, d] = newException.split("-").map(Number);
-      const base = baseStart ? new Date(baseStart) : null;
-      const dt = new Date(
-        Date.UTC(
-          y ?? 1970,
-          (m ?? 1) - 1,
-          d ?? 1,
-          base ? base.getHours() : 0,
-          base ? base.getMinutes() : 0,
-          0,
-          0,
-        ),
-      );
-      iso = dt.toISOString();
-    } catch {
-      return;
-    }
-    if (exceptionDates.includes(iso)) return;
-    onExceptionsChange([...exceptionDates, iso].sort());
+
+    /*
+     * Store the plain calendar date the editor picked, nothing more.
+     *
+     * This used to build a full timestamp from the base event's *local*
+     * hours and write them as if they were UTC, while expansion compared
+     * exact ISO strings built from UTC hours. For anybody outside UTC —
+     * which is everyone at this parish — the two never matched, so
+     * cancelling a week silently did nothing and looked like a broken
+     * button. A cancelled date is a cancelled day; the clock time was
+     * never the point.
+     */
+    const date = exceptionDateFor(newException);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+    if (exceptionDates.some((e) => exceptionDateFor(e) === date)) return;
+    onExceptionsChange([...exceptionDates, date].sort());
     setNewException("");
   };
 
@@ -353,13 +342,18 @@ export function RecurrenceEditor({
         {exceptionDates.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-1.5">
             {exceptionDates.map((iso) => {
-              const d = new Date(iso);
+              // Build the label from the calendar parts, not by parsing the
+              // string as an instant — `new Date("2026-08-12")` is UTC
+              // midnight, which reads as the 11th in Westfield and would
+              // show the wrong day on the chip.
+              const [y, m, d] = exceptionDateFor(iso).split("-").map(Number);
+              const label = new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
               return (
                 <li
                   key={iso}
                   className="inline-flex items-center gap-1.5 rounded-pill border border-rule bg-white px-2 py-0.5 text-xs"
                 >
-                  {d.toLocaleDateString("en-US", {
+                  {label.toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
                     year: "numeric",

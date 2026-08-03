@@ -263,7 +263,6 @@ export function EventForm({
           onChange={setRecurrence}
           exceptionDates={exceptionDates}
           onExceptionsChange={setExceptionDates}
-          baseStart={startsAtLocal}
         />
         <input
           type="hidden"

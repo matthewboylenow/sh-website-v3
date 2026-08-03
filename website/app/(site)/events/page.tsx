@@ -128,11 +128,15 @@ export default async function EventsPage({
                 <EmptyState />
               ) : (
                 [...byMonth.entries()].map(([key, entries]) => {
+                  // monthKey now emits a real calendar month (2026-08 for
+                  // August). It used to emit a zero-indexed one, which this
+                  // line silently compensated for.
                   const [y, mStr] = key.split("-");
-                  const label = new Date(Number(y), Number(mStr), 1).toLocaleString(
-                    "en-US",
-                    { month: "long" },
-                  );
+                  const label = new Date(
+                    Number(y),
+                    Number(mStr) - 1,
+                    1,
+                  ).toLocaleString("en-US", { month: "long" });
                   return (
                     <div key={key} className="mb-12">
                       <h2 className="flex items-baseline gap-3 font-serif text-2xl font-bold text-navy">

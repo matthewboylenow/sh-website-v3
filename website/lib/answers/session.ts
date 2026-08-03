@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { parishDateString } from "@/lib/timezone";
 
 /**
  * Visitor identity for the answer engine — enough to rate limit and to stop
@@ -29,12 +30,7 @@ function secret(): string {
  * nightly hour of invisible data loss.
  */
 export function parishDay(now: Date = new Date()): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/New_York",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(now);
+  return parishDateString(now);
 }
 
 /** Derive the daily visitor hash. Rotates at parish midnight. */

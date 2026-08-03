@@ -8,6 +8,7 @@ import {
   pages,
   siteSettings,
 } from "@/db/schema";
+import { parishToday } from "@/lib/timezone";
 import { filterLinks, isBlocked, type BlockRule } from "./blocklist";
 import { resolveCard } from "./resolve";
 import type { AnswerCard, CorpusCard, CorpusPage } from "./types";
@@ -22,14 +23,7 @@ import type { AnswerCard, CorpusCard, CorpusPage } from "./types";
  */
 
 /** The parish's own date, which is what card resolution is relative to. */
-export function parishToday(now: Date = new Date()): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/New_York",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(now);
-}
+export { parishToday };
 
 /**
  * Pages that must never be discoverable even though the URL works. The
