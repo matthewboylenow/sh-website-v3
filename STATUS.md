@@ -2,7 +2,7 @@
 
 > **Read this first, every session.** This is the running log of what's shipped, what's in flight, what's queued, and what's broken. It pairs with `CLAUDE.md` (rules) and `/design-ref/` (specs). Update it after every meaningful step.
 
-Last updated: **2026-08-02**
+Last updated: **2026-08-04**
 
 ---
 
@@ -1117,6 +1117,27 @@ in `tests/recurrence.test.ts` under `known gaps`, except the last two.
    and the handoff notes both said 18.
 
 ---
+
+## ✅ Answer engine live on Neon (2026-08-04)
+
+Migration `0024_answer_engine` applied and the 52 starter cards seeded.
+
+- **Migration**: this session's sandbox can't reach Postgres on :5432
+  (drizzle-kit's path), so 0024 was applied over the Neon HTTP driver
+  by `scripts/_apply-0024.ts` — same statements, and the run was
+  recorded in `drizzle.__drizzle_migrations` with drizzle's own
+  hash/`when` convention, so a future `pnpm db:migrate` sees it as
+  applied. All four tables created: `answer_cards`, `answer_searches`,
+  `answer_feedback`, `answer_rate_limits`.
+- **Seed**: new `pnpm answers:seed` runner (`db/seed/answer-cards.run.ts`,
+  `--dry-run` supported; insert-only by key so admin edits survive).
+  Dry-run previewed 52/52, apply inserted 52, re-run skipped 52 —
+  idempotent. DB state verified: 42 published + 10 pastoral cards in
+  `review`, 6 seasonal cards carrying activation windows.
+- **Live check**: production `/api/answers/corpus` returns exactly 36
+  cards — 52 minus the 10 review-gated pastoral cards minus the 6
+  seasonal cards outside their windows in August — with full trigger
+  and answer payloads. Activation-window logic confirmed working.
 
 ## Wave 20.A — the answer engine, core
 
