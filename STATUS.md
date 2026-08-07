@@ -938,7 +938,7 @@ manually by staff.
   one-time backup of `wp-content/uploads` before decommissioning WP if an
   archive is wanted.
 
-## 🎨 In review — Wave 19 · Design refinement pass (branch `claude/design-refinement`)
+## 🎨 In review — Wave 22 · Design refinement pass (branch `claude/design-refinement`)
 
 Adjustment pass over the EXISTING design system (explicitly not a redesign),
 driven by the taste-skill redesign audit + styleseed coherence rubric
