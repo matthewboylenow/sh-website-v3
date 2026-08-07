@@ -69,6 +69,17 @@ export default async function PrayersPage() {
     data ? { kind: "page", id: data.page.id } : undefined,
   );
 
+  const WIDE_KINDS = new Set([
+    "card_grid",
+    "image_gallery",
+    "columns",
+    "callout_banner",
+    "embed",
+    "video",
+    "featured_ministries",
+    "featured_events",
+  ]);
+
   return (
     <>
       <section className="bg-cream pt-28 pb-16 sm:pt-32 sm:pb-20">
@@ -86,9 +97,11 @@ export default async function PrayersPage() {
       <section className="bg-white py-16">
         <Container width="wide">
           {sections.length > 0 && (
-            <div className="space-y-12">
+            <div className="space-y-10">
               {sections.map((s, i) => (
-                <SectionRenderer key={i} payload={s} ctx={sectionCtx} />
+                <div key={i} className={WIDE_KINDS.has(s.kind) ? undefined : "max-w-[70ch]"}>
+                  <SectionRenderer payload={s} ctx={sectionCtx} />
+                </div>
               ))}
             </div>
           )}

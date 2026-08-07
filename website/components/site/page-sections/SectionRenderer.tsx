@@ -87,22 +87,38 @@ export function SectionRenderer({
 function HeaderEl({
   header,
   level = 2,
+  displayDefault = false,
 }: {
   header?: SectionHeader;
   level?: 2 | 3;
+  /** Landing surfaces (homepage) keep the display treatment even for
+      bare headings; prose pages demote bare headings to content scale. */
+  displayDefault?: boolean;
 }) {
   if (!header || (!header.heading && !header.subheading && !header.eyebrow))
     return null;
   const Tag = level === 3 ? "h3" : "h2";
   const isCenter = header.align === "center";
-  // Display style: clamped serif title + rust rule + lede; mirrors
-  // SectionHead from the original mockup.
+  // Two registers, and the difference carries meaning:
+  //  - DISPLAY (eyebrow and/or subheading present): a designed section
+  //    head — big clamped serif + rust rule, mirroring the mockup's
+  //    SectionHead. Homepage/landing blocks use this.
+  //  - CONTENT (a bare heading, nothing else): an in-article heading on
+  //    a prose page. Rendering those at display scale flattened the
+  //    hierarchy — every section shouted at page-title size with an
+  //    identical rule under it. Content headings now sit clearly below
+  //    the page title and drop the rule.
+  const isDisplay = displayDefault || Boolean(header.eyebrow || header.subheading);
   const wrapClass =
-    "mb-6 max-w-[60ch] " + (isCenter ? "mx-auto text-center" : "");
+    (isDisplay ? "mb-6" : "mb-4 mt-2") +
+    " max-w-[60ch] " +
+    (isCenter ? "mx-auto text-center" : "");
   const titleClass =
     level === 3
       ? "font-serif text-xl font-bold text-navy [.sh-on-dark_&]:text-white"
-      : "font-serif font-bold text-navy [.sh-on-dark_&]:text-white text-[clamp(28px,3.2vw,40px)] leading-tight";
+      : isDisplay
+        ? "font-serif font-bold text-navy [.sh-on-dark_&]:text-white text-[clamp(28px,3.2vw,40px)] leading-tight"
+        : "font-serif font-bold text-navy [.sh-on-dark_&]:text-white text-[clamp(23px,2.2vw,29px)] leading-snug";
   const ruleClass =
     "mt-3 inline-block h-[3px] w-14 rounded-sm bg-rust [.sh-on-dark_&]:bg-gold";
   return (
@@ -117,7 +133,7 @@ function HeaderEl({
           {header.heading}
         </Tag>
       )}
-      {header.heading && level === 2 && (
+      {header.heading && level === 2 && isDisplay && (
         <span className={ruleClass} aria-hidden="true" />
       )}
       {header.subheading && (
@@ -132,12 +148,12 @@ function HeaderEl({
 function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode {
   switch (p.kind) {
     case "heading":
-      return <HeaderEl header={p.header} level={p.level ?? 2} />;
+      return <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} level={p.level ?? 2} />;
 
     case "rich_text":
       return (
         <>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           <div className="sh-prose">
             <RichTextRenderer html={p.html} />
           </div>
@@ -160,7 +176,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       );
       return (
         <>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           {p.href ? (
             <a href={p.href} target="_blank" rel="noopener noreferrer">
               {inner}
@@ -187,7 +203,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       if (!url) {
         return (
           <>
-            <HeaderEl header={p.header} />
+            <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
             {textEl}
           </>
         );
@@ -206,7 +222,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       const reverse = p.imageSide === "right";
       return (
         <>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           <div
             className={`grid gap-8 md:grid-cols-2 md:items-center ${reverse ? "md:[&>*:first-child]:order-2" : ""}`}
           >
@@ -221,7 +237,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       const cols = p.columns === 2 ? "sm:grid-cols-2" : "sm:grid-cols-2 md:grid-cols-3";
       return (
         <>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           <ul className={`grid gap-4 ${cols}`}>
             {p.images.map((img, i) => {
               const url = ctx.images.get(img.blobKey);
@@ -251,7 +267,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
     case "link_list":
       return (
         <>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           <ul className="space-y-1">
             {p.items.map((l, i) => (
               <li key={i}>
@@ -273,7 +289,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
     case "button_group":
       return (
         <>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           <div className="flex flex-wrap gap-3">
             {p.items.map((b, i) => (
               <a
@@ -298,7 +314,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       const poster = p.posterBlobKey ? ctx.images.get(p.posterBlobKey) ?? undefined : undefined;
       return (
         <>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           <VideoBlock url={p.url} type={p.type} poster={poster} />
           {p.caption && (
             <p className="mt-2 text-center text-xs text-ink-3">{p.caption}</p>
@@ -322,7 +338,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
             : `sm:grid-cols-${Math.min(tiles.length, 3)}`;
         return (
           <>
-            <HeaderEl header={p.header} />
+            <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
             <ul className="grid gap-5 md:grid-cols-2">
               {heroes.map((c, i) => (
                 <li key={`hero-${i}`}>
@@ -354,7 +370,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       const cols = p.columns === 2 ? "sm:grid-cols-2" : "sm:grid-cols-2 md:grid-cols-3";
       return (
         <>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           <ul className={`grid gap-6 ${cols}`}>
             {p.cards.map((c, i) => (
               <li key={i}>
@@ -373,7 +389,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
     case "embed":
       return (
         <>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           <EmbedRender embed={p.embed} />
         </>
       );
@@ -384,7 +400,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       const photoUrl = s.photoBlobKey ? ctx.images.get(s.photoBlobKey) ?? null : null;
       return (
         <>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           <div className="flex flex-wrap items-center gap-6 rounded-lg border border-rule bg-cream/40 p-6">
             <div className="size-24 overflow-hidden rounded-full bg-navy/10">
               {photoUrl && (
@@ -427,9 +443,9 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       const onDark = p.tone !== "gold";
       return (
         <>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           <div
-            className={`relative overflow-hidden rounded-xl bg-gradient-to-br p-8 md:p-10 ${toneClass} ${onDark ? "sh-on-dark" : ""}`}
+            className={`relative overflow-hidden rounded-xl bg-gradient-to-br p-8 md:p-10 ${toneClass} ${onDark ? "sh-on-dark sh-grain" : ""}`}
           >
             <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
               <div>
@@ -483,7 +499,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
           : "md:grid-cols-2";
       return (
         <div className={onNavy ? "sh-on-dark -mx-4 rounded-xl bg-navy px-6 py-12 sm:-mx-6 sm:px-10 sm:py-16" : ""}>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           {picks.length === 0 ? (
             <p className="text-sm text-ink-3">No ministries to feature.</p>
           ) : (
@@ -537,7 +553,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       const picks = filtered.slice(0, p.count);
       return (
         <>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           {picks.length === 0 ? (
             <p className="text-sm text-ink-3">No upcoming events.</p>
           ) : (
@@ -640,7 +656,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
       );
       return (
         <>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           <div
             className={`grid gap-8 md:grid-cols-[5fr_7fr] md:items-center ${reverse ? "md:[&>*:first-child]:order-2" : ""}`}
           >
@@ -660,7 +676,7 @@ function renderInner(p: PageSectionPayload, ctx: RenderContext): React.ReactNode
             : `md:grid-cols-${p.columns.length}`;
       return (
         <>
-          <HeaderEl header={p.header} />
+          <HeaderEl displayDefault={ctx.parent?.kind === "homepage"} header={p.header} />
           <div className={`grid gap-8 ${ratio}`}>
             {p.columns.map((col, ci) => (
               <div key={ci} className="space-y-6">

@@ -291,6 +291,33 @@
     margin: 0 0 var(--space-4);
   }
 
+  /* Film-grain overlay for large flat color fields (navy sections, the
+     footer, callout banners). Pure flat vectors read as sterile; 4–5%
+     noise breaks the digital flatness without touching legibility.
+     The ::after is absolutely positioned, so it paints above static
+     children — pointer-events:none keeps everything clickable. */
+  .sh-grain { position: relative; }
+  .sh-grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+  }
+
+  /* Pressed-state physicality: buttons and pill CTAs settle 1px on
+     press so clicks feel mechanical rather than painted. */
+  button:not(:disabled):active,
+  a[class~="rounded-pill"]:active {
+    transform: translateY(1px);
+  }
+
+  /* Schedule figures — Mass times, fees, phone extensions — align as
+     columns instead of dancing on proportional widths. */
+  .sh-tabular { font-variant-numeric: tabular-nums; }
+
   /* Form input baseline — used heavily in the admin */
   .form-input {
     width: 100%;

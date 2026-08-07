@@ -56,6 +56,17 @@ export async function generateMetadata({
   });
 }
 
+  const WIDE_KINDS = new Set([
+    "card_grid",
+    "image_gallery",
+    "columns",
+    "callout_banner",
+    "embed",
+    "video",
+    "featured_ministries",
+    "featured_events",
+  ]);
+
 export default async function SacramentDetailPage({
   params,
 }: {
@@ -119,9 +130,9 @@ export default async function SacramentDetailPage({
         <Container width="wide">
           <article className="max-w-3xl">
             {sections.length > 0 ? (
-              <div className="space-y-12">
+              <div className="space-y-10">
                 {sections.map((s, i) => (
-                  <SectionRenderer key={i} payload={s} ctx={sectionCtx} />
+                  <div key={i} className={WIDE_KINDS.has(s.kind) ? undefined : "max-w-[70ch]"}><SectionRenderer payload={s} ctx={sectionCtx} /></div>
                 ))}
               </div>
             ) : (

@@ -189,10 +189,17 @@ async function main() {
   for (const { post: p, category } of toImport) {
     const title = decodeEntities(htmlToPlainText(p.title.rendered, 300)).trim();
     const body = sanitizeHtml(p.content.rendered);
-    const summary = decodeEntities(htmlToPlainText(p.excerpt.rendered, 400))
+    // Truncate summaries at a word boundary with an ellipsis — a summary
+    // cut mid-word ("was har") reads as a bug on every card and dek.
+    const rawSummary = decodeEntities(htmlToPlainText(p.excerpt.rendered, 400))
       .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 300) || null;
+      .replace(/\s*\[…\]\s*$/, "")
+      .trim();
+    let summary: string | null = rawSummary || null;
+    if (summary && summary.length > 280) {
+      const cut = summary.slice(0, 280);
+      summary = `${cut.slice(0, cut.lastIndexOf(" "))}…`;
+    }
     const publishedAt = new Date(`${p.date_gmt}Z`);
 
     if (DRY_RUN) {

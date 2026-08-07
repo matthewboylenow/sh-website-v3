@@ -70,23 +70,28 @@ export default async function BlogPostPage({
             {" · "}
             {author}
           </p>
-          {p.summary && <p className="sh-lede mt-6 max-w-[60ch]">{p.summary}</p>}
+          {/* No dek here: post summaries are excerpts of the opening
+              paragraph, so repeating one above the body reads as a
+              stutter. Summaries still serve the blog index cards. */}
         </Container>
       </section>
 
-      {(photoUrl || true) && (
-        <section className="bg-white pt-0">
-          <Container width="default">
-            <div className="-mt-2">
-              <PhotoPlaceholder
-                imageUrl={photoUrl}
-                imageAlt={p.title}
-                label="Cover"
-                brief={p.title}
-                tone={p.category === "pastor" ? "warm" : "navy"}
-                aspect="16/9"
-              />
-            </div>
+      {/* Cover only when the post actually has one — and sized as an
+          inset figure, not a full-bleed banner. The archive photos vary
+          wildly in aspect and quality; a restrained 3:2 crop anchored
+          toward the top keeps faces in frame. */}
+      {photoUrl && (
+        <section className="bg-white pt-10">
+          <Container width="narrow">
+            <PhotoPlaceholder
+              imageUrl={photoUrl}
+              imageAlt={p.title}
+              label="Cover"
+              brief={p.title}
+              tone={p.category === "pastor" ? "warm" : "navy"}
+              aspect="3/2"
+              imagePosition="center 25%"
+            />
           </Container>
         </section>
       )}

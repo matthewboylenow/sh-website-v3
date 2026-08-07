@@ -13,7 +13,7 @@ export function Footer({
   const safeBottom = bottomBarHtml ? sanitizeHtml(bottomBarHtml) : null;
 
   return (
-    <footer className="sh-on-dark mt-24 bg-navy-dark text-white">
+    <footer className="sh-on-dark sh-grain mt-24 bg-navy-dark text-white">
       <Container width="wide">
         <div className="grid gap-10 py-14 sm:grid-cols-2 md:grid-cols-4">
           <div>

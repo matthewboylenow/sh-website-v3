@@ -104,7 +104,7 @@ export default async function MassPage() {
                         {r.label}
                       </p>
                       {r.citation && (
-                        <p className="mt-1 font-serif text-lg font-bold">
+                        <p className="mt-1 sh-tabular font-serif text-lg font-bold">
                           {r.citation}
                         </p>
                       )}
@@ -176,7 +176,7 @@ function MassGroup({
 }) {
   return (
     <div>
-      <h3 className="font-serif text-lg font-bold text-navy">{title}</h3>
+      <h3 className="sh-tabular font-serif text-lg font-bold text-navy">{title}</h3>
       {entries.length === 0 ? (
         <p className="mt-3 text-sm text-ink-3">No services scheduled.</p>
       ) : (
@@ -186,7 +186,7 @@ function MassGroup({
               key={m.id}
               className="flex items-baseline justify-between rounded-md bg-white px-4 py-3"
             >
-              <span className="font-serif text-lg font-bold text-navy">
+              <span className="sh-tabular font-serif text-lg font-bold text-navy">
                 {formatTime(m.time)}
               </span>
               {m.liveStreamUrl && (

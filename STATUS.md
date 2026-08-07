@@ -938,6 +938,38 @@ manually by staff.
   one-time backup of `wp-content/uploads` before decommissioning WP if an
   archive is wanted.
 
+## 🎨 In review — Wave 19 · Design refinement pass (branch `claude/design-refinement`)
+
+Adjustment pass over the EXISTING design system (explicitly not a redesign),
+driven by the taste-skill redesign audit + styleseed coherence rubric
+Matthew supplied. Full before/after screenshot loop against real content.
+
+- **Generic page template** (`[slug]`, biggest win — 40+ pages): the
+  public-facing "Page hero" placeholder box is gone (photo column renders
+  only when a photo exists); body copy sits on a ~70ch reading measure
+  (was ~120 chars full-container); media/grid blocks still span wide;
+  optical padding (bottom > top). Same treatment on /prayers +
+  /sacraments/[slug].
+- **Heading hierarchy carries meaning** (SectionRenderer): bare headings
+  (imported prose) render at content scale without the rust rule; designed
+  section heads (eyebrow/subheading present, or any homepage block) keep
+  the big display treatment. Before: every imported heading shouted at
+  page-title size with an identical rule.
+- **Blog detail**: duplicated dek removed (summaries are excerpts of the
+  opening paragraph); cover is an inset 3:2 figure anchored `center 25%`
+  instead of a full-bleed 16/9 that decapitated portrait photos; the
+  `(photoUrl || true)` always-placeholder bug fixed.
+- **Post summaries** re-imported with word-boundary truncation + ellipsis
+  (was cutting mid-word: "was har"); picked up 1 brand-new WP post.
+- **Texture + physicality** (globals): `.sh-grain` film-grain overlay on
+  flat navy fields (footer, dark callout banners); pressed-state
+  `translateY(1px)` on buttons/pill CTAs; `.sh-tabular` figures on Mass
+  times.
+- **Strategic omissions closed**: skip-to-content link, branded
+  `app/error.tsx`.
+- Gates: typecheck, lint, build, 468 tests green. NOT merged — preview
+  deployment for Matthew's review.
+
 ## 🛑 Paused — end-to-end testing in progress
 
 Build paused after Step 6. Step 7 deferred. Step 8 (Fathom + Subsplash) queued. Matthew is verifying everything end-to-end before we keep going.

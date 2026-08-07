@@ -87,11 +87,34 @@ export default async function GenericCmsPage({
     id: data.page.id,
   });
 
+  // Blocks that carry their own composition (grids, galleries, media,
+  // banners) span the full container; reading blocks sit on a ~70ch
+  // measure so body copy never runs 120 characters wide.
+  const WIDE_KINDS = new Set([
+    "card_grid",
+    "image_gallery",
+    "columns",
+    "callout_banner",
+    "embed",
+    "video",
+    "featured_ministries",
+    "featured_events",
+  ]);
+
   return (
     <>
-      <section className="bg-cream pt-28 pb-16 sm:pt-32 sm:pb-20">
+      {/* Hero: two-column only when the page actually has art. A photo-less
+          page gets a clean single-column masthead instead of a labeled
+          placeholder box repeated on every URL. */}
+      <section className="border-b border-rule-soft bg-cream pt-28 pb-14 sm:pt-32 sm:pb-16">
         <Container width="wide">
-          <div className="grid gap-10 md:grid-cols-[1.2fr_1fr] md:items-center">
+          <div
+            className={
+              photoUrl
+                ? "grid gap-10 md:grid-cols-[1.2fr_1fr] md:items-center"
+                : undefined
+            }
+          >
             <div>
               <nav
                 aria-label="Breadcrumb"
@@ -103,30 +126,39 @@ export default async function GenericCmsPage({
                 <span aria-hidden="true" className="text-ink-4">/</span>
                 <span aria-current="page">{data.page.title}</span>
               </nav>
-              <h1 className="text-[clamp(36px,4.4vw,56px)]">{data.page.title}</h1>
+              <h1 className="max-w-[18ch] text-[clamp(36px,4.4vw,56px)]">
+                {data.page.title}
+              </h1>
               {data.page.summary && (
                 <p className="sh-lede mt-4 max-w-[52ch]">{data.page.summary}</p>
               )}
             </div>
-            <PhotoPlaceholder
-              imageUrl={photoUrl}
-              imageAlt={data.page.title}
-              label="Page hero"
-              brief={data.page.title}
-              tone="warm"
-              aspect="5/4"
-              priority
-            />
+            {photoUrl && (
+              <PhotoPlaceholder
+                imageUrl={photoUrl}
+                imageAlt={data.page.title}
+                label="Page hero"
+                brief={data.page.title}
+                tone="warm"
+                aspect="5/4"
+                priority
+              />
+            )}
           </div>
         </Container>
       </section>
 
-      <section className="bg-white py-16">
+      <section className="bg-white pt-14 pb-20 sm:pt-16 sm:pb-24">
         <Container width="wide">
           {sections.length > 0 ? (
-            <div className="space-y-12">
+            <div className="space-y-10">
               {sections.map((s, i) => (
-                <SectionRenderer key={i} payload={s} ctx={sectionCtx} />
+                <div
+                  key={i}
+                  className={WIDE_KINDS.has(s.kind) ? undefined : "max-w-[70ch]"}
+                >
+                  <SectionRenderer payload={s} ctx={sectionCtx} />
+                </div>
               ))}
             </div>
           ) : (
